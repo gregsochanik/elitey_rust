@@ -1,0 +1,10 @@
+/Users/gregsochanik/home/prototypes/elitey_rust/target/debug/deps/async_stream-9dc5df0c8576eaa9.d: /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/lib.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/async_stream.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/next.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/yielder.rs
+
+/Users/gregsochanik/home/prototypes/elitey_rust/target/debug/deps/libasync_stream-9dc5df0c8576eaa9.rlib: /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/lib.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/async_stream.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/next.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/yielder.rs
+
+/Users/gregsochanik/home/prototypes/elitey_rust/target/debug/deps/libasync_stream-9dc5df0c8576eaa9.rmeta: /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/lib.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/async_stream.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/next.rs /Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/yielder.rs
+
+/Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/lib.rs:
+/Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/async_stream.rs:
+/Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/next.rs:
+/Users/gregsochanik/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-stream-0.3.6/src/yielder.rs:
