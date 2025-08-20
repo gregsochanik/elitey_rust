@@ -1,5 +1,6 @@
 use colored::*;
 use crate::game::GameState;
+use crate::data::systems::StarSystem;
 
 /// Print welcome message
 pub fn print_welcome(commander_name: &str) {
@@ -25,6 +26,9 @@ pub fn show_help() {
     println!("{}", "==================".cyan());
     println!("{} - Show this help menu", "help".yellow());
     println!("{} - Display ship and commander status", "status".yellow());
+    println!("{} - List all available star systems", "systems".yellow());
+    println!("{} - Show information about a system", "info <system>".yellow());
+    println!("{} - Travel to a star system", "jump <system>".yellow());
     println!("{} - Exit the game", "quit".yellow());
     println!();
 }
@@ -64,6 +68,65 @@ pub fn show_status(game_state: &GameState) {
     println!();
 }
 
+/// Show all available star systems
+pub fn show_systems(game_state: &GameState) {
+    println!();
+    println!("{}", "Available Star Systems".cyan().bold());
+    println!("{}", "=====================".cyan());
+    
+    let systems = game_state.get_available_systems();
+    let current_location = &game_state.commander.location;
+    
+    for system in systems {
+        let distance = game_state.calculate_travel_cost(system.name())
+            .unwrap_or(0.0);
+        
+        let location_indicator = if system.name() == current_location {
+            "📍 ".green()
+        } else {
+            "   ".normal()
+        };
+        
+        println!("{}{} - {} ({} light years)", 
+            location_indicator,
+            system.name().yellow(),
+            system.economy().display_name().blue(),
+            distance.to_string().cyan()
+        );
+    }
+    println!();
+}
+
+/// Show detailed information about a specific system
+pub fn show_system_info(system: &StarSystem, game_state: &GameState) {
+    println!();
+    println!("{}", format!("System: {}", system.name()).cyan().bold());
+    println!("{}", "=".repeat(system.name().len() + 8).cyan());
+    println!("Economy: {}", system.economy().display_name().blue());
+    println!("Distance from Lave: {} light years", system.distance_from_lave().to_string().cyan());
+    
+    let distance_from_current = game_state.calculate_travel_cost(system.name());
+    if let Some(distance) = distance_from_current {
+        println!("Distance from current location: {} light years", distance.to_string().cyan());
+        println!("Fuel required: {} light years", distance.to_string().yellow());
+    }
+    
+    println!("Available commodities: {}", system.available_commodities().join(", ").green());
+    println!("Description: {}", system.description().white());
+    println!();
+}
+
+/// Show travel confirmation
+pub fn show_travel_confirmation(from: &str, to: &str, fuel_cost: f64) {
+    println!();
+    println!("{}", "Travel Confirmation".cyan().bold());
+    println!("{}", "===================".cyan());
+    println!("From: {}", from.yellow());
+    println!("To: {}", to.yellow());
+    println!("Fuel cost: {} light years", fuel_cost.to_string().red());
+    println!("{}", "Confirm travel? (y/n): ".cyan());
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,7 +142,8 @@ mod tests {
     fn test_show_status() {
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
-        let game_state = GameState { commander, ship };
+        let system_manager = crate::data::systems::SystemManager::new();
+        let game_state = GameState { commander, ship, system_manager };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);
@@ -90,7 +154,8 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(30); // Add some damage
-        let game_state = GameState { commander, ship };
+        let system_manager = crate::data::systems::SystemManager::new();
+        let game_state = GameState { commander, ship, system_manager };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);
@@ -101,7 +166,8 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.consume_fuel(5); // Consume most fuel
-        let game_state = GameState { commander, ship };
+        let system_manager = crate::data::systems::SystemManager::new();
+        let game_state = GameState { commander, ship, system_manager };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);

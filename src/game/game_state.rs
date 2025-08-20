@@ -1,4 +1,5 @@
 use crate::utils::input;
+use crate::data::systems::SystemManager;
 use colored::*;
 use std::io::Write;
 
@@ -11,6 +12,8 @@ pub struct GameState {
     pub commander: Commander,
     /// The player's ship
     pub ship: Ship,
+    /// The system manager for travel
+    pub system_manager: SystemManager,
 }
 
 #[allow(dead_code)]
@@ -26,6 +29,7 @@ impl GameState {
         Self {
             commander: Commander::new(name),
             ship: Ship::new_cobra_mk3(),
+            system_manager: SystemManager::new(),
         }
     }
 
@@ -82,6 +86,53 @@ impl GameState {
     pub fn is_running(&self) -> bool {
         !self.ship.is_destroyed()
     }
+
+    /// Travel to a new system
+    pub fn travel_to_system(&mut self, destination: &str) -> Result<(), String> {
+        let current_location = &self.commander.location;
+        
+        // Check if destination exists
+        if self.system_manager.get_system(destination).is_none() {
+            return Err(format!("Unknown system: {}", destination));
+        }
+        
+        // Check if we're already there
+        if current_location == destination {
+            return Err("You are already in this system.".to_string());
+        }
+        
+        // Check if we have enough fuel
+        if !self.system_manager.can_travel(current_location, destination, self.ship.fuel_current as f64) {
+            return Err("Insufficient fuel for this journey.".to_string());
+        }
+        
+        // Calculate fuel cost
+        let fuel_cost = self.system_manager.calculate_fuel_cost(current_location, destination)
+            .ok_or("Unable to calculate fuel cost.")?;
+        
+        // Consume fuel
+        self.ship.consume_fuel(fuel_cost as u32);
+        
+        // Update location
+        self.commander.location = destination.to_string();
+        
+        Ok(())
+    }
+
+    /// Get all available systems
+    pub fn get_available_systems(&self) -> Vec<&crate::data::systems::StarSystem> {
+        self.system_manager.get_all_systems()
+    }
+
+    /// Get system information
+    pub fn get_system_info(&self, system_name: &str) -> Option<&crate::data::systems::StarSystem> {
+        self.system_manager.get_system(system_name)
+    }
+
+    /// Calculate travel cost to a system
+    pub fn calculate_travel_cost(&self, destination: &str) -> Option<f64> {
+        self.system_manager.calculate_fuel_cost(&self.commander.location, destination)
+    }
 }
 
 #[cfg(test)]
@@ -94,9 +145,11 @@ mod tests {
         // For now, we'll test the basic structure
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
+        let system_manager = SystemManager::new();
         let game_state = GameState {
             commander,
             ship,
+            system_manager,
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -108,7 +161,8 @@ mod tests {
     fn test_game_state_running() {
         let commander = Commander::new("Test".to_string());
         let ship = Ship::new_cobra_mk3();
-        let game_state = GameState { commander, ship };
+        let system_manager = SystemManager::new();
+        let game_state = GameState { commander, ship, system_manager };
         
         assert!(game_state.is_running());
     }
@@ -118,8 +172,9 @@ mod tests {
         let commander = Commander::new("Test".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(100); // Destroy the ship
+        let system_manager = SystemManager::new();
         
-        let game_state = GameState { commander, ship };
+        let game_state = GameState { commander, ship, system_manager };
         
         assert!(!game_state.is_running());
     }

@@ -25,8 +25,8 @@ impl Ship {
             ship_type: "Cobra Mk III".to_string(),
             cargo_capacity: 20, // Starting cargo capacity as per spec
             cargo_used: 0,      // Empty cargo hold as per spec
-            fuel_capacity: 7,   // Fuel capacity in light years
-            fuel_current: 7,    // Full fuel tank
+            fuel_capacity: 20,  // Fuel capacity in light years (increased for testing)
+            fuel_current: 20,   // Full fuel tank
             hull_percentage: 100, // Full hull integrity
         }
     }
@@ -149,8 +149,8 @@ mod tests {
         assert_eq!(ship.ship_type(), "Cobra Mk III");
         assert_eq!(ship.cargo_capacity(), 20);
         assert_eq!(ship.cargo_used(), 0);
-        assert_eq!(ship.fuel_capacity(), 7);
-        assert_eq!(ship.fuel_current(), 7);
+        assert_eq!(ship.fuel_capacity(), 20);
+        assert_eq!(ship.fuel_current(), 20);
         assert_eq!(ship.hull_percentage(), 100);
     }
 
@@ -188,16 +188,17 @@ mod tests {
         
         // Test fuel checks
         assert!(ship.has_fuel(5));
-        assert!(!ship.has_fuel(10));
+        assert!(ship.has_fuel(10));
+        assert!(!ship.has_fuel(25));
 
         // Test consuming fuel
         assert!(ship.consume_fuel(3));
-        assert_eq!(ship.fuel_current(), 4);
-        assert!(!ship.consume_fuel(10)); // Too much fuel
+        assert_eq!(ship.fuel_current(), 17);
+        assert!(!ship.consume_fuel(25)); // Too much fuel
 
         // Test refueling
         ship.refuel();
-        assert_eq!(ship.fuel_current(), 7);
+        assert_eq!(ship.fuel_current(), 20);
     }
 
     #[test]

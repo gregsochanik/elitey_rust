@@ -6,65 +6,65 @@ Implement the star system network, travel mechanics, and basic navigation betwee
 ## Requirements
 
 ### Star System Data
-- [ ] System name and unique identifier
-- [ ] Economy type (Agricultural, Industrial, High-Tech, etc.)
-- [ ] Distance from Lave in light years
-- [ ] Available commodities list
-- [ ] System description/flavor text
+- [x] System name and unique identifier
+- [x] Economy type (Agricultural, Industrial, High-Tech, etc.)
+- [x] Distance from Lave in light years
+- [x] Available commodities list
+- [x] System description/flavor text
 
 ### Travel Mechanics
-- [ ] `jump <system>` command to travel between systems
-- [ ] Fuel consumption based on distance
-- [ ] Travel time calculation
-- [ ] Cannot travel beyond fuel range
-- [ ] Fuel refueling mechanics
+- [x] `jump <system>` command to travel between systems
+- [x] Fuel consumption based on distance
+- [x] Travel time calculation
+- [x] Cannot travel beyond fuel range
+- [x] Fuel refueling mechanics
 
 ### System Information
-- [ ] `systems` command to list available destinations
-- [ ] `info <system>` command to show system details
-- [ ] Display distance and fuel requirements
-- [ ] Show economy type and available commodities
+- [x] `systems` command to list available destinations
+- [x] `info <system>` command to show system details
+- [x] Display distance and fuel requirements
+- [x] Show economy type and available commodities
 
 ## Implementation Tasks
 
 ### 1. System Data Structure
-- [ ] Create data/systems.rs with system definitions
-- [ ] Define economy types and their characteristics
-- [ ] Create system lookup and validation functions
-- [ ] Implement distance calculation between systems
+- [x] Create data/systems.rs with system definitions
+- [x] Define economy types and their characteristics
+- [x] Create system lookup and validation functions
+- [x] Implement distance calculation between systems
 
 ### 2. Travel System
-- [ ] Implement fuel consumption logic
-- [ ] Create travel validation (fuel check, distance check)
-- [ ] Add travel time simulation
-- [ ] Implement fuel refueling at stations
+- [x] Implement fuel consumption logic
+- [x] Create travel validation (fuel check, distance check)
+- [x] Add travel time simulation
+- [x] Implement fuel refueling at stations
 
 ### 3. Navigation Commands
-- [ ] Implement `jump` command with validation
-- [ ] Implement `systems` command to list destinations
-- [ ] Implement `info` command for system details
-- [ ] Add fuel status to status display
+- [x] Implement `jump` command with validation
+- [x] Implement `systems` command to list destinations
+- [x] Implement `info` command for system details
+- [x] Add fuel status to status display
 
 ### 4. System Display
-- [ ] Create system information display formatting
-- [ ] Show available systems with distance and fuel cost
-- [ ] Display system economy and commodity availability
-- [ ] Add travel confirmation prompts
+- [x] Create system information display formatting
+- [x] Show available systems with distance and fuel cost
+- [x] Display system economy and commodity availability
+- [x] Add travel confirmation prompts
 
 ## Acceptance Criteria
-- [ ] Can travel between connected systems
-- [ ] Fuel consumption is accurate to distance
-- [ ] Cannot travel without sufficient fuel
-- [ ] System information is displayed correctly
-- [ ] Travel commands handle invalid destinations gracefully
-- [ ] Fuel status is updated after travel
+- [x] Can travel between connected systems
+- [x] Fuel consumption is accurate to distance
+- [x] Cannot travel without sufficient fuel
+- [x] System information is displayed correctly
+- [x] Travel commands handle invalid destinations gracefully
+- [x] Fuel status is updated after travel
 
 ## Testing
-- [ ] Test travel between all connected systems
-- [ ] Test fuel consumption accuracy
-- [ ] Test travel with insufficient fuel
-- [ ] Test system information display
-- [ ] Test invalid system names
+- [x] Test travel between all connected systems
+- [x] Test fuel consumption accuracy
+- [x] Test travel with insufficient fuel
+- [x] Test system information display
+- [x] Test invalid system names
 
 ## Dependencies
 - Feature 01: Core Gameplay (commander, ship, basic commands)
