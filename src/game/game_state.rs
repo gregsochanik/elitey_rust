@@ -3,10 +3,10 @@ use crate::data::systems::SystemManager;
 use colored::*;
 use std::io::Write;
 
-use super::{Commander, Ship};
+use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler};
 
 /// Represents the complete game state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GameState {
     /// The player commander
     pub commander: Commander,
@@ -14,6 +14,12 @@ pub struct GameState {
     pub ship: Ship,
     /// The system manager for travel
     pub system_manager: SystemManager,
+    /// The trading handler
+    pub trading_handler: TradingHandler,
+    /// The upgrade handler
+    pub upgrade_handler: UpgradeHandler,
+    /// The save/load handler
+    pub save_load_handler: SaveLoadHandler,
 }
 
 #[allow(dead_code)]
@@ -29,7 +35,10 @@ impl GameState {
         Self {
             commander: Commander::new(name),
             ship: Ship::new_cobra_mk3(),
-            system_manager: SystemManager::new(),
+            system_manager: SystemManager::new().expect("Failed to load galaxy data"),
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
         }
     }
 
@@ -38,6 +47,11 @@ impl GameState {
         // For now, always create new game
         // TODO: Implement save/load system in Feature 05
         Self::new_game()
+    }
+
+    /// Create game state from existing save
+    pub fn from_save(save_state: GameState) -> Self {
+        save_state
     }
 
     /// Get commander name from user input
@@ -133,6 +147,109 @@ impl GameState {
     pub fn calculate_travel_cost(&self, destination: &str) -> Option<f64> {
         self.system_manager.calculate_fuel_cost(&self.commander.location, destination)
     }
+
+    /// Get the trading handler
+    pub fn trading_handler(&self) -> &TradingHandler {
+        &self.trading_handler
+    }
+
+    /// Get mutable reference to trading handler
+    pub fn trading_handler_mut(&mut self) -> &mut TradingHandler {
+        &mut self.trading_handler
+    }
+
+    /// Get the upgrade handler
+    pub fn upgrade_handler(&self) -> &UpgradeHandler {
+        &self.upgrade_handler
+    }
+
+    /// Get mutable reference to upgrade handler
+    pub fn upgrade_handler_mut(&mut self) -> &mut UpgradeHandler {
+        &mut self.upgrade_handler
+    }
+
+    /// Get the save/load handler
+    pub fn save_load_handler(&self) -> &SaveLoadHandler {
+        &self.save_load_handler
+    }
+
+    /// Get mutable reference to save/load handler
+    pub fn save_load_handler_mut(&mut self) -> &mut SaveLoadHandler {
+        &mut self.save_load_handler
+    }
+
+    /// Handle buy command
+    pub fn handle_buy_command(&mut self, args: &[String]) -> bool {
+        self.trading_handler.handle_buy(
+            args,
+            &mut self.commander,
+            &mut self.ship,
+            &self.system_manager,
+        )
+    }
+
+    /// Handle sell command
+    pub fn handle_sell_command(&mut self, args: &[String]) -> bool {
+        self.trading_handler.handle_sell(
+            args,
+            &mut self.commander,
+            &mut self.ship,
+            &self.system_manager,
+        )
+    }
+
+    /// Handle market command
+    pub fn handle_market_command(&self) {
+        self.trading_handler.handle_market(
+            &self.system_manager,
+            &self.commander.location,
+        );
+    }
+
+    /// Handle cargo command
+    pub fn handle_cargo_command(&self) {
+        self.trading_handler.handle_cargo(&self.ship);
+    }
+
+    /// Handle upgrade command
+    pub fn handle_upgrade_command(&self) {
+        self.upgrade_handler.handle_upgrade(&self.commander, &self.ship);
+    }
+
+    /// Handle upgrade purchase command
+    pub fn handle_upgrade_purchase_command(&mut self, args: &[String]) -> bool {
+        self.upgrade_handler.handle_upgrade_purchase(args, &mut self.commander, &mut self.ship)
+    }
+
+    /// Handle ships command
+    pub fn handle_ships_command(&self) {
+        self.upgrade_handler.handle_ships(&self.commander, &self.ship);
+    }
+
+    /// Handle save command
+    pub fn handle_save_command(&self, args: &[String]) -> bool {
+        self.save_load_handler.handle_save(args, self)
+    }
+
+    /// Handle load command
+    pub fn handle_load_command(&self, args: &[String]) -> Result<Option<GameState>, String> {
+        self.save_load_handler.handle_load(args)
+    }
+
+    /// Handle list saves command
+    pub fn handle_list_saves_command(&self) {
+        self.save_load_handler.handle_list_saves();
+    }
+
+    /// Handle delete save command
+    pub fn handle_delete_save_command(&self, args: &[String]) -> bool {
+        self.save_load_handler.handle_delete_save(args)
+    }
+
+    /// Handle auto-save
+    pub fn handle_auto_save(&self) -> bool {
+        self.save_load_handler.auto_save(self)
+    }
 }
 
 #[cfg(test)]
@@ -145,15 +262,18 @@ mod tests {
         // For now, we'll test the basic structure
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
-        let system_manager = SystemManager::new();
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         let game_state = GameState {
             commander,
             ship,
             system_manager,
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
-        assert_eq!(game_state.ship().ship_type(), "Cobra Mk III");
+        assert_eq!(game_state.ship().ship_type_name(), "Cobra Mk III");
         assert!(game_state.is_running());
     }
 
@@ -161,8 +281,15 @@ mod tests {
     fn test_game_state_running() {
         let commander = Commander::new("Test".to_string());
         let ship = Ship::new_cobra_mk3();
-        let system_manager = SystemManager::new();
-        let game_state = GameState { commander, ship, system_manager };
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let game_state = GameState { 
+            commander, 
+            ship, 
+            system_manager, 
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+        };
         
         assert!(game_state.is_running());
     }
@@ -172,9 +299,16 @@ mod tests {
         let commander = Commander::new("Test".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(100); // Destroy the ship
-        let system_manager = SystemManager::new();
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         
-        let game_state = GameState { commander, ship, system_manager };
+        let game_state = GameState { 
+            commander, 
+            ship, 
+            system_manager, 
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+        };
         
         assert!(!game_state.is_running());
     }

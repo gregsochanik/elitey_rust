@@ -72,6 +72,56 @@ async fn main() -> Result<()> {
                     }
                 }
             }
+            "market" => {
+                game_state.handle_market_command();
+            }
+            "buy" => {
+                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                game_state.handle_buy_command(&args);
+            }
+            "sell" => {
+                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                game_state.handle_sell_command(&args);
+            }
+            "cargo" => {
+                game_state.handle_cargo_command();
+            }
+            "upgrade" => {
+                if command_parts.len() == 1 {
+                    game_state.handle_upgrade_command();
+                } else {
+                    let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                    game_state.handle_upgrade_purchase_command(&args);
+                }
+            }
+            "ships" => {
+                game_state.handle_ships_command();
+            }
+            "save" => {
+                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                game_state.handle_save_command(&args);
+            }
+            "load" => {
+                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                match game_state.handle_load_command(&args) {
+                    Ok(Some(new_game_state)) => {
+                        game_state = new_game_state;
+                    }
+                    Ok(None) => {
+                        // Load was cancelled or failed, continue with current game
+                    }
+                    Err(e) => {
+                        println!("{}", format!("Load error: {}", e).red());
+                    }
+                }
+            }
+            "saves" => {
+                game_state.handle_list_saves_command();
+            }
+            "delete" => {
+                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                game_state.handle_delete_save_command(&args);
+            }
             "jump" => {
                 if command_parts.len() < 2 {
                     println!("{}", "Usage: jump <system_name>".red());
@@ -107,6 +157,8 @@ async fn main() -> Result<()> {
                 }
             }
             "quit" | "exit" => {
+                // Auto-save before quitting
+                game_state.handle_auto_save();
                 display::print_goodbye(&game_state.commander.name);
                 break;
             }

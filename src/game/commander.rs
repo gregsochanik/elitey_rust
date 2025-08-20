@@ -18,7 +18,7 @@ impl Commander {
         Self {
             name,
             credits: 100, // Starting credits as per spec
-            location: "Lave".to_string(), // Starting location as per spec
+            location: "LAVE".to_string(), // Starting location as per spec
         }
     }
 
@@ -73,7 +73,7 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         assert_eq!(commander.name(), "Test Commander");
         assert_eq!(commander.credits(), 100);
-        assert_eq!(commander.location(), "Lave");
+        assert_eq!(commander.location(), "LAVE");
     }
 
     #[test]

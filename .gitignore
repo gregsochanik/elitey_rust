@@ -45,6 +45,3 @@ node_modules/
 
 # dotenv environment variables file
 .env
-
-# Galaxies directory (separate git repo)
-galaxies/

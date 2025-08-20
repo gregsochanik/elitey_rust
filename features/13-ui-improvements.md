@@ -5,6 +5,8 @@ Enhance the visual appeal and usability of the CLI interface with minimal code c
 
 ## Requirements
 
+- [ ] Favour any out of the box rust CLI improvement modules for this rather than low level coding solutions 
+
 ### Color Coding System
 - [ ] Credits/Money: Green for positive amounts, red for negative
 - [ ] System Names: Blue for current system, cyan for destinations
@@ -36,7 +38,6 @@ Enhance the visual appeal and usability of the CLI interface with minimal code c
 ## Implementation Tasks
 
 ### 1. Color System Foundation
-- [ ] Create color utility functions in `utils/display.rs`
 - [ ] Implement color detection for terminal compatibility
 - [ ] Add fallback for terminals without color support
 - [ ] Create colorize() function for text formatting
@@ -58,23 +59,10 @@ Enhance the visual appeal and usability of the CLI interface with minimal code c
 - [ ] Ensure consistent borders and formatting across all tables
 
 ### 4. Menu System
-- [ ] Add numbered menu handling to `utils/input.rs`
-- [ ] Update main menu display in `main.rs`
+- [ ] Add numbered menu handling
+- [ ] Update main menu display 
 - [ ] Modify command processing for number input
 - [ ] Update help text to show numbered options
-
-## Files Created/Modified
-```
-utils/
-├── display.rs           # Color utilities, status bars, table formatting
-└── input.rs             # Numbered menu handling
-game/
-├── game_state.rs        # Status display integration
-├── market.rs            # Market display with colors
-├── cargo.rs             # Cargo display with status bars
-└── equipment.rs         # Equipment display with colors
-main.rs                  # Main menu with numbered options
-```
 
 ## User Experience Examples
 
@@ -127,16 +115,3 @@ Enter choice (1-7):
 - [ ] Test table alignment with various data lengths
 - [ ] Verify numbered menu navigation works correctly
 - [ ] Test fallback behavior for unsupported terminals
-
-## Dependencies
-- Feature 01: Core Gameplay (existing display functions)
-- Feature 03: Trading System (market displays)
-- Feature 09: Equipment System (equipment displays)
-
-## Estimated Effort
-- **Color System Foundation**: 2-3 hours
-- **Status Bar System**: 2-3 hours
-- **Table Formatting**: 2-3 hours
-- **Menu System**: 1-2 hours
-- **Testing**: 1-2 hours
-- **Total**: 8-13 hours 

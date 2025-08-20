@@ -11,6 +11,19 @@ Implement the star system network, travel mechanics, and basic navigation betwee
 - [x] Distance from Lave in light years
 - [x] Available commodities list
 - [x] System description/flavor text
+- [x] Load star system data from galaxies/galaxy1.json file
+- [x] Use actual 3D coordinates (x, y) for distance calculations
+- [x] Include government types and tech levels from galaxy data
+- [x] Use the original Elite distance calculation:
+```c
+/* Calculate distance between two planets (scaled to light years) */
+int distance(int x1, int y1, int x2, int y2)
+{
+    int dx = x1 - x2;
+    int dy = y1 - y2;
+    return (int)(sqrt((dx * dx) + (dy * dy)) / 4);
+}
+```
 
 ### Travel Mechanics
 - [x] `jump <system>` command to travel between systems
@@ -32,6 +45,9 @@ Implement the star system network, travel mechanics, and basic navigation betwee
 - [x] Define economy types and their characteristics
 - [x] Create system lookup and validation functions
 - [x] Implement distance calculation between systems
+- [ ] Parse and load galaxy data from JSON file
+- [ ] Implement 3D coordinate-based distance calculations
+- [ ] Add government and tech level data structures
 
 ### 2. Travel System
 - [x] Implement fuel consumption logic
@@ -58,6 +74,9 @@ Implement the star system network, travel mechanics, and basic navigation betwee
 - [x] System information is displayed correctly
 - [x] Travel commands handle invalid destinations gracefully
 - [x] Fuel status is updated after travel
+- [ ] All star systems from galaxy1.json are available for travel
+- [ ] Distance calculations use actual 3D coordinates
+- [ ] System information includes government and tech level data
 
 ## Testing
 - [x] Test travel between all connected systems
@@ -65,6 +84,9 @@ Implement the star system network, travel mechanics, and basic navigation betwee
 - [x] Test travel with insufficient fuel
 - [x] Test system information display
 - [x] Test invalid system names
+- [ ] Test loading of all galaxy systems from JSON
+- [ ] Test 3D coordinate distance calculations
+- [ ] Test government and tech level data display
 
 ## Dependencies
 - Feature 01: Core Gameplay (commander, ship, basic commands)

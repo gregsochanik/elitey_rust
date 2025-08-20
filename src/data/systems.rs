@@ -1,31 +1,109 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
+use anyhow::Result;
 
-/// Economy types for star systems
+/// Economy types for star systems (matching galaxy1.json)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EconomyType {
-    Agricultural,
-    Industrial,
-    HighTech,
-    Mining,
-    Tourism,
-    Military,
-    Service,
+    #[serde(rename = "Rich Ind")]
+    RichIndustrial,
+    #[serde(rename = "Poor Ind")]
+    PoorIndustrial,
+    #[serde(rename = "Mainly Ind")]
+    MainlyIndustrial,
+    #[serde(rename = "Average Ind")]
+    AverageIndustrial,
+    #[serde(rename = "Rich Agri")]
+    RichAgricultural,
+    #[serde(rename = "Poor Agri")]
+    PoorAgricultural,
+    #[serde(rename = "Mainly Agri")]
+    MainlyAgricultural,
+    #[serde(rename = "Average Agri")]
+    AverageAgricultural,
 }
 
 impl EconomyType {
     /// Get a human-readable name for the economy type
     pub fn display_name(&self) -> &'static str {
         match self {
-            EconomyType::Agricultural => "Agricultural",
-            EconomyType::Industrial => "Industrial",
-            EconomyType::HighTech => "High-Tech",
-            EconomyType::Mining => "Mining",
-            EconomyType::Tourism => "Tourism",
-            EconomyType::Military => "Military",
-            EconomyType::Service => "Service",
+            EconomyType::RichIndustrial => "Rich Industrial",
+            EconomyType::PoorIndustrial => "Poor Industrial",
+            EconomyType::MainlyIndustrial => "Mainly Industrial",
+            EconomyType::AverageIndustrial => "Average Industrial",
+            EconomyType::RichAgricultural => "Rich Agricultural",
+            EconomyType::PoorAgricultural => "Poor Agricultural",
+            EconomyType::MainlyAgricultural => "Mainly Agricultural",
+            EconomyType::AverageAgricultural => "Average Agricultural",
         }
     }
+}
+
+/// Government types for star systems (matching galaxy1.json)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum GovernmentType {
+    #[serde(rename = "Anarchy")]
+    Anarchy,
+    #[serde(rename = "Feudal")]
+    Feudal,
+    #[serde(rename = "Multi-Government")]
+    MultiGovernment,
+    #[serde(rename = "Dictatorship")]
+    Dictatorship,
+    #[serde(rename = "Communist")]
+    Communist,
+    #[serde(rename = "Confederacy")]
+    Confederacy,
+    #[serde(rename = "Democracy")]
+    Democracy,
+    #[serde(rename = "Corporate State")]
+    CorporateState,
+}
+
+impl GovernmentType {
+    /// Get a human-readable name for the government type
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            GovernmentType::Anarchy => "Anarchy",
+            GovernmentType::Feudal => "Feudal",
+            GovernmentType::MultiGovernment => "Multi-Government",
+            GovernmentType::Dictatorship => "Dictatorship",
+            GovernmentType::Communist => "Communist",
+            GovernmentType::Confederacy => "Confederacy",
+            GovernmentType::Democracy => "Democracy",
+            GovernmentType::CorporateState => "Corporate State",
+        }
+    }
+}
+
+/// JSON structure for economy data from galaxy1.json
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EconomyData {
+    level: u8,
+    name: String,
+}
+
+/// JSON structure for government data from galaxy1.json
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GovernmentData {
+    level: u8,
+    name: String,
+}
+
+/// JSON structure for a star system from galaxy1.json
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GalaxySystemData {
+    name: String,
+    x: u16,
+    y: u16,
+    economy: EconomyData,
+    government: GovernmentData,
+    techlevel: u8,
+    turnover: u32,
+    radius: u32,
+    population: String,
+    description: String,
 }
 
 /// Represents a star system with all its properties
@@ -33,36 +111,47 @@ impl EconomyType {
 pub struct StarSystem {
     /// System name
     pub name: String,
-    /// Unique identifier
-    pub id: String,
+    /// X coordinate
+    pub x: u16,
+    /// Y coordinate
+    pub y: u16,
     /// Economy type
     pub economy: EconomyType,
-    /// Distance from Lave in light years
-    pub distance_from_lave: f64,
-    /// Available commodities (simplified for now)
-    pub available_commodities: Vec<String>,
+    /// Government type
+    pub government: GovernmentType,
+    /// Technology level
+    pub tech_level: u8,
+    /// Economic turnover
+    pub turnover: u32,
+    /// Planet radius
+    pub radius: u32,
+    /// Population
+    pub population: String,
     /// System description
     pub description: String,
 }
 
 impl StarSystem {
-    /// Create a new star system
-    pub fn new(
-        name: String,
-        id: String,
-        economy: EconomyType,
-        distance_from_lave: f64,
-        available_commodities: Vec<String>,
-        description: String,
-    ) -> Self {
-        Self {
-            name,
-            id,
+    /// Create a new star system from galaxy data
+    pub fn from_galaxy_data(data: GalaxySystemData) -> Result<Self, serde_json::Error> {
+        // Parse economy type from the name string
+        let economy = serde_json::from_str(&format!("\"{}\"", data.economy.name))?;
+        
+        // Parse government type from the name string
+        let government = serde_json::from_str(&format!("\"{}\"", data.government.name))?;
+        
+        Ok(Self {
+            name: data.name,
+            x: data.x,
+            y: data.y,
             economy,
-            distance_from_lave,
-            available_commodities,
-            description,
-        }
+            government,
+            tech_level: data.techlevel,
+            turnover: data.turnover,
+            radius: data.radius,
+            population: data.population,
+            description: data.description,
+        })
     }
 
     /// Get the system name
@@ -75,92 +164,74 @@ impl StarSystem {
         &self.economy
     }
 
-    /// Get distance from Lave
-    pub fn distance_from_lave(&self) -> f64 {
-        self.distance_from_lave
+    /// Get the government type
+    pub fn government(&self) -> &GovernmentType {
+        &self.government
     }
 
-    /// Get available commodities
-    pub fn available_commodities(&self) -> &[String] {
-        &self.available_commodities
+    /// Get technology level
+    pub fn tech_level(&self) -> u8 {
+        self.tech_level
+    }
+
+    /// Get economic turnover
+    pub fn turnover(&self) -> u32 {
+        self.turnover
+    }
+
+    /// Get population
+    pub fn population(&self) -> &str {
+        &self.population
     }
 
     /// Get system description
     pub fn description(&self) -> &str {
         &self.description
     }
+
+    /// Calculate distance to another system using Elite's distance formula
+    pub fn distance_to(&self, other: &StarSystem) -> f64 {
+        let dx = self.x as i32 - other.x as i32;
+        let dy = self.y as i32 - other.y as i32;
+        let distance_squared = (dx * dx) + (dy * dy);
+        (distance_squared as f64).sqrt() / 4.0
+    }
 }
 
 /// Manages all star systems and travel mechanics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SystemManager {
     systems: HashMap<String, StarSystem>,
 }
 
 impl Default for SystemManager {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("Failed to load galaxy data")
     }
 }
 
 impl SystemManager {
-    /// Create a new system manager with predefined systems
-    pub fn new() -> Self {
+    /// Create a new system manager by loading from galaxy1.json
+    pub fn new() -> Result<Self> {
         let mut systems = HashMap::new();
         
-        // Add predefined systems as per Elite lore
-        let lave = StarSystem::new(
-            "Lave".to_string(),
-            "LAVE".to_string(),
-            EconomyType::Agricultural,
-            0.0,
-            vec!["Food".to_string(), "Textiles".to_string(), "Liquor".to_string()],
-            "A peaceful agricultural world known for its fine wines and textiles.".to_string(),
-        );
+        // Load galaxy data from JSON file
+        let galaxy_data = fs::read_to_string("galaxies/galaxy1.json")?;
+        let galaxy_systems: HashMap<String, GalaxySystemData> = serde_json::from_str(&galaxy_data)?;
         
-        let leesti = StarSystem::new(
-            "Leesti".to_string(),
-            "LEESTI".to_string(),
-            EconomyType::Industrial,
-            15.2,
-            vec!["Machinery".to_string(), "Computers".to_string(), "Alloys".to_string()],
-            "An industrial powerhouse producing advanced machinery and computers.".to_string(),
-        );
+        // Convert each system from JSON data to StarSystem
+        for (system_id, system_data) in galaxy_systems {
+            match StarSystem::from_galaxy_data(system_data) {
+                Ok(system) => {
+                    systems.insert(system.name.clone(), system);
+                }
+                Err(e) => {
+                    eprintln!("Failed to parse system {}: {}", system_id, e);
+                }
+            }
+        }
         
-        let diso = StarSystem::new(
-            "Diso".to_string(),
-            "DISO".to_string(),
-            EconomyType::Agricultural,
-            8.7,
-            vec!["Food".to_string(), "Livestock".to_string(), "Grain".to_string()],
-            "A fertile agricultural world with vast farmlands and livestock.".to_string(),
-        );
-        
-        let zaonce = StarSystem::new(
-            "Zaonce".to_string(),
-            "ZAONCE".to_string(),
-            EconomyType::HighTech,
-            12.3,
-            vec!["Computers".to_string(), "Electronics".to_string(), "Robots".to_string()],
-            "A high-tech research center specializing in advanced electronics.".to_string(),
-        );
-        
-        let orrere = StarSystem::new(
-            "Orrere".to_string(),
-            "ORRERE".to_string(),
-            EconomyType::Mining,
-            18.9,
-            vec!["Minerals".to_string(), "Ore".to_string(), "Precious Metals".to_string()],
-            "A mining colony extracting valuable minerals from asteroid belts.".to_string(),
-        );
-
-        systems.insert(lave.name.clone(), lave);
-        systems.insert(leesti.name.clone(), leesti);
-        systems.insert(diso.name.clone(), diso);
-        systems.insert(zaonce.name.clone(), zaonce);
-        systems.insert(orrere.name.clone(), orrere);
-
-        Self { systems }
+        Ok(Self { systems })
     }
 
     /// Get a system by name
@@ -173,15 +244,12 @@ impl SystemManager {
         self.systems.values().collect()
     }
 
-    /// Calculate distance between two systems
+    /// Calculate distance between two systems using 3D coordinates
     pub fn calculate_distance(&self, from: &str, to: &str) -> Option<f64> {
         let from_system = self.get_system(from)?;
         let to_system = self.get_system(to)?;
         
-        // For now, use distance from Lave as a simple approximation
-        // In a full implementation, this would use actual 3D coordinates
-        let distance = (from_system.distance_from_lave - to_system.distance_from_lave).abs();
-        Some(distance)
+        Some(from_system.distance_to(to_system))
     }
 
     /// Check if travel is possible (fuel check)
@@ -211,51 +279,64 @@ mod tests {
 
     #[test]
     fn test_system_creation() {
-        let system = StarSystem::new(
-            "Test System".to_string(),
-            "TEST".to_string(),
-            EconomyType::HighTech,
-            10.0,
-            vec!["Computers".to_string()],
-            "A test system.".to_string(),
-        );
+        let test_data = GalaxySystemData {
+            name: "Test System".to_string(),
+            x: 10,
+            y: 20,
+            economy: EconomyData {
+                level: 0,
+                name: "Rich Ind".to_string(),
+            },
+            government: GovernmentData {
+                level: 2,
+                name: "Multi-Government".to_string(),
+            },
+            techlevel: 10,
+            turnover: 20000,
+            radius: 5000,
+            population: "40 Billion".to_string(),
+            description: "A test system.".to_string(),
+        };
+        
+        let system = StarSystem::from_galaxy_data(test_data).unwrap();
         
         assert_eq!(system.name(), "Test System");
-        assert_eq!(system.economy(), &EconomyType::HighTech);
-        assert_eq!(system.distance_from_lave(), 10.0);
+        assert_eq!(system.economy(), &EconomyType::RichIndustrial);
+        assert_eq!(system.government(), &GovernmentType::MultiGovernment);
+        assert_eq!(system.tech_level(), 10);
     }
 
     #[test]
     fn test_system_manager() {
-        let manager = SystemManager::new();
+        let manager = SystemManager::new().unwrap();
         
         // Test getting a system
-        let lave = manager.get_system("Lave");
+        let lave = manager.get_system("LAVE");
         assert!(lave.is_some());
-        assert_eq!(lave.unwrap().name(), "Lave");
+        assert_eq!(lave.unwrap().name(), "LAVE");
         
         // Test getting all systems
         let all_systems = manager.get_all_systems();
-        assert_eq!(all_systems.len(), 5);
+        assert!(all_systems.len() > 100); // Should have hundreds of systems
     }
 
     #[test]
     fn test_distance_calculation() {
-        let manager = SystemManager::new();
+        let manager = SystemManager::new().unwrap();
         
-        let distance = manager.calculate_distance("Lave", "Leesti");
+        let distance = manager.calculate_distance("LAVE", "LEESTI");
         assert!(distance.is_some());
-        assert_eq!(distance.unwrap(), 15.2);
+        assert!(distance.unwrap() > 0.0); // Should be a positive distance
     }
 
     #[test]
     fn test_travel_validation() {
-        let manager = SystemManager::new();
+        let manager = SystemManager::new().unwrap();
         
         // Test travel with sufficient fuel
-        assert!(manager.can_travel("Lave", "Leesti", 20.0));
+        assert!(manager.can_travel("LAVE", "LEESTI", 20.0));
         
         // Test travel with insufficient fuel
-        assert!(!manager.can_travel("Lave", "Leesti", 10.0));
+        assert!(!manager.can_travel("LAVE", "LEESTI", 1.0));
     }
 }

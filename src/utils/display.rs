@@ -29,6 +29,27 @@ pub fn show_help() {
     println!("{} - List all available star systems", "systems".yellow());
     println!("{} - Show information about a system", "info <system>".yellow());
     println!("{} - Travel to a star system", "jump <system>".yellow());
+    println!();
+    println!("{}", "Trading Commands:".cyan().bold());
+    println!("{}", "=================".cyan());
+    println!("{} - Show current system's market prices", "market".yellow());
+    println!("{} - Buy commodities", "buy <item> <quantity>".yellow());
+    println!("{} - Sell commodities", "sell <item> <quantity>".yellow());
+    println!("{} - Show cargo hold contents", "cargo".yellow());
+    println!();
+    println!("{}", "Ship Upgrade Commands:".cyan().bold());
+    println!("{}", "=====================".cyan());
+    println!("{} - Show available ship upgrades", "upgrade".yellow());
+    println!("{} - Purchase ship upgrade", "upgrade <ship>".yellow());
+    println!("{} - List all available ships", "ships".yellow());
+    println!();
+    println!("{}", "Save/Load Commands:".cyan().bold());
+    println!("{}", "===================".cyan());
+    println!("{} - Save game to slot", "save <slot>".yellow());
+    println!("{} - Load game from slot", "load <slot>".yellow());
+    println!("{} - List all save files", "saves".yellow());
+    println!("{} - Delete save file", "delete <slot>".yellow());
+    println!();
     println!("{} - Exit the game", "quit".yellow());
     println!();
 }
@@ -47,7 +68,7 @@ pub fn show_status(game_state: &GameState) {
     println!();
     println!("{}", "Ship Status".cyan().bold());
     println!("{}", "===========".cyan());
-    println!("Ship: {}", ship.ship_type().yellow());
+    println!("Ship: {}", ship.ship_type_name().yellow());
     println!("Cargo: {}/{} tons", ship.cargo_used(), ship.cargo_capacity());
     println!("Fuel: {}/{} light years", ship.fuel_current(), ship.fuel_capacity());
     println!("Hull: {}%", ship.hull_percentage());
@@ -103,7 +124,10 @@ pub fn show_system_info(system: &StarSystem, game_state: &GameState) {
     println!("{}", format!("System: {}", system.name()).cyan().bold());
     println!("{}", "=".repeat(system.name().len() + 8).cyan());
     println!("Economy: {}", system.economy().display_name().blue());
-    println!("Distance from Lave: {} light years", system.distance_from_lave().to_string().cyan());
+    println!("Government: {}", system.government().display_name().magenta());
+    println!("Technology Level: {}", system.tech_level().to_string().yellow());
+    println!("Population: {}", system.population().green());
+    println!("Economic Turnover: {} cr", system.turnover().to_string().cyan());
     
     let distance_from_current = game_state.calculate_travel_cost(system.name());
     if let Some(distance) = distance_from_current {
@@ -111,7 +135,6 @@ pub fn show_system_info(system: &StarSystem, game_state: &GameState) {
         println!("Fuel required: {} light years", distance.to_string().yellow());
     }
     
-    println!("Available commodities: {}", system.available_commodities().join(", ").green());
     println!("Description: {}", system.description().white());
     println!();
 }
@@ -125,6 +148,21 @@ pub fn show_travel_confirmation(from: &str, to: &str, fuel_cost: f64) {
     println!("To: {}", to.yellow());
     println!("Fuel cost: {} light years", fuel_cost.to_string().red());
     println!("{}", "Confirm travel? (y/n): ".cyan());
+}
+
+/// Show error message
+pub fn show_error(message: &str) {
+    println!("{}", format!("Error: {}", message).red());
+}
+
+/// Show success message
+pub fn show_success(message: &str) {
+    println!("{}", format!("Success: {}", message).green());
+}
+
+/// Show info message
+pub fn show_info(message: &str) {
+    println!("{}", format!("Info: {}", message).blue());
 }
 
 #[cfg(test)]
@@ -142,8 +180,15 @@ mod tests {
     fn test_show_status() {
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
-        let system_manager = crate::data::systems::SystemManager::new();
-        let game_state = GameState { commander, ship, system_manager };
+        let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let game_state = GameState { 
+            commander, 
+            ship, 
+            system_manager, 
+            trading_handler: crate::game::TradingHandler::new(),
+            upgrade_handler: crate::game::UpgradeHandler::new(),
+            save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+        };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);
@@ -154,8 +199,15 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(30); // Add some damage
-        let system_manager = crate::data::systems::SystemManager::new();
-        let game_state = GameState { commander, ship, system_manager };
+        let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let game_state = GameState { 
+            commander, 
+            ship, 
+            system_manager, 
+            trading_handler: crate::game::TradingHandler::new(),
+            upgrade_handler: crate::game::UpgradeHandler::new(),
+            save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+        };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);
@@ -166,8 +218,15 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.consume_fuel(5); // Consume most fuel
-        let system_manager = crate::data::systems::SystemManager::new();
-        let game_state = GameState { commander, ship, system_manager };
+        let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let game_state = GameState { 
+            commander, 
+            ship, 
+            system_manager, 
+            trading_handler: crate::game::TradingHandler::new(),
+            upgrade_handler: crate::game::UpgradeHandler::new(),
+            save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+        };
         
         // This test just ensures the function doesn't panic
         show_status(&game_state);
