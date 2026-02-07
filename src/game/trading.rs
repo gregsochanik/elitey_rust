@@ -1,4 +1,4 @@
-use crate::data::commodities::{CommodityType, TradingSystem, MarketPrices};
+use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
 use crate::data::systems::{StarSystem, SystemManager};
 use crate::game::{Commander, Ship};
 use crate::utils::display::{show_error, show_success};
@@ -35,13 +35,13 @@ impl TradingHandler {
         ship: &mut Ship,
         system_manager: &SystemManager,
     ) -> bool {
-        if args.len() != 3 {
-            show_error("Usage: buy <item> <quantity>");
+        if args.is_empty() {
+            show_error("Usage: buy <item> [quantity]");
             return false;
         }
 
-        let commodity_name = &args[1];
-        let quantity_str = &args[2];
+        let commodity_name = &args[0];
+        let quantity_str = args.get(1).map(|s| s.as_str()).unwrap_or("1");
 
         // Parse commodity
         let commodity = match self.parse_commodity(commodity_name) {
@@ -72,7 +72,7 @@ impl TradingHandler {
         };
 
         let market = self.trading_system.generate_market_prices(&system.economy);
-        
+
         // Perform the purchase
         self.execute_buy(commodity, quantity, commander, ship, &market)
     }
@@ -85,13 +85,13 @@ impl TradingHandler {
         ship: &mut Ship,
         system_manager: &SystemManager,
     ) -> bool {
-        if args.len() != 3 {
-            show_error("Usage: sell <item> <quantity>");
+        if args.is_empty() {
+            show_error("Usage: sell <item> [quantity]");
             return false;
         }
 
-        let commodity_name = &args[1];
-        let quantity_str = &args[2];
+        let commodity_name = &args[0];
+        let quantity_str = args.get(1).map(|s| s.as_str()).unwrap_or("1");
 
         // Parse commodity
         let commodity = match self.parse_commodity(commodity_name) {
@@ -122,7 +122,7 @@ impl TradingHandler {
         };
 
         let market = self.trading_system.generate_market_prices(&system.economy);
-        
+
         // Perform the sale
         self.execute_sell(commodity, quantity, commander, ship, &market)
     }
@@ -167,14 +167,20 @@ impl TradingHandler {
         };
 
         if availability < quantity {
-            show_error(&format!("Only {} tons available, requested {}", availability, quantity));
+            show_error(&format!(
+                "Only {} tons available, requested {}",
+                availability, quantity
+            ));
             return false;
         }
 
         // Check cargo space
         if !ship.has_cargo_space(quantity) {
-            show_error(&format!("Insufficient cargo space. Need {} tons, have {} tons available", 
-                               quantity, ship.cargo_available()));
+            show_error(&format!(
+                "Insufficient cargo space. Need {} tons, have {} tons available",
+                quantity,
+                ship.cargo_available()
+            ));
             return false;
         }
 
@@ -191,8 +197,11 @@ impl TradingHandler {
 
         // Check if commander has enough credits
         if !commander.has_credits(total_cost) {
-            show_error(&format!("Insufficient credits. Need {}cr, have {}cr", 
-                               total_cost, commander.credits()));
+            show_error(&format!(
+                "Insufficient credits. Need {}cr, have {}cr",
+                total_cost,
+                commander.credits()
+            ));
             return false;
         }
 
@@ -200,8 +209,12 @@ impl TradingHandler {
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
 
-        show_success(&format!("Purchased {} tons of {} for {}cr", 
-                             quantity, commodity.name(), total_cost));
+        show_success(&format!(
+            "Purchased {} tons of {} for {}cr",
+            quantity,
+            commodity.name(),
+            total_cost
+        ));
         true
     }
 
@@ -217,8 +230,10 @@ impl TradingHandler {
         // Check if we have the commodity
         let current_quantity = ship.cargo_hold().get_quantity(&commodity);
         if current_quantity < quantity {
-            show_error(&format!("Insufficient cargo. Have {} tons, trying to sell {}", 
-                               current_quantity, quantity));
+            show_error(&format!(
+                "Insufficient cargo. Have {} tons, trying to sell {}",
+                current_quantity, quantity
+            ));
             return false;
         }
 
@@ -237,8 +252,12 @@ impl TradingHandler {
         ship.remove_cargo(&commodity, quantity);
         commander.add_credits(total_revenue);
 
-        show_success(&format!("Sold {} tons of {} for {}cr", 
-                             quantity, commodity.name(), total_revenue));
+        show_success(&format!(
+            "Sold {} tons of {} for {}cr",
+            quantity,
+            commodity.name(),
+            total_revenue
+        ));
         true
     }
 
@@ -246,19 +265,21 @@ impl TradingHandler {
     fn display_market(&self, system: &StarSystem, market: &MarketPrices) {
         println!("\n{} Market", system.name().yellow());
         println!("{}", "=".repeat(system.name().len() + 7));
-        
+
         for commodity in self.trading_system.get_commodities() {
             let buy_price = market.get_buy_price(commodity).unwrap_or(0);
             let sell_price = market.get_sell_price(commodity).unwrap_or(0);
             let availability = market.get_availability(commodity).unwrap_or(0);
-            
+
             let commodity_name = format!("{}:", commodity.name());
             let buy_str = format!("Buy: {}cr", buy_price);
             let sell_str = format!("Sell: {}cr", sell_price);
             let avail_str = format!("Available: {} tons", availability);
-            
-            println!("{:<12} {:<12} {:<12} {:<15}", 
-                     commodity_name, buy_str, sell_str, avail_str);
+
+            println!(
+                "{:<12} {:<12} {:<12} {:<15}",
+                commodity_name, buy_str, sell_str, avail_str
+            );
         }
         println!();
     }
@@ -268,27 +289,29 @@ impl TradingHandler {
         let cargo_hold = ship.cargo_hold();
         let current_weight = cargo_hold.current_weight();
         let capacity = ship.cargo_capacity();
-        
+
         println!("\nCargo Hold ({}/{})", current_weight, capacity);
         println!("{}", "=".repeat(20));
-        
+
         if cargo_hold.is_empty() {
             println!("Cargo hold is empty");
         } else {
             let mut total_value = 0;
-            
+
             for item in cargo_hold.get_items() {
                 // For display purposes, we'll use a rough estimate of value
                 // In a real implementation, you'd track purchase prices
                 let estimated_value = item.quantity * item.commodity.base_price();
                 total_value += estimated_value;
-                
-                println!("{:<12} {} tons  Value: {}cr", 
-                         format!("{}:", item.commodity.name()),
-                         item.quantity,
-                         estimated_value);
+
+                println!(
+                    "{:<12} {} tons  Value: {}cr",
+                    format!("{}:", item.commodity.name()),
+                    item.quantity,
+                    estimated_value
+                );
             }
-            
+
             println!("{}", "-".repeat(20));
             println!("Total Value: {}cr", total_value);
         }
@@ -309,10 +332,13 @@ mod tests {
     #[test]
     fn test_parse_commodity() {
         let handler = TradingHandler::new();
-        
+
         assert_eq!(handler.parse_commodity("food"), Some(CommodityType::Food));
         assert_eq!(handler.parse_commodity("FOOD"), Some(CommodityType::Food));
-        assert_eq!(handler.parse_commodity("machinery"), Some(CommodityType::Machinery));
+        assert_eq!(
+            handler.parse_commodity("machinery"),
+            Some(CommodityType::Machinery)
+        );
         assert_eq!(handler.parse_commodity("unknown"), None);
     }
 

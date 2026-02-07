@@ -242,9 +242,18 @@ impl SystemManager {
         Ok(Self { systems })
     }
 
-    /// Get a system by name
+    /// Get a system by name (exact match)
     pub fn get_system(&self, name: &str) -> Option<&StarSystem> {
         self.systems.get(name)
+    }
+
+    /// Get a system by name (case-insensitive)
+    pub fn get_system_case_insensitive(&self, name: &str) -> Option<&StarSystem> {
+        self.systems.get(name).or_else(|| {
+            self.systems
+                .values()
+                .find(|s| s.name.eq_ignore_ascii_case(name))
+        })
     }
 
     /// Get all available systems

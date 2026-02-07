@@ -21,12 +21,12 @@ impl SaveLoadHandler {
 
     /// Handle save command
     pub fn handle_save(&self, args: &[String], game_state: &GameState) -> bool {
-        if args.len() != 2 {
+        if args.is_empty() {
             show_error("Usage: save <slot_name>");
             return false;
         }
 
-        let slot_name = &args[1];
+        let slot_name = &args[0];
         
         // Validate slot name (alphanumeric and underscores only)
         if !slot_name.chars().all(|c| c.is_alphanumeric() || c == '_') {
@@ -52,12 +52,12 @@ impl SaveLoadHandler {
 
     /// Handle load command
     pub fn handle_load(&self, args: &[String]) -> Result<Option<GameState>, String> {
-        if args.len() != 2 {
+        if args.is_empty() {
             show_error("Usage: load <slot_name>");
             return Ok(None);
         }
 
-        let slot_name = &args[1];
+        let slot_name = &args[0];
         
         if !self.save_manager.save_exists(slot_name) {
             show_error(&format!("Save file '{}' not found", slot_name));
@@ -135,12 +135,12 @@ impl SaveLoadHandler {
 
     /// Handle delete save command
     pub fn handle_delete_save(&self, args: &[String]) -> bool {
-        if args.len() != 2 {
+        if args.is_empty() {
             show_error("Usage: delete <slot_name>");
             return false;
         }
 
-        let slot_name = &args[1];
+        let slot_name = &args[0];
         
         if !self.save_manager.save_exists(slot_name) {
             show_error(&format!("Save file '{}' not found", slot_name));
