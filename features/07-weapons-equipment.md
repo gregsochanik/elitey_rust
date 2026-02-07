@@ -61,8 +61,8 @@ Add a comprehensive weapons and equipment system that allows players to purchase
 ## 🛠 **Implementation Tasks**
 
 ### **Phase 1: Equipment System Foundation**
-- [ ] Create `data/equipment.rs` module with equipment definitions
-- [ ] Create `game/equipment.rs` module for equipment management
+- [ ] Create module with equipment definitions
+- [ ] Create module for equipment management
 - [ ] Implement equipment slots and power system
 - [ ] Add equipment installation/removal functions
 

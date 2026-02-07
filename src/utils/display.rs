@@ -1,6 +1,6 @@
 use colored::*;
 use crate::game::GameState;
-use crate::data::systems::StarSystem;
+
 
 /// Print welcome message
 pub fn print_welcome(commander_name: &str) {
@@ -28,7 +28,7 @@ pub fn show_help() {
     println!("{} - Display ship and commander status", "status".yellow());
     println!("{} - List all available star systems", "systems".yellow());
     println!("{} - Show information about a system", "info <system>".yellow());
-    println!("{} - Travel to a star system", "jump <system>".yellow());
+    println!("{} - Travel to a star system (with events!)", "jump <system>".yellow());
     println!();
     println!("{}", "Trading Commands:".cyan().bold());
     println!("{}", "=================".cyan());
@@ -89,66 +89,9 @@ pub fn show_status(game_state: &GameState) {
     println!();
 }
 
-/// Show all available star systems
-pub fn show_systems(game_state: &GameState) {
-    println!();
-    println!("{}", "Available Star Systems".cyan().bold());
-    println!("{}", "=====================".cyan());
-    
-    let systems = game_state.get_available_systems();
-    let current_location = &game_state.commander.location;
-    
-    for system in systems {
-        let distance = game_state.calculate_travel_cost(system.name())
-            .unwrap_or(0.0);
-        
-        let location_indicator = if system.name() == current_location {
-            "📍 ".green()
-        } else {
-            "   ".normal()
-        };
-        
-        println!("{}{} - {} ({} light years)", 
-            location_indicator,
-            system.name().yellow(),
-            system.economy().display_name().blue(),
-            distance.to_string().cyan()
-        );
-    }
-    println!();
-}
 
-/// Show detailed information about a specific system
-pub fn show_system_info(system: &StarSystem, game_state: &GameState) {
-    println!();
-    println!("{}", format!("System: {}", system.name()).cyan().bold());
-    println!("{}", "=".repeat(system.name().len() + 8).cyan());
-    println!("Economy: {}", system.economy().display_name().blue());
-    println!("Government: {}", system.government().display_name().magenta());
-    println!("Technology Level: {}", system.tech_level().to_string().yellow());
-    println!("Population: {}", system.population().green());
-    println!("Economic Turnover: {} cr", system.turnover().to_string().cyan());
-    
-    let distance_from_current = game_state.calculate_travel_cost(system.name());
-    if let Some(distance) = distance_from_current {
-        println!("Distance from current location: {} light years", distance.to_string().cyan());
-        println!("Fuel required: {} light years", distance.to_string().yellow());
-    }
-    
-    println!("Description: {}", system.description().white());
-    println!();
-}
 
-/// Show travel confirmation
-pub fn show_travel_confirmation(from: &str, to: &str, fuel_cost: f64) {
-    println!();
-    println!("{}", "Travel Confirmation".cyan().bold());
-    println!("{}", "===================".cyan());
-    println!("From: {}", from.yellow());
-    println!("To: {}", to.yellow());
-    println!("Fuel cost: {} light years", fuel_cost.to_string().red());
-    println!("{}", "Confirm travel? (y/n): ".cyan());
-}
+
 
 /// Show error message
 pub fn show_error(message: &str) {
@@ -181,6 +124,7 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
         let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager_clone = system_manager.clone();
         let game_state = GameState { 
             commander, 
             ship, 
@@ -188,6 +132,8 @@ mod tests {
             trading_handler: crate::game::TradingHandler::new(),
             upgrade_handler: crate::game::UpgradeHandler::new(),
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: crate::game::EventManager::new(),
+            travel_handler: crate::game::TravelHandler::new(system_manager_clone),
         };
         
         // This test just ensures the function doesn't panic
@@ -200,6 +146,7 @@ mod tests {
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(30); // Add some damage
         let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager_clone = system_manager.clone();
         let game_state = GameState { 
             commander, 
             ship, 
@@ -207,6 +154,8 @@ mod tests {
             trading_handler: crate::game::TradingHandler::new(),
             upgrade_handler: crate::game::UpgradeHandler::new(),
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: crate::game::EventManager::new(),
+            travel_handler: crate::game::TravelHandler::new(system_manager_clone),
         };
         
         // This test just ensures the function doesn't panic
@@ -218,7 +167,8 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let mut ship = Ship::new_cobra_mk3();
         ship.consume_fuel(5); // Consume most fuel
-        let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager = crate::data::systems::SystemManager::new().expect("Failed to load galaxy_data");
+        let system_manager_clone = system_manager.clone();
         let game_state = GameState { 
             commander, 
             ship, 
@@ -226,6 +176,8 @@ mod tests {
             trading_handler: crate::game::TradingHandler::new(),
             upgrade_handler: crate::game::UpgradeHandler::new(),
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: crate::game::EventManager::new(),
+            travel_handler: crate::game::TravelHandler::new(system_manager_clone),
         };
         
         // This test just ensures the function doesn't panic

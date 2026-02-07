@@ -1,9 +1,10 @@
 use crate::utils::input;
-use crate::data::systems::SystemManager;
+use crate::data::systems::{SystemManager, StarSystem};
 use colored::*;
 use std::io::Write;
+use crate::utils::display::show_error;
 
-use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler};
+use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler, EventManager, TravelHandler};
 
 /// Represents the complete game state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -20,6 +21,10 @@ pub struct GameState {
     pub upgrade_handler: UpgradeHandler,
     /// The save/load handler
     pub save_load_handler: SaveLoadHandler,
+    /// The event manager
+    pub event_manager: EventManager,
+    /// The travel handler
+    pub travel_handler: TravelHandler,
 }
 
 #[allow(dead_code)]
@@ -32,13 +37,16 @@ impl GameState {
         // Get commander name
         let name = Self::get_commander_name();
         
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         Self {
             commander: Commander::new(name),
             ship: Ship::new_cobra_mk3(),
-            system_manager: SystemManager::new().expect("Failed to load galaxy data"),
+            system_manager: system_manager.clone(),
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager),
         }
     }
 
@@ -178,6 +186,26 @@ impl GameState {
         &mut self.save_load_handler
     }
 
+    /// Get the event manager
+    pub fn event_manager(&self) -> &EventManager {
+        &self.event_manager
+    }
+
+    /// Get mutable reference to event manager
+    pub fn event_manager_mut(&mut self) -> &mut EventManager {
+        &mut self.event_manager
+    }
+
+    /// Get the travel handler
+    pub fn travel_handler(&self) -> &TravelHandler {
+        &self.travel_handler
+    }
+
+    /// Get mutable reference to travel handler
+    pub fn travel_handler_mut(&mut self) -> &mut TravelHandler {
+        &mut self.travel_handler
+    }
+
     /// Handle buy command
     pub fn handle_buy_command(&mut self, args: &[String]) -> bool {
         self.trading_handler.handle_buy(
@@ -250,6 +278,118 @@ impl GameState {
     pub fn handle_auto_save(&self) -> bool {
         self.save_load_handler.auto_save(self)
     }
+
+    /// Handle jump command
+    pub fn handle_jump_command(&mut self, args: &[String]) -> bool {
+        if args.is_empty() {
+            show_error("Usage: jump <system_name>");
+            return false;
+        }
+        
+        let destination = &args[0];
+        match self.travel_handler.travel_to_system(
+            &mut self.commander,
+            &mut self.ship,
+            &self.event_manager,
+            destination
+        ) {
+            Ok(success) => success,
+            Err(e) => {
+                show_error(&e);
+                false
+            }
+        }
+    }
+
+    /// Handle systems command
+    pub fn handle_systems_command(&self) {
+        let all_systems = self.travel_handler.get_available_systems();
+        let current_fuel = self.ship.fuel_current as f64;
+        
+        // Get current system for distance calculations
+        let current_system = if let Some(system) = self.travel_handler.get_system_info(&self.commander.location) {
+            system
+        } else {
+            show_error("Unable to determine current location");
+            return;
+        };
+        
+        // Filter systems that can be reached with current fuel and sort by distance
+        let mut reachable_systems: Vec<(&StarSystem, f64)> = all_systems
+            .iter()
+            .filter_map(|system| {
+                // Skip current system
+                if system.name == current_system.name {
+                    return None;
+                }
+                
+                let distance = current_system.distance_to(system);
+                
+                // Only include systems that can be reached with current fuel
+                if distance <= current_fuel {
+                    Some((*system, distance))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        // Sort by distance (low to high)
+        reachable_systems.sort_by(|(_, dist1), (_, dist2)| dist1.partial_cmp(dist2).unwrap_or(std::cmp::Ordering::Equal));
+        
+        println!();
+        println!("{}", "Available Star Systems".cyan().bold());
+        println!("{}", "=====================".cyan());
+        println!("Current fuel: {} light years", current_fuel);
+        println!();
+        
+        if reachable_systems.is_empty() {
+            println!("{}", "No systems reachable with current fuel.".yellow());
+            println!("{}", "Consider refueling or upgrading your ship.".yellow());
+        } else {
+            for (system, distance) in reachable_systems {
+                println!("{} - {:.1} light years", system.name.yellow(), distance);
+            }
+        }
+        println!();
+    }
+
+    /// Handle info command
+    pub fn handle_info_command(&self, args: &[String]) -> bool {
+        if args.is_empty() {
+            show_error("Usage: info <system_name>");
+            return false;
+        }
+        
+        let system_name = &args[0];
+        if let Some(system) = self.travel_handler.get_system_info(system_name) {
+            self.show_system_info(system);
+            true
+        } else {
+            show_error(&format!("System '{}' not found", system_name));
+            false
+        }
+    }
+
+    /// Show detailed system information
+    fn show_system_info(&self, system: &crate::data::systems::StarSystem) {
+        println!();
+        println!("{}", format!("System: {}", system.name).cyan().bold());
+        println!("{}", "=".repeat(30));
+        println!("Economy: {:?}", system.economy);
+        println!("Government: {:?}", system.government);
+        println!("Tech Level: {}", system.tech_level);
+        println!("Population: {}", system.population);
+        println!("Description: {}", system.description);
+        
+        // Show distance from current location
+        if let Some(current_system) = self.travel_handler.get_system_info(&self.commander.location) {
+            let distance = current_system.distance_to(system);
+            println!("Distance: {:.1} light years", distance);
+            println!("Fuel required: {} light years", distance.ceil() as u32);
+        }
+        println!();
+    }
 }
 
 #[cfg(test)]
@@ -263,6 +403,7 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         let ship = Ship::new_cobra_mk3();
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager_clone = system_manager.clone();
         let game_state = GameState {
             commander,
             ship,
@@ -270,6 +411,8 @@ mod tests {
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager_clone),
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -282,6 +425,7 @@ mod tests {
         let commander = Commander::new("Test".to_string());
         let ship = Ship::new_cobra_mk3();
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager_clone = system_manager.clone();
         let game_state = GameState { 
             commander, 
             ship, 
@@ -289,6 +433,8 @@ mod tests {
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager_clone),
         };
         
         assert!(game_state.is_running());
@@ -300,6 +446,7 @@ mod tests {
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(100); // Destroy the ship
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let system_manager_clone = system_manager.clone();
         
         let game_state = GameState { 
             commander, 
@@ -308,6 +455,8 @@ mod tests {
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager_clone),
         };
         
         assert!(!game_state.is_running());

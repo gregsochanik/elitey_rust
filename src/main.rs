@@ -57,30 +57,16 @@ async fn main() -> Result<()> {
             "status" => {
                 display::show_status(&game_state);
             }
-            "systems" => {
-                display::show_systems(&game_state);
-            }
-            "info" => {
-                if command_parts.len() < 2 {
-                    println!("{}", "Usage: info <system_name>".red());
-                } else {
-                    let system_name = command_parts[1];
-                    if let Some(system) = game_state.get_system_info(system_name) {
-                        display::show_system_info(system, &game_state);
-                    } else {
-                        println!("{}", format!("Unknown system: {}", system_name).red());
-                    }
-                }
-            }
+
             "market" => {
                 game_state.handle_market_command();
             }
             "buy" => {
-                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                 game_state.handle_buy_command(&args);
             }
             "sell" => {
-                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                 game_state.handle_sell_command(&args);
             }
             "cargo" => {
@@ -90,7 +76,7 @@ async fn main() -> Result<()> {
                 if command_parts.len() == 1 {
                     game_state.handle_upgrade_command();
                 } else {
-                    let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                    let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                     game_state.handle_upgrade_purchase_command(&args);
                 }
             }
@@ -98,11 +84,11 @@ async fn main() -> Result<()> {
                 game_state.handle_ships_command();
             }
             "save" => {
-                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                 game_state.handle_save_command(&args);
             }
             "load" => {
-                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                 match game_state.handle_load_command(&args) {
                     Ok(Some(new_game_state)) => {
                         game_state = new_game_state;
@@ -119,42 +105,19 @@ async fn main() -> Result<()> {
                 game_state.handle_list_saves_command();
             }
             "delete" => {
-                let args: Vec<String> = command_parts.iter().map(|s| s.to_string()).collect();
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
                 game_state.handle_delete_save_command(&args);
             }
             "jump" => {
-                if command_parts.len() < 2 {
-                    println!("{}", "Usage: jump <system_name>".red());
-                } else {
-                    let destination = command_parts[1];
-                    
-                    // Check if we can travel there
-                    if let Some(fuel_cost) = game_state.calculate_travel_cost(destination) {
-                        display::show_travel_confirmation(&game_state.commander.location, destination, fuel_cost);
-                        
-                        // Get confirmation
-                        print!("Confirm travel? (y/n): ");
-                        io::stdout().flush()?;
-                        
-                        if let Ok(input) = input::get_input() {
-                            if input.trim().to_lowercase() == "y" || input.trim().to_lowercase() == "yes" {
-                                match game_state.travel_to_system(destination) {
-                                    Ok(_) => {
-                                        println!("{}", format!("Successfully jumped to {}!", destination).green());
-                                        println!("{}", "Fuel consumed during travel.".yellow());
-                                    }
-                                    Err(e) => {
-                                        println!("{}", format!("Travel failed: {}", e).red());
-                                    }
-                                }
-                            } else {
-                                println!("{}", "Travel cancelled.".yellow());
-                            }
-                        }
-                    } else {
-                        println!("{}", format!("Unknown system: {}", destination).red());
-                    }
-                }
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
+                game_state.handle_jump_command(&args);
+            }
+            "systems" => {
+                game_state.handle_systems_command();
+            }
+            "info" => {
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
+                game_state.handle_info_command(&args);
             }
             "quit" | "exit" => {
                 // Auto-save before quitting

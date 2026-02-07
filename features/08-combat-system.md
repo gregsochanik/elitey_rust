@@ -210,19 +210,7 @@ Implement a turn-based combat system for hostile encounters during space travel.
 - [ ] Add equipment-based special actions
 - [ ] Create equipment upgrade effects
 
-#### Phase 4: Advanced Features (DESCOPED)
-- [ ] Add heat management system (DESCOPED)
-- [ ] Implement positioning and cover (DESCOPED)
-- [ ] Create reaction system (overwatch) (DESCOPED)
-- [ ] Add combat experience and progression (DESCOPED)
-
 ### Technical Requirements
-
-#### New Modules
-- [ ] `game/combat.rs` - Main combat system
-- [ ] `game/enemies.rs` - Enemy definitions and AI
-- [ ] `data/enemies.rs` - Enemy definitions
-- [ ] `utils/dice.rs` - Dice rolling utilities
 
 #### Integration Points
 - [ ] Connect to existing event system
@@ -244,10 +232,3 @@ Implement a turn-based combat system for hostile encounters during space travel.
 - [ ] Balanced rewards and consequences
 - [ ] Smooth integration with existing game systems
 - [ ] Clear and intuitive combat interface
-
-## Future Enhancements (DESCOPED)
-- [ ] Multi-enemy combat scenarios (DESCOPED)
-- [ ] Fleet battles with multiple ships (DESCOPED)
-- [ ] Boarding actions and crew combat (DESCOPED)
-- [ ] Alliance system for cooperative combat (DESCOPED)
-- [ ] Tournament and arena combat modes (DESCOPED)

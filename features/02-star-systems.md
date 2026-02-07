@@ -37,6 +37,8 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] `info <system>` command to show system details
 - [x] Display distance and fuel requirements
 - [x] Show economy type and available commodities
+- [x] Only show systems that can be reached based on the amount of fuel the user has
+- [x] order by distance low to high
 
 ## Implementation Tasks
 
@@ -45,9 +47,9 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] Define economy types and their characteristics
 - [x] Create system lookup and validation functions
 - [x] Implement distance calculation between systems
-- [ ] Parse and load galaxy data from JSON file
-- [ ] Implement 3D coordinate-based distance calculations
-- [ ] Add government and tech level data structures
+- [x] Parse and load galaxy data from JSON file
+- [x] Implement 3D coordinate-based distance calculations
+- [x] Add government and tech level data structures
 
 ### 2. Travel System
 - [x] Implement fuel consumption logic
@@ -74,9 +76,11 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] System information is displayed correctly
 - [x] Travel commands handle invalid destinations gracefully
 - [x] Fuel status is updated after travel
-- [ ] All star systems from galaxy1.json are available for travel
-- [ ] Distance calculations use actual 3D coordinates
-- [ ] System information includes government and tech level data
+- [x] All star systems from galaxy1.json are available for travel
+- [x] Distance calculations use actual 3D coordinates
+- [x] System information includes government and tech level data
+- [x] Only reachable systems are shown based on fuel availability
+- [x] Systems are sorted by distance (closest first)
 
 ## Testing
 - [x] Test travel between all connected systems
@@ -84,9 +88,11 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] Test travel with insufficient fuel
 - [x] Test system information display
 - [x] Test invalid system names
-- [ ] Test loading of all galaxy systems from JSON
-- [ ] Test 3D coordinate distance calculations
-- [ ] Test government and tech level data display
+- [x] Test loading of all galaxy systems from JSON
+- [x] Test 3D coordinate distance calculations
+- [x] Test government and tech level data display
+- [x] Test fuel-based system filtering
+- [x] Test distance-based system sorting
 
 ## Dependencies
 - Feature 01: Core Gameplay (commander, ship, basic commands)
