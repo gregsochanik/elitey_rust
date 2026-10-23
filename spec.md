@@ -19,9 +19,9 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 03 | Trading | Done | 01, 02 |
 | 04 | Ship upgrades | Done | 03 |
 | 05 | Save/load | Done | 01 |
-| 06 | Dynamic events | Done | 02 |
+| 06 | Dynamic events | Done (reputation effects not applied until 10) | 02 |
 | 07 | Weapons & equipment (design) | Spec only | 04 |
-| 09 | Equipment system (implementation) | Spec only – no code in `src/` | 04, 07 |
+| 09 | Equipment system (implementation) | Spec only | 04, 07 |
 | 08 | Combat | Spec only | 06, 09 |
 | 10 | Reputation | Spec only | 03, 06 |
 | 11 | Trading log | Spec only | 03, 05 |
@@ -38,7 +38,8 @@ Out of scope: multiplayer, graphics, real-time combat.
 ## Open decisions
 
 - **Async runtime.** `main` uses `#[tokio::main]` but the game is synchronous. Keep it, or drop `tokio` until something needs it.
-- **Spec drift.** `features/09-equipment-system.md` and the README disagree with the code: 09 lists most of the system as implemented, but `src/` has no equipment code. Reconcile when starting step 1.
+- **Event reputation.** Events set `reputation_change` but nothing applies it. Wire up in 10, or earlier if wanted.
+- **Overlap.** 07 and 09 both describe equipment; consider merging into one spec when starting step 1.
 - **Numbering.** There is no feature 12. Either reserve it or renumber.
 - **Tests.** The README references a `tests/` directory that does not exist. Add BDD-style integration tests there as each feature lands.
 

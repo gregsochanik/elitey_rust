@@ -14,11 +14,9 @@ Feature specs and implementation details live in the [features/](features/) dire
 - **05 – Save/Load**: `save`, `load`, `saves`, `delete`; multiple save slots, auto-save on quit.
 - **06 – Dynamic Events**: Two-phase events (hyperspace + approach); government/economy modifiers; integrated into travel.
 
-### 🚧 In Progress
-- **07 – Weapons & Equipment**: Spec in place; equipment categories and mechanics (combat not yet wired).
-- **09 – Equipment System**: Shop, slots, and effects; user commands and integration to complete.
-
 ### 📋 Planned
+- **07 – Weapons & Equipment**: Spec only; no code yet.
+- **09 – Equipment System**: Spec only; no code yet.
 - **08 – Combat System**: Turn-based combat, enemy types, equipment integration (spec in features/).
 - **10 – Reputation System**: Factions, effects, criminal consequences.
 - **11 – Trading Log**: Transaction history, analytics, route performance.

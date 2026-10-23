@@ -5,19 +5,16 @@ The equipment system allows players to purchase, install, and manage ship equipm
 
 ## Current Implementation Status
 
-**✅ Fully Implemented:**
+**Not started.** There is no equipment code in `src/`; everything below is design only.
+
+**To build:**
 - Equipment data structure and definitions
 - Power/slot system with ship capacity limits
-- Equipment shop inventory generation based on system characteristics
-- Equipment installation and removal with validation
-- Equipment status display with power usage
-- Equipment damage and repair system
-- Equipment shop display with availability filtering
-
-**❌ Missing Features:**
-- `equipment buy <item_id>` - Purchase equipment ✅
-- `equipment sell <item_id>` - Sell equipment ✅
-- `equipment installed` - View installed equipment ✅
+- Shop inventory generation based on system characteristics
+- Install and remove with validation
+- Status display with power usage
+- Damage and repair
+- `equipment buy <item_id>`, `equipment sell <item_id>`, `equipment installed`
 
 ## Equipment Categories
 
