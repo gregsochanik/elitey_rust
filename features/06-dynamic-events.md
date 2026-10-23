@@ -50,7 +50,23 @@ Frequency multipliers by destination, applied to both phases.
 | | | Others | 1.0 |
 
 - [x] Government and economy scale event frequency
-- [ ] Government and economy change which events occur (see Gaps)
+- [x] Government and economy change which events occur
+
+### Which Events Occur
+Each event has a weight at the destination (1.0 is normal; unlisted events stay 1.0). The government and economy weights multiply, and an event is picked in proportion to its weight within the phase.
+
+| Destination | Event | Weight |
+|---|---|---|
+| Anarchy | Pirate Attack / Inspection / Patrol | 2.5 / 0.2 / 0.3 |
+| Communist | Inspection / Patrol / Pirate Attack | 2.5 / 1.5 / 0.6 |
+| Dictatorship | Patrol / Inspection / Pirate Attack | 2.5 / 1.5 / 0.7 |
+| Corporate State | Inspection / Pirate Attack | 1.5 / 0.5 |
+| Poor Agricultural, Poor Industrial | Pirate Attack / Rescue Signal | 1.5 / 1.5 |
+| Rich Agricultural, Rich Industrial | Pirate Attack | 0.6 |
+| Mainly Industrial | Space Debris | 1.5 |
+| Mainly Agricultural | Rescue Signal | 1.3 |
+
+Over 400 jumps each: an anarchy destination had 40 pirate attacks against 10 for a democracy and 6 for a dictatorship, while the dictatorship had more inspections and patrols (15 and 14 against 9 and 8).
 
 ### Cargo
 Losses come from the largest cargo first, or all of one commodity; gains are limited by free space in the hold.
@@ -60,7 +76,6 @@ Losses come from the largest cargo first, or all of one commodity; gains are lim
 - [ ] Reputation affects outcomes or anything else (Feature 10)
 
 ## Gaps
-- **Which events occur.** Modifiers only change frequency; every system draws from the same events. The original design had communist systems inspect more and anarchy systems attack more.
 - **Movement.** The wormhole and navigation error do not change where the player ends up; the destination is always reached.
 - **Advanced:** difficulty scaling, event chains, event history.
 
