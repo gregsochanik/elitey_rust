@@ -72,6 +72,10 @@ async fn main() -> Result<()> {
             "cargo" => {
                 game_state.handle_cargo_command();
             }
+            "log" => {
+                let args: Vec<String> = command_parts.iter().skip(1).map(|s| s.to_string()).collect();
+                game_state.handle_log_command(&args);
+            }
             "upgrade" => {
                 if command_parts.len() == 1 {
                     game_state.handle_upgrade_command();

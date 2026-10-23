@@ -1,5 +1,6 @@
 use colored::*;
-use crate::game::GameState;
+use crate::game::trade_log::TradeKind;
+use crate::game::{GameState, TradeLog};
 
 
 /// Print welcome message
@@ -36,6 +37,7 @@ pub fn show_help() {
     println!("{} - Buy commodities", "buy <item> <quantity>".yellow());
     println!("{} - Sell commodities", "sell <item> <quantity>".yellow());
     println!("{} - Show cargo hold contents", "cargo".yellow());
+    println!("{} - Show trading history and statistics", "log [count]".yellow());
     println!();
     println!("{}", "Ship Upgrade Commands:".cyan().bold());
     println!("{}", "=====================".cyan());
@@ -51,6 +53,46 @@ pub fn show_help() {
     println!("{} - Delete save file", "delete <slot>".yellow());
     println!();
     println!("{} - Exit the game", "quit".yellow());
+    println!();
+}
+
+/// Show recent trades and trading statistics
+pub fn show_trade_log(log: &TradeLog, count: usize) {
+    println!("\n{}", "Trading Log".cyan().bold());
+    println!("{}", "===========".cyan());
+
+    let recent = log.recent(count);
+    if recent.is_empty() {
+        println!("No trades yet.\n");
+        return;
+    }
+
+    println!("Recent Transactions:");
+    for t in recent {
+        let name = t.commodity.name();
+        match (t.kind, t.profit) {
+            (TradeKind::Sell, Some(profit)) => {
+                let profit_str = format!("{:+}cr profit", profit);
+                let coloured = if profit >= 0 { profit_str.green() } else { profit_str.red() };
+                println!("- Sold {} {} at {} for {}cr ({})", t.quantity, name, t.location, t.total(), coloured);
+            }
+            _ => println!("- Bought {} {} at {} for {}cr", t.quantity, name, t.location, t.total()),
+        }
+    }
+
+    let stats = log.stats();
+    println!("\nStatistics:");
+    println!("- Total Trades: {}", stats.total_trades);
+    println!("- Net Profit: {}cr", stats.net_profit);
+    if let Some(best) = log.best_trade() {
+        println!(
+            "- Best Trade: {:+}cr ({} {} at {})",
+            best.profit.unwrap_or(0), best.quantity, best.commodity.name(), best.location
+        );
+    }
+    if let Some(rate) = stats.success_rate {
+        println!("- Success Rate: {:.0}%", rate * 100.0);
+    }
     println!();
 }
 
@@ -134,6 +176,7 @@ mod tests {
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: crate::game::EventManager::new(),
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
+            trade_log: crate::game::TradeLog::new(),
         };
         
         // This test just ensures the function doesn't panic
@@ -156,6 +199,7 @@ mod tests {
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: crate::game::EventManager::new(),
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
+            trade_log: crate::game::TradeLog::new(),
         };
         
         // This test just ensures the function doesn't panic
@@ -178,6 +222,7 @@ mod tests {
             save_load_handler: crate::game::SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: crate::game::EventManager::new(),
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
+            trade_log: crate::game::TradeLog::new(),
         };
         
         // This test just ensures the function doesn't panic

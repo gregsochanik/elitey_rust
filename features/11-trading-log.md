@@ -15,26 +15,26 @@ Out of scope for this version (later): route analysis, per-commodity analytics, 
 ## Requirements
 
 ### Transaction Recording
-- [ ] Buy and sell each record: commodity, quantity, unit price, location, timestamp
-- [ ] Sells also record profit using average cost
-- [ ] Only successful transactions are recorded
-- [ ] Average cost is updated on each buy and cleared when holdings reach zero
+- [x] Buy and sell each record: commodity, quantity, unit price, location, timestamp
+- [x] Sells also record profit using average cost
+- [x] Only successful transactions are recorded
+- [x] Average cost is updated on each buy and cleared when holdings reach zero
 
 ### `log` Command
-- [ ] `log` shows the last 10 transactions, newest first
-- [ ] `log <n>` shows the last n transactions
-- [ ] Empty log shows a clear message
-- [ ] Listed in `help`
+- [x] `log` shows the last 10 transactions, newest first
+- [x] `log <n>` shows the last n transactions
+- [x] Empty log shows a clear message
+- [x] Listed in `help`
 
 ### Statistics (shown under the transaction list)
-- [ ] Total trades (buys + sells)
-- [ ] Net profit (sum of sell profits)
-- [ ] Best trade (highest single-sell profit)
-- [ ] Success rate (profitable sells ÷ sells)
+- [x] Total trades (buys + sells)
+- [x] Net profit (sum of sell profits)
+- [x] Best trade (highest single-sell profit)
+- [x] Success rate (profitable sells ÷ sells)
 
 ### Persistence
-- [ ] Log is saved and loaded with the game
-- [ ] Saves created before this feature still load, with an empty log (`#[serde(default)]`)
+- [x] Log is saved and loaded with the game
+- [x] Saves created before this feature still load, with an empty log (`#[serde(default)]`)
 
 ## Example Output
 ```
@@ -52,22 +52,22 @@ Statistics:
 ```
 
 ## Acceptance Criteria
-- [ ] Every successful buy and sell is logged accurately
-- [ ] Failed buys and sells (no credits, no space, no stock) are not logged
-- [ ] Profit matches average cost across multiple buys at different prices
-- [ ] Selling at a loss gives negative profit and lowers success rate
-- [ ] Log survives save then load
-- [ ] Old save files load without error
+- [x] Every successful buy and sell is logged accurately
+- [x] Failed buys and sells (no credits, no space, no stock) are not logged
+- [x] Profit matches average cost across multiple buys at different prices
+- [x] Selling at a loss gives negative profit and lowers success rate
+- [x] Log survives save then load
+- [x] Old save files load without error
 
 ## Testing (write first)
-- [ ] Buy records a transaction
-- [ ] Sell records a transaction with correct profit
-- [ ] Average cost across two buys at different prices
-- [ ] Loss-making sale
-- [ ] Failed transactions leave the log unchanged
-- [ ] Statistics on an empty log and on a mixed log
-- [ ] Save/load round trip keeps the log
-- [ ] Loading a save without a log field gives an empty log
+- [x] Buy records a transaction
+- [x] Sell records a transaction with correct profit
+- [x] Average cost across two buys at different prices
+- [x] Loss-making sale
+- [x] Failed transactions leave the log unchanged
+- [x] Statistics on an empty log and on a mixed log
+- [x] Save/load round trip keeps the log
+- [x] Loading a save without a log field gives an empty log
 
 ## Dependencies
 - Feature 03: Trading System ✅

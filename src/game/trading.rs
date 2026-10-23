@@ -1,6 +1,6 @@
 use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
 use crate::data::systems::{StarSystem, SystemManager};
-use crate::game::{Commander, Ship};
+use crate::game::{Commander, Ship, TradeLog};
 use crate::utils::display::{show_error, show_success};
 use colored::*;
 
@@ -34,6 +34,7 @@ impl TradingHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         system_manager: &SystemManager,
+        trade_log: &mut TradeLog,
     ) -> bool {
         if args.is_empty() {
             show_error("Usage: buy <item> [quantity]");
@@ -74,7 +75,7 @@ impl TradingHandler {
         let market = self.trading_system.generate_market_prices(&system.economy);
 
         // Perform the purchase
-        self.execute_buy(commodity, quantity, commander, ship, &market)
+        self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
     }
 
     /// Handle the sell command - sell commodities
@@ -84,6 +85,7 @@ impl TradingHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         system_manager: &SystemManager,
+        trade_log: &mut TradeLog,
     ) -> bool {
         if args.is_empty() {
             show_error("Usage: sell <item> [quantity]");
@@ -124,7 +126,7 @@ impl TradingHandler {
         let market = self.trading_system.generate_market_prices(&system.economy);
 
         // Perform the sale
-        self.execute_sell(commodity, quantity, commander, ship, &market)
+        self.execute_sell(commodity, quantity, commander, ship, &market, trade_log)
     }
 
     /// Handle the cargo command - show current cargo hold contents
@@ -156,6 +158,7 @@ impl TradingHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         market: &MarketPrices,
+        trade_log: &mut TradeLog,
     ) -> bool {
         // Check if commodity is available
         let availability = match market.get_availability(&commodity) {
@@ -206,8 +209,10 @@ impl TradingHandler {
         }
 
         // Execute the transaction
+        let cargo_before = ship.cargo_hold().get_quantity(&commodity);
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
+        trade_log.record_buy(commodity.clone(), quantity, buy_price, commander.location(), cargo_before);
 
         show_success(&format!(
             "Purchased {} tons of {} for {}cr",
@@ -226,6 +231,7 @@ impl TradingHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         market: &MarketPrices,
+        trade_log: &mut TradeLog,
     ) -> bool {
         // Check if we have the commodity
         let current_quantity = ship.cargo_hold().get_quantity(&commodity);
@@ -251,6 +257,7 @@ impl TradingHandler {
         // Execute the transaction
         ship.remove_cargo(&commodity, quantity);
         commander.add_credits(total_revenue);
+        trade_log.record_sell(commodity.clone(), quantity, sell_price, commander.location(), current_quantity);
 
         show_success(&format!(
             "Sold {} tons of {} for {}cr",
@@ -346,5 +353,43 @@ mod tests {
     fn test_trading_handler_creation() {
         let handler = TradingHandler::new();
         assert_eq!(handler.trading_system.get_commodities().len(), 8);
+    }
+
+    fn market(buy: u32, sell: u32, available: u32) -> MarketPrices {
+        let mut m = MarketPrices::new();
+        m.buy_prices.insert(CommodityType::Food, buy);
+        m.sell_prices.insert(CommodityType::Food, sell);
+        m.availability.insert(CommodityType::Food, available);
+        m
+    }
+
+    #[test]
+    fn successful_buy_and_sell_are_logged() {
+        let handler = TradingHandler::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        let mut log = TradeLog::new();
+
+        assert!(handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 20), &mut log));
+        assert!(handler.execute_sell(CommodityType::Food, 5, &mut commander, &mut ship, &market(12, 15, 20), &mut log));
+
+        assert_eq!(log.transactions().len(), 2);
+        assert_eq!(log.transactions()[1].profit, Some(25));
+        assert_eq!(log.transactions()[0].location, commander.location());
+    }
+
+    #[test]
+    fn failed_buy_and_sell_are_not_logged() {
+        let handler = TradingHandler::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        let mut log = TradeLog::new();
+
+        // too expensive, not enough stock, nothing to sell
+        assert!(!handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(1_000_000, 8, 20), &mut log));
+        assert!(!handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 2), &mut log));
+        assert!(!handler.execute_sell(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 20), &mut log));
+
+        assert!(log.transactions().is_empty());
     }
 }

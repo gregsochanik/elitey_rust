@@ -4,7 +4,7 @@ use colored::*;
 use std::io::Write;
 use crate::utils::display::show_error;
 
-use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler, EventManager, TravelHandler};
+use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler, EventManager, TravelHandler, TradeLog};
 
 /// Represents the complete game state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -25,6 +25,9 @@ pub struct GameState {
     pub event_manager: EventManager,
     /// The travel handler
     pub travel_handler: TravelHandler,
+    /// Buy/sell history
+    #[serde(default)]
+    pub trade_log: TradeLog,
 }
 
 #[allow(dead_code)]
@@ -47,6 +50,7 @@ impl GameState {
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager),
+            trade_log: TradeLog::new(),
         }
     }
 
@@ -213,7 +217,23 @@ impl GameState {
             &mut self.commander,
             &mut self.ship,
             &self.system_manager,
+            &mut self.trade_log,
         )
+    }
+
+    /// Handle log command
+    pub fn handle_log_command(&self, args: &[String]) {
+        let count = match args.first() {
+            None => 10,
+            Some(arg) => match arg.parse::<usize>() {
+                Ok(n) if n > 0 => n,
+                _ => {
+                    show_error("Usage: log [count]");
+                    return;
+                }
+            },
+        };
+        crate::utils::display::show_trade_log(&self.trade_log, count);
     }
 
     /// Handle sell command
@@ -223,6 +243,7 @@ impl GameState {
             &mut self.commander,
             &mut self.ship,
             &self.system_manager,
+            &mut self.trade_log,
         )
     }
 
@@ -413,6 +434,7 @@ mod tests {
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
+            trade_log: TradeLog::new(),
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -435,6 +457,7 @@ mod tests {
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
+            trade_log: TradeLog::new(),
         };
         
         assert!(game_state.is_running());
@@ -457,8 +480,51 @@ mod tests {
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
+            trade_log: TradeLog::new(),
         };
         
         assert!(!game_state.is_running());
+    }
+
+    #[test]
+    fn trade_log_missing_from_old_save_loads_empty() {
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let state = GameState {
+            commander: Commander::new("Old".to_string()),
+            ship: Ship::new_cobra_mk3(),
+            system_manager: system_manager.clone(),
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager),
+            trade_log: TradeLog::new(),
+        };
+        let mut value = serde_json::to_value(&state).unwrap();
+        value.as_object_mut().unwrap().remove("trade_log");
+
+        let loaded: GameState = serde_json::from_value(value).unwrap();
+        assert!(loaded.trade_log.transactions().is_empty());
+    }
+
+    #[test]
+    fn trade_log_survives_serialization() {
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let mut state = GameState {
+            commander: Commander::new("New".to_string()),
+            ship: Ship::new_cobra_mk3(),
+            system_manager: system_manager.clone(),
+            trading_handler: TradingHandler::new(),
+            upgrade_handler: UpgradeHandler::new(),
+            save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
+            event_manager: EventManager::new(),
+            travel_handler: TravelHandler::new(system_manager),
+            trade_log: TradeLog::new(),
+        };
+        state.trade_log.record_buy(crate::data::commodities::CommodityType::Food, 5, 10, "LAVE", 0);
+
+        let json = serde_json::to_string(&state).unwrap();
+        let loaded: GameState = serde_json::from_str(&json).unwrap();
+        assert_eq!(loaded.trade_log.transactions().len(), 1);
     }
 }

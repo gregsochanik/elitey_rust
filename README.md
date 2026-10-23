@@ -14,12 +14,13 @@ Feature specs and implementation details live in the [features/](features/) dire
 - **05 – Save/Load**: `save`, `load`, `saves`, `delete`; multiple save slots, auto-save on quit.
 - **06 – Dynamic Events**: Two-phase events (hyperspace + approach); government/economy modifiers; integrated into travel.
 
+- **11 – Trading Log**: `log [count]` shows recent trades and stats (v1); profit uses average cost; persists in saves.
+
 ### 📋 Planned
 - **07 – Weapons & Equipment**: Spec only; no code yet.
 - **09 – Equipment System**: Spec only; no code yet.
 - **08 – Combat System**: Turn-based combat, enemy types, equipment integration (spec in features/).
 - **10 – Reputation System**: Factions, effects, criminal consequences.
-- **11 – Trading Log**: Transaction history, analytics, route performance.
 - **13 – UI Improvements**: Color coding, table alignment, status indicators, menus.
 
 ## Quick Start
@@ -69,6 +70,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 - `buy <commodity> [amount]` - Buy cargo
 - `sell <commodity> [amount]` - Sell cargo
 - `cargo` - List cargo hold
+- `log [count]` - Show trading history and statistics
 
 ### Travel
 - `jump <system name>` - Hyperspace to another system (triggers travel events)
