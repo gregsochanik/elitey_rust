@@ -159,18 +159,20 @@ Run tests with `make test` or `cargo test`.
 
 ## Releases
 
-Versions follow [semver](https://semver.org). While below 1.0, a `feat:` bumps the minor version, a `fix:` bumps the patch, and any change that breaks old save files bumps the minor version.
+Releases are automatic. When a PR merges to `main`, the Release workflow reads its title (Conventional Commits) and works out the next [semver](https://semver.org) version from the latest release tag:
 
-To release:
-1. In a PR, set `version` in `Cargo.toml` (e.g. `0.2.0`) and merge it.
-2. Tag the merge commit and push the tag:
-   ```bash
-   git tag v0.2.0
-   git push origin v0.2.0
-   ```
-3. The Release workflow checks the tag matches `Cargo.toml`, builds for macOS (Apple silicon and Intel), Linux and Windows, and publishes a GitHub release with the archives and generated notes. A tag with a suffix such as `v0.2.0-rc.1` is published as a pre-release.
+| PR title | Release |
+|---|---|
+| `feat: ...` | minor bump (0.2.0 → 0.3.0) |
+| `fix: ...` | patch bump (0.2.0 → 0.2.1) |
+| `feat!: ...` or any `type!:` | minor bump while below 1.0 |
+| `docs`, `chore`, `ci`, `test`, `style`, `refactor` | no release |
 
-Release notes are grouped by the labels on merged PRs (see `.github/release.yml`).
+The workflow then builds for macOS (Apple silicon and Intel), Linux and Windows, tags the merge commit, and publishes a GitHub release with the archives and notes grouped by PR label.
+
+`Cargo.toml` holds a placeholder version (`0.0.0-dev`); the real version is set at build time, because `main` is protected and a bot cannot commit a bump. A local `cargo run` therefore reports `0.0.0-dev`.
+
+To force a release, run the Release workflow manually from the Actions tab and pick `minor` or `patch`.
 
 ## Game Design
 
