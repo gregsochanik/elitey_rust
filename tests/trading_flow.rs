@@ -57,7 +57,9 @@ fn stock_runs_out_after_repeated_buying() {
     while game.handle_buy_command(&args("food 10")) {
         bought += 10;
         let held = game.ship.cargo_hold.get_quantity(&CommodityType::Food);
-        game.ship.cargo_hold_mut().remove_cargo(&CommodityType::Food, held);
+        game.ship
+            .cargo_hold_mut()
+            .remove_cargo(&CommodityType::Food, held);
         assert!(bought <= 100, "stock never ran out");
     }
 
