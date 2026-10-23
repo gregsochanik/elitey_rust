@@ -15,7 +15,7 @@ Implemented in `src/game/events.rs` and `src/game/travel.rs`. Gaps are listed at
 - [x] Each event offers choices; each choice has an outcome
 - [x] Outcomes can change credits, hull, fuel and reputation
 - [x] Jump and approach events are shown with their phase
-- [ ] Outcomes can remove or award cargo (see Gaps)
+- [x] Outcomes can remove or award cargo
 - [ ] Outcomes can move the player to another system (see Gaps)
 
 ### Events
@@ -28,13 +28,13 @@ Approach: Alien Encounter, Pirate Attack, Rescue Signal, Government Inspection, 
 | Event | Choices |
 |---|---|
 | Wormhole | Enter, avoid |
-| Hyperspace Anomaly | Investigate (reward or damage), avoid |
+| Hyperspace Anomaly | Investigate (+credits, +2 tons Computers), avoid |
 | Navigation Error | Correct course (fuel), continue |
-| Space Debris | Salvage (credits, minor damage), avoid |
+| Space Debris | Salvage (+credits, +3 tons Minerals, minor damage), avoid |
 | Alien Encounter | Communicate (+credits, +reputation), flee, fight |
-| Pirate Attack | Fight, flee, surrender |
-| Rescue Signal | Investigate (reward or trap), ignore |
-| Government Inspection | Comply (+reputation), bribe, resist (−reputation) |
+| Pirate Attack | Fight, flee (lose up to 3 tons), surrender (lose up to 5 tons and 200cr) |
+| Rescue Signal | Investigate (+credits, +reputation, +2 tons Luxury), ignore |
+| Government Inspection | Comply (+reputation), bribe, resist (lose all Narcotics, −reputation) |
 | Military Patrol | Identify, evade, engage |
 
 ### Contextual Modifiers
@@ -52,13 +52,15 @@ Frequency multipliers by destination, applied to both phases.
 - [x] Government and economy scale event frequency
 - [ ] Government and economy change which events occur (see Gaps)
 
+### Cargo
+Losses come from the largest cargo first, or all of one commodity; gains are limited by free space in the hold.
+
 ### Reputation
 - [x] Outcomes change the commander's reputation, which is saved and shown in `status`
 - [ ] Reputation affects outcomes or anything else (Feature 10)
 
 ## Gaps
 - **Which events occur.** Modifiers only change frequency; every system draws from the same events. The original design had communist systems inspect more and anarchy systems attack more.
-- **Cargo.** Outcomes that lose cargo only show a message and nothing is removed. Rare-cargo rewards don't exist.
 - **Movement.** The wormhole and navigation error do not change where the player ends up; the destination is always reached.
 - **Advanced:** difficulty scaling, event chains, event history.
 
