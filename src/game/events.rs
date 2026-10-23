@@ -171,6 +171,8 @@ impl EventManager {
             // TODO: Implement proper cargo removal when we have string-to-commodity conversion
         }
         
+        commander.reputation += outcome.reputation_change;
+
         ship.take_damage(outcome.hull_damage.unsigned_abs());
         ship.fuel_current = (ship.fuel_current as i32 + outcome.fuel_change).max(0) as u32;
         
@@ -629,5 +631,34 @@ mod tests {
         // Check that effects were applied
         assert_eq!(commander.credits, initial_credits);
         assert_eq!(ship.fuel_current, initial_fuel - 2);
+    }
+
+    #[test]
+    fn event_outcome_changes_commander_reputation() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        let event = manager.events.get(&EventType::AlienEncounter).unwrap();
+        manager.process_event(event, &mut commander, &mut ship, 0).unwrap();
+
+        assert_eq!(commander.reputation, 15);
+    }
+
+    #[test]
+    fn reputation_can_go_negative() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        let event = manager.events.get(&EventType::MilitaryPatrol).unwrap();
+        for index in 0..event.choices.len() {
+            let before = commander.reputation;
+            manager.process_event(event, &mut commander, &mut ship, index).unwrap();
+            if commander.reputation < before {
+                return;
+            }
+        }
+        panic!("no military patrol choice lowers reputation");
     }
 }

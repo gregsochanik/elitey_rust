@@ -1,6 +1,6 @@
 # Feature 06: Dynamic Events While Jumping
 
-> **Status:** Implemented in `src/game/events.rs` and `src/game/travel.rs` (9 event types, two phases, government/economy modifiers). Gap: events set `reputation_change`, but nothing stores or applies it until Feature 10. Checkboxes below are not maintained; see the Implementation Summary.
+> **Status:** Implemented in `src/game/events.rs` and `src/game/travel.rs` (9 event types, two phases, government/economy modifiers). Event `reputation_change` is stored on the commander and shown in `status`; reputation has no other effect until Feature 10. Checkboxes below are not maintained; see the Implementation Summary.
 
 ## 🎯 **Objective**
 Add surprise and tension between system jumps with a two-phase event system that provides contextually appropriate encounters based on destination system characteristics.

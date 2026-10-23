@@ -19,7 +19,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 03 | Trading | Done | 01, 02 |
 | 04 | Ship upgrades | Done | 03 |
 | 05 | Save/load | Done | 01 |
-| 06 | Dynamic events | Done (reputation effects not applied until 10) | 02 |
+| 06 | Dynamic events | Done (reputation stored; effects in 10) | 02 |
 | 07 | Weapons & equipment (design) | Spec only | 04 |
 | 09 | Equipment system (implementation) | Spec only | 04, 07 |
 | 08 | Combat | Spec only | 06, 09 |
@@ -37,7 +37,6 @@ Out of scope: multiplayer, graphics, real-time combat.
 
 ## Open decisions
 
-- **Event reputation.** Events set `reputation_change` but nothing applies it. Wire up in 10, or earlier if wanted.
 - **Overlap.** 07 and 09 both describe equipment; consider merging into one spec when starting step 1.
 - **Numbering.** There is no feature 12. Either reserve it or renumber.
 - **Tests.** The README references a `tests/` directory that does not exist. Add BDD-style integration tests there as each feature lands.

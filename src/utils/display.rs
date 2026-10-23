@@ -107,6 +107,7 @@ pub fn show_status(game_state: &GameState) {
     println!("Commander: {}", commander.name().yellow());
     println!("Credits: {} cr", commander.credits().to_string().green());
     println!("Location: {}", commander.location().blue());
+    println!("Reputation: {}", commander.reputation);
     println!();
     println!("{}", "Ship Status".cyan().bold());
     println!("{}", "===========".cyan());

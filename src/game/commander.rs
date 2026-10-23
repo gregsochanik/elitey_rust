@@ -9,6 +9,9 @@ pub struct Commander {
     pub credits: u32,
     /// Current location (system name)
     pub location: String,
+    /// Standing earned through events; can be negative
+    #[serde(default)]
+    pub reputation: i32,
 }
 
 #[allow(dead_code)]
@@ -19,6 +22,7 @@ impl Commander {
             name,
             credits: 100, // Starting credits as per spec
             location: "LAVE".to_string(), // Starting location as per spec
+            reputation: 0,
         }
     }
 
@@ -112,5 +116,12 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         commander.set_location("Leesti".to_string());
         assert_eq!(commander.location(), "Leesti");
+    }
+
+    #[test]
+    fn reputation_defaults_to_zero_for_old_saves() {
+        let commander: Commander =
+            serde_json::from_str(r#"{"name":"Old","credits":100,"location":"LAVE"}"#).unwrap();
+        assert_eq!(commander.reputation, 0);
     }
 }
