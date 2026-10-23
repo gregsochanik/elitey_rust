@@ -20,7 +20,7 @@ impl Commander {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            credits: 100, // Starting credits as per spec
+            credits: 100,                 // Starting credits as per spec
             location: "LAVE".to_string(), // Starting location as per spec
             reputation: 0,
         }

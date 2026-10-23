@@ -257,7 +257,11 @@ mod tests {
         let log = TradeLog::new();
         assert_eq!(
             log.stats(),
-            TradeStats { total_trades: 0, net_profit: 0, success_rate: None }
+            TradeStats {
+                total_trades: 0,
+                net_profit: 0,
+                success_rate: None
+            }
         );
         assert!(log.best_trade().is_none());
         assert!(log.recent(10).is_empty());

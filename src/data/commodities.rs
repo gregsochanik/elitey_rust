@@ -1,8 +1,8 @@
+use crate::data::systems::EconomyType;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::data::systems::EconomyType;
 
 /// Represents a commodity in the trading system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -66,41 +66,41 @@ impl CommodityType {
             (CommodityType::Food, EconomyType::AverageAgricultural) => 1.4,
             (CommodityType::Food, EconomyType::RichAgricultural) => 1.5,
             (CommodityType::Food, EconomyType::MainlyAgricultural) => 1.4,
-            
+
             // Textiles are preferred in agricultural economies
             (CommodityType::Textiles, EconomyType::PoorAgricultural) => 1.2,
             (CommodityType::Textiles, EconomyType::AverageAgricultural) => 1.3,
             (CommodityType::Textiles, EconomyType::RichAgricultural) => 1.4,
             (CommodityType::Textiles, EconomyType::MainlyAgricultural) => 1.3,
-            
+
             // Machinery is preferred in industrial economies
             (CommodityType::Machinery, EconomyType::PoorIndustrial) => 1.3,
             (CommodityType::Machinery, EconomyType::AverageIndustrial) => 1.4,
             (CommodityType::Machinery, EconomyType::RichIndustrial) => 1.5,
             (CommodityType::Machinery, EconomyType::MainlyIndustrial) => 1.4,
-            
+
             // Computers are preferred in high-tech economies
             (CommodityType::Computers, EconomyType::RichIndustrial) => 1.4,
             (CommodityType::Computers, EconomyType::MainlyIndustrial) => 1.3,
-            
+
             // Minerals are preferred in industrial economies
             (CommodityType::Minerals, EconomyType::PoorIndustrial) => 1.2,
             (CommodityType::Minerals, EconomyType::AverageIndustrial) => 1.3,
             (CommodityType::Minerals, EconomyType::RichIndustrial) => 1.4,
             (CommodityType::Minerals, EconomyType::MainlyIndustrial) => 1.3,
-            
+
             // Alloys are preferred in industrial economies
             (CommodityType::Alloys, EconomyType::AverageIndustrial) => 1.3,
             (CommodityType::Alloys, EconomyType::RichIndustrial) => 1.4,
             (CommodityType::Alloys, EconomyType::MainlyIndustrial) => 1.3,
-            
+
             // Luxury goods are preferred in rich economies
             (CommodityType::Luxury, EconomyType::RichAgricultural) => 1.4,
             (CommodityType::Luxury, EconomyType::RichIndustrial) => 1.4,
-            
+
             // Narcotics have no economy preference (illegal everywhere)
             (CommodityType::Narcotics, _) => 0.8,
-            
+
             // Default case - no preference
             _ => 1.0,
         }
@@ -116,7 +116,10 @@ pub struct CargoItem {
 
 impl CargoItem {
     pub fn new(commodity: CommodityType, quantity: u32) -> Self {
-        Self { commodity, quantity }
+        Self {
+            commodity,
+            quantity,
+        }
     }
 
     /// Calculate the value of this cargo item at given price
@@ -161,7 +164,7 @@ impl CargoHold {
         if !self.can_add(quantity) {
             return false;
         }
-        
+
         *self.items.entry(commodity).or_insert(0) += quantity;
         true
     }
@@ -264,22 +267,22 @@ impl TradingSystem {
     pub fn generate_market_prices(&self, economy: &EconomyType, seed: u64) -> MarketPrices {
         let mut rng = StdRng::seed_from_u64(seed);
         let mut market = MarketPrices::new();
-        
+
         for commodity in &self.commodities {
             let base_price = commodity.base_price();
             let economy_multiplier = commodity.economy_preference(economy);
-            
+
             // Add ±20% random fluctuation
             let fluctuation = 0.8 + (rng.gen::<f64>() * 0.4); // 0.8 to 1.2
-            
+
             let adjusted_price = (base_price as f64 * economy_multiplier * fluctuation) as u32;
-            
+
             // Buy/sell spread (2-6%)
             let spread = 0.94 + (rng.gen::<f64>() * 0.04); // 0.94 to 0.98
-            
+
             let buy_price = adjusted_price;
             let sell_price = (adjusted_price as f64 * spread) as u32;
-            
+
             // Availability based on economy preference
             let availability = if economy_multiplier > 1.0 {
                 50 + (rng.gen::<u32>() % 50) // 50-100 tons
@@ -288,12 +291,12 @@ impl TradingSystem {
             } else {
                 20 + (rng.gen::<u32>() % 30) // 20-50 tons
             };
-            
+
             market.buy_prices.insert(commodity.clone(), buy_price);
             market.sell_prices.insert(commodity.clone(), sell_price);
             market.availability.insert(commodity.clone(), availability);
         }
-        
+
         market
     }
 
@@ -338,7 +341,7 @@ mod tests {
         // Food should be preferred in agricultural economies
         assert!(CommodityType::Food.economy_preference(&EconomyType::RichAgricultural) > 1.0);
         assert!(CommodityType::Food.economy_preference(&EconomyType::RichIndustrial) == 1.0);
-        
+
         // Machinery should be preferred in industrial economies
         assert!(CommodityType::Machinery.economy_preference(&EconomyType::RichIndustrial) > 1.0);
         assert!(CommodityType::Machinery.economy_preference(&EconomyType::RichAgricultural) == 1.0);
@@ -347,23 +350,23 @@ mod tests {
     #[test]
     fn test_cargo_hold_operations() {
         let mut cargo = CargoHold::new(20);
-        
+
         // Test adding cargo
         assert!(cargo.add_cargo(CommodityType::Food, 5));
         assert_eq!(cargo.current_weight(), 5);
         assert_eq!(cargo.remaining_capacity(), 15);
-        
+
         // Test adding more of same commodity
         assert!(cargo.add_cargo(CommodityType::Food, 3));
         assert_eq!(cargo.get_quantity(&CommodityType::Food), 8);
-        
+
         // Test capacity limit
         assert!(!cargo.add_cargo(CommodityType::Machinery, 15)); // Would exceed capacity
-        
+
         // Test removing cargo
         assert!(cargo.remove_cargo(&CommodityType::Food, 3));
         assert_eq!(cargo.get_quantity(&CommodityType::Food), 5);
-        
+
         // Test removing more than available
         assert!(!cargo.remove_cargo(&CommodityType::Food, 10));
     }
@@ -372,12 +375,12 @@ mod tests {
     fn test_market_generation() {
         let trading_system = TradingSystem::new();
         let market = trading_system.generate_market_prices(&EconomyType::RichAgricultural, 1);
-        
+
         // Check that all commodities have prices
         assert_eq!(market.buy_prices.len(), 8);
         assert_eq!(market.sell_prices.len(), 8);
         assert_eq!(market.availability.len(), 8);
-        
+
         // Check that buy prices are higher than sell prices
         for commodity in trading_system.get_commodities() {
             let buy_price = market.get_buy_price(commodity).unwrap();
@@ -400,7 +403,8 @@ mod tests {
 
     #[test]
     fn best_commodity_on_a_short_trip_usually_profits() {
-        let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let systems =
+            crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
         let from = systems.get_system("LAVE").unwrap().economy.clone();
         let to = systems.get_system("DISO").unwrap().economy.clone();
         let trading = TradingSystem::new();
@@ -416,7 +420,12 @@ mod tests {
             })
             .count();
 
-        assert!(profitable as f64 / runs as f64 >= 0.9, "profitable in {}/{} runs", profitable, runs);
+        assert!(
+            profitable as f64 / runs as f64 >= 0.9,
+            "profitable in {}/{} runs",
+            profitable,
+            runs
+        );
     }
 
     #[test]
@@ -437,9 +446,15 @@ mod tests {
 
     #[test]
     fn buying_the_cheapest_against_base_beats_buying_blind() {
-        let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let systems =
+            crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
         let trading = TradingSystem::new();
-        let pairs = [("LAVE", "DISO"), ("DISO", "LAVE"), ("LAVE", "LEESTI"), ("LEESTI", "DISO")];
+        let pairs = [
+            ("LAVE", "DISO"),
+            ("DISO", "LAVE"),
+            ("LAVE", "LEESTI"),
+            ("LEESTI", "DISO"),
+        ];
 
         let (mut informed_wins, mut blind_wins, mut runs) = (0, 0, 0);
         for (from, to) in pairs {
@@ -449,7 +464,8 @@ mod tests {
                 let buy_market = trading.generate_market_prices(&from_economy, seed);
                 let sell_market = trading.generate_market_prices(&to_economy, seed + 10_000);
                 let profit = |c: &CommodityType| {
-                    i64::from(sell_market.get_sell_price(c).unwrap()) - i64::from(buy_market.get_buy_price(c).unwrap())
+                    i64::from(sell_market.get_sell_price(c).unwrap())
+                        - i64::from(buy_market.get_buy_price(c).unwrap())
                 };
 
                 let cheapest = trading

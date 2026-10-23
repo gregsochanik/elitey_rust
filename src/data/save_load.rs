@@ -1,8 +1,8 @@
+use crate::game::GameState;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::game::GameState;
 
 /// Represents save file metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,7 +43,7 @@ impl SaveLoadManager {
     /// Create a new save/load manager
     pub fn new() -> Result<Self, String> {
         let save_dir = Self::get_save_directory()?;
-        
+
         // Create save directory if it doesn't exist
         if !save_dir.exists() {
             fs::create_dir_all(&save_dir)
@@ -58,8 +58,7 @@ impl SaveLoadManager {
 
     /// Get the save directory path
     fn get_save_directory() -> Result<PathBuf, String> {
-        let mut save_dir = dirs::home_dir()
-            .ok_or("Could not determine home directory")?;
+        let mut save_dir = dirs::home_dir().ok_or("Could not determine home directory")?;
         save_dir.push(".elitey_rust");
         save_dir.push("saves");
         Ok(save_dir)
@@ -83,7 +82,7 @@ impl SaveLoadManager {
         };
 
         let file_path = self.get_save_file_path(slot_name);
-        
+
         // Create backup of existing save if it exists
         if file_path.exists() {
             let backup_path = self.get_backup_file_path(slot_name);
@@ -94,9 +93,8 @@ impl SaveLoadManager {
         // Write save file
         let json = serde_json::to_string_pretty(&save_file)
             .map_err(|e| format!("Failed to serialize save file: {}", e))?;
-        
-        fs::write(&file_path, json)
-            .map_err(|e| format!("Failed to write save file: {}", e))?;
+
+        fs::write(&file_path, json).map_err(|e| format!("Failed to write save file: {}", e))?;
 
         Ok(())
     }
@@ -104,7 +102,7 @@ impl SaveLoadManager {
     /// Load game state from a file
     pub fn load_game(&self, slot_name: &str) -> Result<GameState, String> {
         let file_path = self.get_save_file_path(slot_name);
-        
+
         if !file_path.exists() {
             return Err(format!("Save file '{}' not found", slot_name));
         }
@@ -112,9 +110,9 @@ impl SaveLoadManager {
         // Read save file
         let json = fs::read_to_string(&file_path)
             .map_err(|e| format!("Failed to read save file: {}", e))?;
-        
-        let save_file: SaveFile = serde_json::from_str(&json)
-            .map_err(|e| format!("Failed to parse save file: {}", e))?;
+
+        let save_file: SaveFile =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to parse save file: {}", e))?;
 
         // Validate version compatibility
         if save_file.metadata.version != self.version {
@@ -130,16 +128,17 @@ impl SaveLoadManager {
     /// List all available save slots
     pub fn list_saves(&self) -> Result<Vec<SaveMetadata>, String> {
         let mut saves = Vec::new();
-        
+
         if !self.save_directory.exists() {
             return Ok(saves);
         }
 
         for entry in fs::read_dir(&self.save_directory)
-            .map_err(|e| format!("Failed to read save directory: {}", e))? {
+            .map_err(|e| format!("Failed to read save directory: {}", e))?
+        {
             let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                     if let Ok(save_file) = self.load_save_metadata(stem) {
@@ -150,23 +149,23 @@ impl SaveLoadManager {
         }
 
         // Sort by timestamp (newest first)
-        saves.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        saves.sort_by_key(|save| std::cmp::Reverse(save.timestamp));
         Ok(saves)
     }
 
     /// Load just the metadata from a save file
     pub fn load_save_metadata(&self, slot_name: &str) -> Result<SaveMetadata, String> {
         let file_path = self.get_save_file_path(slot_name);
-        
+
         if !file_path.exists() {
             return Err(format!("Save file '{}' not found", slot_name));
         }
 
         let json = fs::read_to_string(&file_path)
             .map_err(|e| format!("Failed to read save file: {}", e))?;
-        
-        let save_file: SaveFile = serde_json::from_str(&json)
-            .map_err(|e| format!("Failed to parse save file: {}", e))?;
+
+        let save_file: SaveFile =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to parse save file: {}", e))?;
 
         Ok(save_file.metadata)
     }
@@ -174,13 +173,12 @@ impl SaveLoadManager {
     /// Delete a save file
     pub fn delete_save(&self, slot_name: &str) -> Result<(), String> {
         let file_path = self.get_save_file_path(slot_name);
-        
+
         if !file_path.exists() {
             return Err(format!("Save file '{}' not found", slot_name));
         }
 
-        fs::remove_file(&file_path)
-            .map_err(|e| format!("Failed to delete save file: {}", e))?;
+        fs::remove_file(&file_path).map_err(|e| format!("Failed to delete save file: {}", e))?;
 
         // Also delete backup if it exists
         let backup_path = self.get_backup_file_path(slot_name);
@@ -213,8 +211,7 @@ impl SaveLoadManager {
     /// Format timestamp for display
     pub fn format_timestamp(timestamp: u64) -> String {
         use chrono::{DateTime, Utc};
-        let dt = DateTime::from_timestamp(timestamp as i64, 0)
-            .unwrap_or_else(Utc::now);
+        let dt = DateTime::from_timestamp(timestamp as i64, 0).unwrap_or_else(Utc::now);
         dt.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }

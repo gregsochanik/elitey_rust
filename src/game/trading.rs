@@ -35,7 +35,9 @@ impl TradingHandler {
             self.market_seed = rand::random();
             self.purchased.clear();
         }
-        let mut market = self.trading_system.generate_market_prices(economy, self.market_seed);
+        let mut market = self
+            .trading_system
+            .generate_market_prices(economy, self.market_seed);
         for (commodity, bought) in &self.purchased {
             if let Some(stock) = market.availability.get_mut(commodity) {
                 *stock = stock.saturating_sub(*bought);
@@ -240,7 +242,13 @@ impl TradingHandler {
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
         *self.purchased.entry(commodity.clone()).or_insert(0) += quantity;
-        trade_log.record_buy(commodity.clone(), quantity, buy_price, commander.location(), cargo_before);
+        trade_log.record_buy(
+            commodity.clone(),
+            quantity,
+            buy_price,
+            commander.location(),
+            cargo_before,
+        );
 
         show_success(&format!(
             "Purchased {} tons of {} for {}cr",
@@ -285,7 +293,13 @@ impl TradingHandler {
         // Execute the transaction
         ship.remove_cargo(&commodity, quantity);
         commander.add_credits(total_revenue);
-        trade_log.record_sell(commodity.clone(), quantity, sell_price, commander.location(), current_quantity);
+        trade_log.record_sell(
+            commodity.clone(),
+            quantity,
+            sell_price,
+            commander.location(),
+            current_quantity,
+        );
 
         show_success(&format!(
             "Sold {} tons of {} for {}cr",
@@ -424,8 +438,22 @@ mod tests {
         let mut ship = Ship::new_cobra_mk3();
         let mut log = TradeLog::new();
 
-        assert!(handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 20), &mut log));
-        assert!(handler.execute_sell(CommodityType::Food, 5, &mut commander, &mut ship, &market(12, 15, 20), &mut log));
+        assert!(handler.execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log
+        ));
+        assert!(handler.execute_sell(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(12, 15, 20),
+            &mut log
+        ));
 
         assert_eq!(log.transactions().len(), 2);
         assert_eq!(log.transactions()[1].profit, Some(25));
@@ -440,9 +468,30 @@ mod tests {
         let mut log = TradeLog::new();
 
         // too expensive, not enough stock, nothing to sell
-        assert!(!handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(1_000_000, 8, 20), &mut log));
-        assert!(!handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 2), &mut log));
-        assert!(!handler.execute_sell(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 20), &mut log));
+        assert!(!handler.execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(1_000_000, 8, 20),
+            &mut log
+        ));
+        assert!(!handler.execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 2),
+            &mut log
+        ));
+        assert!(!handler.execute_sell(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log
+        ));
 
         assert!(log.transactions().is_empty());
     }
@@ -457,11 +506,24 @@ mod tests {
 
         let before = handler.market_for("LAVE", &economy);
         let stock = before.get_availability(&CommodityType::Food).unwrap();
-        assert!(handler.execute_buy(CommodityType::Food, 1, &mut commander, &mut ship, &before, &mut log));
+        assert!(handler.execute_buy(
+            CommodityType::Food,
+            1,
+            &mut commander,
+            &mut ship,
+            &before,
+            &mut log
+        ));
 
         let after = handler.market_for("LAVE", &economy);
-        assert_eq!(after.get_availability(&CommodityType::Food), Some(stock - 1));
-        assert_eq!(after.get_availability(&CommodityType::Textiles), before.get_availability(&CommodityType::Textiles));
+        assert_eq!(
+            after.get_availability(&CommodityType::Food),
+            Some(stock - 1)
+        );
+        assert_eq!(
+            after.get_availability(&CommodityType::Textiles),
+            before.get_availability(&CommodityType::Textiles)
+        );
 
         handler.market_for("DISO", &economy);
         assert!(handler.purchased.is_empty());
@@ -477,9 +539,23 @@ mod tests {
 
         handler.market_location = "LAVE".to_string();
         let mut stock = market(10, 8, 6);
-        assert!(handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &stock, &mut log));
+        assert!(handler.execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &stock,
+            &mut log
+        ));
         stock.availability.insert(CommodityType::Food, 1);
-        assert!(!handler.execute_buy(CommodityType::Food, 2, &mut commander, &mut ship, &stock, &mut log));
+        assert!(!handler.execute_buy(
+            CommodityType::Food,
+            2,
+            &mut commander,
+            &mut ship,
+            &stock,
+            &mut log
+        ));
     }
 
     #[test]

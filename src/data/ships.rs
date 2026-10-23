@@ -34,10 +34,10 @@ impl ShipType {
     /// Get the cost to purchase this ship
     pub fn cost(&self) -> u32 {
         match self {
-            ShipType::CobraMkIII => 0,      // Starting ship
-            ShipType::CobraMkIV => 500,     // First upgrade
-            ShipType::Python => 2000,       // Mid-game ship
-            ShipType::Anaconda => 5000,     // End-game ship
+            ShipType::CobraMkIII => 0,  // Starting ship
+            ShipType::CobraMkIV => 500, // First upgrade
+            ShipType::Python => 2000,   // Mid-game ship
+            ShipType::Anaconda => 5000, // End-game ship
         }
     }
 
@@ -168,7 +168,13 @@ mod tests {
 
     #[test]
     fn test_upgrade_costs() {
-        assert_eq!(ShipType::CobraMkIV.upgrade_cost_from(&ShipType::CobraMkIII), 500);
-        assert_eq!(ShipType::Python.upgrade_cost_from(&ShipType::CobraMkIV), 1500);
+        assert_eq!(
+            ShipType::CobraMkIV.upgrade_cost_from(&ShipType::CobraMkIII),
+            500
+        );
+        assert_eq!(
+            ShipType::Python.upgrade_cost_from(&ShipType::CobraMkIV),
+            1500
+        );
     }
 }
