@@ -149,7 +149,7 @@ impl SaveLoadManager {
         }
 
         // Sort by timestamp (newest first)
-        saves.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        saves.sort_by_key(|save| std::cmp::Reverse(save.timestamp));
         Ok(saves)
     }
 
