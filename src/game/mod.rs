@@ -1,3 +1,4 @@
+pub mod combat;
 pub mod commander;
 pub mod equipment;
 pub mod events;
