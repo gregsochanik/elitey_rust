@@ -37,7 +37,10 @@ pub struct Loadout {
 
 impl Loadout {
     pub fn starting() -> Self {
-        let free = |id: &str| Installed { id: id.to_string(), paid: 0 };
+        let free = |id: &str| Installed {
+            id: id.to_string(),
+            paid: 0,
+        };
         Self {
             installed: vec![
                 free("pulse-laser"),
@@ -63,7 +66,10 @@ impl Loadout {
     }
 
     pub fn slots_used(&self, category: EquipmentCategory) -> usize {
-        self.installed.iter().filter(|i| i.item().category == category).count()
+        self.installed
+            .iter()
+            .filter(|i| i.item().category == category)
+            .count()
     }
 
     pub fn slots_capacity(&self, category: EquipmentCategory) -> usize {
@@ -82,13 +88,22 @@ impl Loadout {
     }
 
     /// Install an item. A full single-slot category swaps out the current item, which is returned.
-    pub fn install(&mut self, item: &'static Equipment, paid: u32) -> Result<Option<Installed>, String> {
+    pub fn install(
+        &mut self,
+        item: &'static Equipment,
+        paid: u32,
+    ) -> Result<Option<Installed>, String> {
         let full = self.slots_used(item.category) >= slot_capacity(item.category);
         let replaced_index = if full {
             if slot_capacity(item.category) > 1 {
-                return Err(format!("No free {} slot", item.category.name().to_lowercase()));
+                return Err(format!(
+                    "No free {} slot",
+                    item.category.name().to_lowercase()
+                ));
             }
-            self.installed.iter().position(|i| i.item().category == item.category)
+            self.installed
+                .iter()
+                .position(|i| i.item().category == item.category)
         } else {
             None
         };
@@ -103,7 +118,10 @@ impl Loadout {
         }
 
         let replaced = replaced_index.map(|index| self.installed.remove(index));
-        self.installed.push(Installed { id: item.id.to_string(), paid });
+        self.installed.push(Installed {
+            id: item.id.to_string(),
+            paid,
+        });
         Ok(replaced)
     }
 
@@ -192,7 +210,10 @@ impl EquipmentHandler {
         match replaced {
             Some(old) => show_success(&format!(
                 "Installed {} for {}cr, replacing {} (refund {}cr)",
-                item.name, item.price, old.item().name, refund
+                item.name,
+                item.price,
+                old.item().name,
+                refund
             )),
             None => show_success(&format!("Installed {} for {}cr", item.name, item.price)),
         }
@@ -242,7 +263,11 @@ impl EquipmentHandler {
                     item.price,
                     item.power,
                     item.effect,
-                    if installed { "  [installed]".green().to_string() } else { String::new() }
+                    if installed {
+                        "  [installed]".green().to_string()
+                    } else {
+                        String::new()
+                    }
                 );
             }
         }
@@ -253,7 +278,11 @@ impl EquipmentHandler {
         let loadout = &ship.equipment;
         println!("\n{}", "Installed Equipment".cyan().bold());
         println!("{}", "===================".cyan());
-        println!("Power: {}/{}", loadout.power_used(), loadout.power_capacity());
+        println!(
+            "Power: {}/{}",
+            loadout.power_used(),
+            loadout.power_capacity()
+        );
 
         for category in EquipmentCategory::ALL {
             println!(
@@ -262,9 +291,16 @@ impl EquipmentHandler {
                 loadout.slots_used(category),
                 loadout.slots_capacity(category)
             );
-            for installed in loadout.installed().iter().filter(|i| i.item().category == category) {
+            for installed in loadout
+                .installed()
+                .iter()
+                .filter(|i| i.item().category == category)
+            {
                 let item = installed.item();
-                println!("  {:<18} {:>2} power  {}", item.name, item.power, item.effect);
+                println!(
+                    "  {:<18} {:>2} power  {}",
+                    item.name, item.power, item.effect
+                );
             }
         }
         println!("\nCargo capacity: {} tons\n", ship.cargo_capacity());

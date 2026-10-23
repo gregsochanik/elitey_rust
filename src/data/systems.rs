@@ -1,7 +1,7 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use anyhow::Result;
 
 /// Economy types for star systems (matching galaxy1.json)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -138,10 +138,10 @@ impl StarSystem {
     pub fn from_galaxy_data(data: GalaxySystemData) -> Result<Self, serde_json::Error> {
         // Parse economy type from the name string
         let economy = serde_json::from_str(&format!("\"{}\"", data.economy.name))?;
-        
+
         // Parse government type from the name string
         let government = serde_json::from_str(&format!("\"{}\"", data.government.name))?;
-        
+
         Ok(Self {
             name: data.name,
             x: data.x,
@@ -222,11 +222,11 @@ impl SystemManager {
     /// Create a new system manager by loading from galaxy1.json
     pub fn new() -> Result<Self> {
         let mut systems = HashMap::new();
-        
+
         // Load galaxy data from JSON file
         let galaxy_data = fs::read_to_string("galaxies/galaxy1.json")?;
         let galaxy_systems: HashMap<String, GalaxySystemData> = serde_json::from_str(&galaxy_data)?;
-        
+
         // Convert each system from JSON data to StarSystem
         for (system_id, system_data) in galaxy_systems {
             match StarSystem::from_galaxy_data(system_data) {
@@ -238,7 +238,7 @@ impl SystemManager {
                 }
             }
         }
-        
+
         Ok(Self { systems })
     }
 
@@ -265,7 +265,7 @@ impl SystemManager {
     pub fn calculate_distance(&self, from: &str, to: &str) -> Option<f64> {
         let from_system = self.get_system(from)?;
         let to_system = self.get_system(to)?;
-        
+
         Some(from_system.distance_to(to_system))
     }
 
@@ -286,7 +286,8 @@ impl SystemManager {
     /// Calculate travel time in seconds (simplified)
     #[allow(dead_code)]
     pub fn calculate_travel_time(&self, from: &str, to: &str) -> Option<u64> {
-        self.calculate_distance(from, to).map(|distance| (distance * 10.0) as u64)
+        self.calculate_distance(from, to)
+            .map(|distance| (distance * 10.0) as u64)
     }
 }
 
@@ -314,9 +315,9 @@ mod tests {
             population: "40 Billion".to_string(),
             description: "A test system.".to_string(),
         };
-        
+
         let system = StarSystem::from_galaxy_data(test_data).unwrap();
-        
+
         assert_eq!(system.name(), "Test System");
         assert_eq!(system.economy(), &EconomyType::RichIndustrial);
         assert_eq!(system.government(), &GovernmentType::MultiGovernment);
@@ -326,12 +327,12 @@ mod tests {
     #[test]
     fn test_system_manager() {
         let manager = SystemManager::new().unwrap();
-        
+
         // Test getting a system
         let lave = manager.get_system("LAVE");
         assert!(lave.is_some());
         assert_eq!(lave.unwrap().name(), "LAVE");
-        
+
         // Test getting all systems
         let all_systems = manager.get_all_systems();
         assert!(all_systems.len() > 100); // Should have hundreds of systems
@@ -340,7 +341,7 @@ mod tests {
     #[test]
     fn test_distance_calculation() {
         let manager = SystemManager::new().unwrap();
-        
+
         let distance = manager.calculate_distance("LAVE", "LEESTI");
         assert!(distance.is_some());
         assert!(distance.unwrap() > 0.0); // Should be a positive distance
@@ -349,10 +350,10 @@ mod tests {
     #[test]
     fn test_travel_validation() {
         let manager = SystemManager::new().unwrap();
-        
+
         // Test travel with sufficient fuel
         assert!(manager.can_travel("LAVE", "LEESTI", 20.0));
-        
+
         // Test travel with insufficient fuel
         assert!(!manager.can_travel("LAVE", "LEESTI", 1.0));
     }

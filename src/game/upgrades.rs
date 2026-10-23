@@ -34,7 +34,7 @@ impl UpgradeHandler {
         }
 
         let ship_name = &args[1];
-        
+
         // Parse ship type
         let new_ship_type = match ShipType::from_string(ship_name) {
             Some(ship_type) => ship_type,
@@ -46,12 +46,17 @@ impl UpgradeHandler {
 
         // Check if it's actually an upgrade
         if !new_ship_type.is_upgrade_from(ship.ship_type()) {
-            show_error(&format!("{} is not an upgrade from your current ship", new_ship_type.display_name()));
+            show_error(&format!(
+                "{} is not an upgrade from your current ship",
+                new_ship_type.display_name()
+            ));
             return false;
         }
 
         // Calculate upgrade cost
-        let upgrade_cost = self.upgrade_manager.calculate_upgrade_cost(ship.ship_type(), &new_ship_type);
+        let upgrade_cost = self
+            .upgrade_manager
+            .calculate_upgrade_cost(ship.ship_type(), &new_ship_type);
 
         // Check if commander has enough credits
         if !commander.has_credits(upgrade_cost) {
@@ -99,17 +104,21 @@ impl UpgradeHandler {
         println!("Credits: {}cr", commander.credits().to_string().green());
         println!();
 
-        let upgrades = self.upgrade_manager.get_available_upgrades(ship.ship_type());
-        
+        let upgrades = self
+            .upgrade_manager
+            .get_available_upgrades(ship.ship_type());
+
         if upgrades.is_empty() {
             println!("No upgrades available for your current ship.");
             return;
         }
 
         for upgrade_ship in upgrades {
-            let upgrade_cost = self.upgrade_manager.calculate_upgrade_cost(ship.ship_type(), upgrade_ship);
+            let upgrade_cost = self
+                .upgrade_manager
+                .calculate_upgrade_cost(ship.ship_type(), upgrade_ship);
             let can_afford = commander.has_credits(upgrade_cost);
-            
+
             let cost_display = if can_afford {
                 format!("({}cr)", upgrade_cost).green()
             } else {
@@ -117,18 +126,24 @@ impl UpgradeHandler {
             };
 
             println!("{} {}", upgrade_ship.display_name().yellow(), cost_display);
-            println!("- Cargo: {} → {} tons ({:+})", 
-                     ship.cargo_capacity(),
-                     upgrade_ship.cargo_capacity(),
-                     upgrade_ship.cargo_capacity() as i32 - ship.cargo_capacity() as i32);
-            println!("- Fuel: {} → {} light years ({:+})", 
-                     ship.fuel_capacity(),
-                     upgrade_ship.fuel_capacity(),
-                     upgrade_ship.fuel_capacity() as i32 - ship.fuel_capacity() as i32);
-            println!("- Hull: {}% → {}% ({:+}%)", 
-                     ship.hull_percentage(),
-                     upgrade_ship.max_hull(),
-                     upgrade_ship.max_hull() as i32 - ship.hull_percentage() as i32);
+            println!(
+                "- Cargo: {} → {} tons ({:+})",
+                ship.cargo_capacity(),
+                upgrade_ship.cargo_capacity(),
+                upgrade_ship.cargo_capacity() as i32 - ship.cargo_capacity() as i32
+            );
+            println!(
+                "- Fuel: {} → {} light years ({:+})",
+                ship.fuel_capacity(),
+                upgrade_ship.fuel_capacity(),
+                upgrade_ship.fuel_capacity() as i32 - ship.fuel_capacity() as i32
+            );
+            println!(
+                "- Hull: {}% → {}% ({:+}%)",
+                ship.hull_percentage(),
+                upgrade_ship.max_hull(),
+                upgrade_ship.max_hull() as i32 - ship.hull_percentage() as i32
+            );
             println!();
         }
     }
@@ -154,9 +169,11 @@ impl UpgradeHandler {
             println!("- Fuel: {} light years", ship_type.fuel_capacity());
             println!("- Hull: {}%", ship_type.max_hull());
             println!("- Cost: {}cr", ship_type.cost());
-            
+
             if !is_current {
-                let upgrade_cost = self.upgrade_manager.calculate_upgrade_cost(ship.ship_type(), ship_type);
+                let upgrade_cost = self
+                    .upgrade_manager
+                    .calculate_upgrade_cost(ship.ship_type(), ship_type);
                 if upgrade_cost > 0 {
                     let can_afford = commander.has_credits(upgrade_cost);
                     let cost_display = if can_afford {
@@ -185,7 +202,13 @@ mod tests {
     #[test]
     fn test_upgrade_handler_creation() {
         let handler = UpgradeHandler::new();
-        assert_eq!(handler.upgrade_manager.get_available_upgrades(&ShipType::CobraMkIII).len(), 3);
+        assert_eq!(
+            handler
+                .upgrade_manager
+                .get_available_upgrades(&ShipType::CobraMkIII)
+                .len(),
+            3
+        );
     }
 
     #[test]
@@ -195,10 +218,14 @@ mod tests {
         commander.credits = 5_000;
         let mut ship = Ship::new_cobra_mk3();
         let mut loadout = ship.equipment.clone();
-        loadout.install(crate::data::equipment::find("expanded-racks").unwrap(), 30).unwrap();
+        loadout
+            .install(crate::data::equipment::find("expanded-racks").unwrap(), 30)
+            .unwrap();
         ship.set_equipment(loadout).unwrap();
 
-        let cost = handler.upgrade_manager.calculate_upgrade_cost(&ShipType::CobraMkIII, &ShipType::CobraMkIV);
+        let cost = handler
+            .upgrade_manager
+            .calculate_upgrade_cost(&ShipType::CobraMkIII, &ShipType::CobraMkIV);
         let args = vec!["upgrade".to_string(), "cobra4".to_string()];
         assert!(handler.handle_upgrade_purchase(&args, &mut commander, &mut ship));
 

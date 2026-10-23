@@ -1,6 +1,6 @@
 use crate::data::save_load::{SaveLoadManager, SaveMetadata};
 use crate::game::GameState;
-use crate::utils::display::{show_error, show_success, show_info};
+use crate::utils::display::{show_error, show_info, show_success};
 use crate::utils::input;
 use colored::*;
 use std::io::Write;
@@ -27,7 +27,7 @@ impl SaveLoadHandler {
         }
 
         let slot_name = &args[0];
-        
+
         // Validate slot name (alphanumeric and underscores only)
         if !slot_name.chars().all(|c| c.is_alphanumeric() || c == '_') {
             show_error("Slot name must contain only letters, numbers, and underscores");
@@ -58,22 +58,24 @@ impl SaveLoadHandler {
         }
 
         let slot_name = &args[0];
-        
+
         if !self.save_manager.save_exists(slot_name) {
             show_error(&format!("Save file '{}' not found", slot_name));
             return Ok(None);
         }
 
         // Load metadata first to show confirmation
-        let metadata = self.save_manager.load_save_metadata(slot_name)
+        let metadata = self
+            .save_manager
+            .load_save_metadata(slot_name)
             .map_err(|e| format!("Failed to load save metadata: {}", e))?;
 
         // Show save information and ask for confirmation
         self.display_save_info(&metadata);
-        
+
         print!("Would you like to load this save? (y/n): ");
         std::io::stdout().flush().expect("Failed to flush stdout");
-        
+
         match input::get_input() {
             Ok(input) => {
                 let response = input.trim().to_lowercase();
@@ -113,11 +115,11 @@ impl SaveLoadHandler {
                 } else {
                     println!("\n{}", "Available Save Files".cyan().bold());
                     println!("{}", "===================".cyan());
-                    
+
                     for (i, save) in saves.iter().enumerate() {
                         let slot_name = self.get_slot_name_from_metadata(save);
                         let timestamp = SaveLoadManager::format_timestamp(save.timestamp);
-                        
+
                         println!("{}. {} ({})", i + 1, slot_name.yellow(), timestamp.blue());
                         println!("   Commander: {}", save.commander_name.green());
                         println!("   Location: {}", save.location.cyan());
@@ -141,7 +143,7 @@ impl SaveLoadHandler {
         }
 
         let slot_name = &args[0];
-        
+
         if !self.save_manager.save_exists(slot_name) {
             show_error(&format!("Save file '{}' not found", slot_name));
             return false;
@@ -150,17 +152,20 @@ impl SaveLoadHandler {
         // Load metadata to show what we're deleting
         if let Ok(metadata) = self.save_manager.load_save_metadata(slot_name) {
             self.display_save_info(&metadata);
-            
+
             print!("Are you sure you want to delete this save? (y/n): ");
             std::io::stdout().flush().expect("Failed to flush stdout");
-            
+
             match input::get_input() {
                 Ok(input) => {
                     let response = input.trim().to_lowercase();
                     if response == "y" || response == "yes" {
                         match self.save_manager.delete_save(slot_name) {
                             Ok(_) => {
-                                show_success(&format!("Save file '{}' deleted successfully.", slot_name));
+                                show_success(&format!(
+                                    "Save file '{}' deleted successfully.",
+                                    slot_name
+                                ));
                                 true
                             }
                             Err(e) => {
@@ -187,7 +192,7 @@ impl SaveLoadHandler {
     /// Handle auto-save on quit
     pub fn auto_save(&self, game_state: &GameState) -> bool {
         let slot_name = "autosave";
-        
+
         match self.save_manager.save_game(game_state, slot_name) {
             Ok(_) => {
                 println!("{}", "Auto-saving game state...".yellow());
@@ -209,18 +214,18 @@ impl SaveLoadHandler {
     pub fn check_existing_save(&self, commander_name: &str) -> Result<Option<GameState>, String> {
         // Look for a save with this commander name
         let saves = self.save_manager.list_saves()?;
-        
+
         for save in saves {
             if save.commander_name == commander_name {
                 // Found existing save for this commander
                 self.display_save_info(&save);
-                
+
                 print!("Found existing save for {} at {} with {} credits.\nWould you like to load this save? (y/n): ", 
                        save.commander_name.green(),
                        save.location.cyan(),
                        save.credits.to_string().green());
                 std::io::stdout().flush().expect("Failed to flush stdout");
-                
+
                 match input::get_input() {
                     Ok(input) => {
                         let response = input.trim().to_lowercase();
@@ -237,14 +242,14 @@ impl SaveLoadHandler {
                 }
             }
         }
-        
+
         Ok(None)
     }
 
     /// Display save information
     fn display_save_info(&self, metadata: &SaveMetadata) {
         let timestamp = SaveLoadManager::format_timestamp(metadata.timestamp);
-        
+
         println!("\n{}", "Save Information".cyan().bold());
         println!("{}", "================".cyan());
         println!("Commander: {}", metadata.commander_name.green());

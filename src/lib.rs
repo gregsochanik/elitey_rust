@@ -1,3 +1,3 @@
+pub mod data;
 pub mod game;
 pub mod utils;
-pub mod data;

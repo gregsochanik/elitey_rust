@@ -1,10 +1,13 @@
+use crate::data::systems::{StarSystem, SystemManager};
+use crate::utils::display::show_error;
 use crate::utils::input;
-use crate::data::systems::{SystemManager, StarSystem};
 use colored::*;
 use std::io::Write;
-use crate::utils::display::show_error;
 
-use super::{Commander, Ship, TradingHandler, UpgradeHandler, SaveLoadHandler, EventManager, TravelHandler, TradeLog};
+use super::{
+    Commander, EventManager, SaveLoadHandler, Ship, TradeLog, TradingHandler, TravelHandler,
+    UpgradeHandler,
+};
 
 /// Represents the complete game state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -36,10 +39,10 @@ impl GameState {
     pub fn new_game() -> Self {
         println!("{}", "Welcome to Elite Rust!".green().bold());
         println!("{}", "=====================".green());
-        
+
         // Get commander name
         let name = Self::get_commander_name();
-        
+
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         Self {
             commander: Commander::new(name),
@@ -71,7 +74,7 @@ impl GameState {
         loop {
             print!("Enter your commander name: ");
             std::io::stdout().flush().expect("Failed to flush stdout");
-            
+
             match input::get_input() {
                 Ok(input) => {
                     let name = input.trim();
@@ -116,32 +119,38 @@ impl GameState {
     /// Travel to a new system
     pub fn travel_to_system(&mut self, destination: &str) -> Result<(), String> {
         let current_location = &self.commander.location;
-        
+
         // Check if destination exists
         if self.system_manager.get_system(destination).is_none() {
             return Err(format!("Unknown system: {}", destination));
         }
-        
+
         // Check if we're already there
         if current_location == destination {
             return Err("You are already in this system.".to_string());
         }
-        
+
         // Check if we have enough fuel
-        if !self.system_manager.can_travel(current_location, destination, self.ship.fuel_current as f64) {
+        if !self.system_manager.can_travel(
+            current_location,
+            destination,
+            self.ship.fuel_current as f64,
+        ) {
             return Err("Insufficient fuel for this journey.".to_string());
         }
-        
+
         // Calculate fuel cost
-        let fuel_cost = self.system_manager.calculate_fuel_cost(current_location, destination)
+        let fuel_cost = self
+            .system_manager
+            .calculate_fuel_cost(current_location, destination)
             .ok_or("Unable to calculate fuel cost.")?;
-        
+
         // Consume fuel
         self.ship.consume_fuel(fuel_cost as u32);
-        
+
         // Update location
         self.commander.location = destination.to_string();
-        
+
         Ok(())
     }
 
@@ -157,7 +166,8 @@ impl GameState {
 
     /// Calculate travel cost to a system
     pub fn calculate_travel_cost(&self, destination: &str) -> Option<f64> {
-        self.system_manager.calculate_fuel_cost(&self.commander.location, destination)
+        self.system_manager
+            .calculate_fuel_cost(&self.commander.location, destination)
     }
 
     /// Get the trading handler
@@ -254,10 +264,8 @@ impl GameState {
 
     /// Handle market command
     pub fn handle_market_command(&mut self) {
-        self.trading_handler.handle_market(
-            &self.system_manager,
-            &self.commander.location,
-        );
+        self.trading_handler
+            .handle_market(&self.system_manager, &self.commander.location);
     }
 
     /// Handle cargo command
@@ -267,17 +275,20 @@ impl GameState {
 
     /// Handle upgrade command
     pub fn handle_upgrade_command(&self) {
-        self.upgrade_handler.handle_upgrade(&self.commander, &self.ship);
+        self.upgrade_handler
+            .handle_upgrade(&self.commander, &self.ship);
     }
 
     /// Handle upgrade purchase command
     pub fn handle_upgrade_purchase_command(&mut self, args: &[String]) -> bool {
-        self.upgrade_handler.handle_upgrade_purchase(args, &mut self.commander, &mut self.ship)
+        self.upgrade_handler
+            .handle_upgrade_purchase(args, &mut self.commander, &mut self.ship)
     }
 
     /// Handle ships command
     pub fn handle_ships_command(&self) {
-        self.upgrade_handler.handle_ships(&self.commander, &self.ship);
+        self.upgrade_handler
+            .handle_ships(&self.commander, &self.ship);
     }
 
     /// Handle save command
@@ -311,13 +322,13 @@ impl GameState {
             show_error("Usage: jump <system_name>");
             return false;
         }
-        
+
         let destination = &args[0];
         match self.travel_handler.travel_to_system(
             &mut self.commander,
             &mut self.ship,
             &self.event_manager,
-            destination
+            destination,
         ) {
             Ok(success) => success,
             Err(e) => {
@@ -331,15 +342,18 @@ impl GameState {
     pub fn handle_systems_command(&self) {
         let all_systems = self.travel_handler.get_available_systems();
         let current_fuel = self.ship.fuel_current as f64;
-        
+
         // Get current system for distance calculations
-        let current_system = if let Some(system) = self.travel_handler.get_system_info(&self.commander.location) {
+        let current_system = if let Some(system) = self
+            .travel_handler
+            .get_system_info(&self.commander.location)
+        {
             system
         } else {
             show_error("Unable to determine current location");
             return;
         };
-        
+
         // Filter systems that can be reached with current fuel and sort by distance
         let mut reachable_systems: Vec<(&StarSystem, f64)> = all_systems
             .iter()
@@ -348,9 +362,9 @@ impl GameState {
                 if system.name == current_system.name {
                     return None;
                 }
-                
+
                 let distance = current_system.distance_to(system);
-                
+
                 // Only include systems that can be reached with current fuel
                 if distance <= current_fuel {
                     Some((*system, distance))
@@ -359,16 +373,20 @@ impl GameState {
                 }
             })
             .collect();
-        
+
         // Sort by distance (low to high)
-        reachable_systems.sort_by(|(_, dist1), (_, dist2)| dist1.partial_cmp(dist2).unwrap_or(std::cmp::Ordering::Equal));
-        
+        reachable_systems.sort_by(|(_, dist1), (_, dist2)| {
+            dist1
+                .partial_cmp(dist2)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         println!();
         println!("{}", "Available Star Systems".cyan().bold());
         println!("{}", "=====================".cyan());
         println!("Current fuel: {} light years", current_fuel);
         println!();
-        
+
         if reachable_systems.is_empty() {
             println!("{}", "No systems reachable with current fuel.".yellow());
             println!("{}", "Consider refueling or upgrading your ship.".yellow());
@@ -386,7 +404,7 @@ impl GameState {
             show_error("Usage: info <system_name>");
             return false;
         }
-        
+
         let system_name = &args[0];
         if let Some(system) = self.travel_handler.get_system_info(system_name) {
             self.show_system_info(system);
@@ -407,9 +425,12 @@ impl GameState {
         println!("Tech Level: {}", system.tech_level);
         println!("Population: {}", system.population);
         println!("Description: {}", system.description);
-        
+
         // Show distance from current location
-        if let Some(current_system) = self.travel_handler.get_system_info(&self.commander.location) {
+        if let Some(current_system) = self
+            .travel_handler
+            .get_system_info(&self.commander.location)
+        {
             let distance = current_system.distance_to(system);
             println!("Distance: {:.1} light years", distance);
             println!("Fuel required: {} light years", distance.ceil() as u32);
@@ -453,10 +474,10 @@ mod tests {
         let ship = Ship::new_cobra_mk3();
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         let system_manager_clone = system_manager.clone();
-        let game_state = GameState { 
-            commander, 
-            ship, 
-            system_manager, 
+        let game_state = GameState {
+            commander,
+            ship,
+            system_manager,
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
@@ -464,7 +485,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
         };
-        
+
         assert!(game_state.is_running());
     }
 
@@ -475,11 +496,11 @@ mod tests {
         ship.take_damage(100); // Destroy the ship
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         let system_manager_clone = system_manager.clone();
-        
-        let game_state = GameState { 
-            commander, 
-            ship, 
-            system_manager, 
+
+        let game_state = GameState {
+            commander,
+            ship,
+            system_manager,
             trading_handler: TradingHandler::new(),
             upgrade_handler: UpgradeHandler::new(),
             save_load_handler: SaveLoadHandler::new().expect("Failed to create save/load handler"),
@@ -487,7 +508,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
         };
-        
+
         assert!(!game_state.is_running());
     }
 
@@ -526,7 +547,13 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
         };
-        state.trade_log.record_buy(crate::data::commodities::CommodityType::Food, 5, 10, "LAVE", 0);
+        state.trade_log.record_buy(
+            crate::data::commodities::CommodityType::Food,
+            5,
+            10,
+            "LAVE",
+            0,
+        );
 
         let json = serde_json::to_string(&state).unwrap();
         let loaded: GameState = serde_json::from_str(&json).unwrap();

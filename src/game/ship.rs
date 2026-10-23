@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
 use crate::data::commodities::{CargoHold, CommodityType};
 use crate::data::ships::ShipType;
 use crate::game::equipment::Loadout;
+use serde::{Deserialize, Serialize};
 
 /// Represents the player's ship with all its properties
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,8 +26,8 @@ impl Ship {
         Self {
             ship_type: ShipType::CobraMkIII,
             cargo_hold: CargoHold::new(20), // Starting cargo capacity as per spec
-            fuel_current: 7,    // Full fuel tank (matches capacity)
-            hull_percentage: 100, // Full hull integrity
+            fuel_current: 7,                // Full fuel tank (matches capacity)
+            hull_percentage: 100,           // Full hull integrity
             equipment: Loadout::starting(),
         }
     }
@@ -89,7 +89,7 @@ impl Ship {
         // Check if the new ship has enough cargo capacity for current cargo
         let current_cargo = self.cargo_hold.current_weight();
         let new_cargo_capacity = new_ship_type.cargo_capacity();
-        
+
         if current_cargo > new_cargo_capacity {
             return Err(format!(
                 "Cannot upgrade to {}: current cargo ({} tons) exceeds new ship capacity ({} tons)",
@@ -100,8 +100,9 @@ impl Ship {
         }
 
         // Transfer cargo to new ship
-        let old_cargo_hold = std::mem::replace(&mut self.cargo_hold, CargoHold::new(new_cargo_capacity));
-        
+        let old_cargo_hold =
+            std::mem::replace(&mut self.cargo_hold, CargoHold::new(new_cargo_capacity));
+
         // Copy cargo items to new ship
         for item in old_cargo_hold.get_items() {
             self.cargo_hold.add_cargo(item.commodity, item.quantity);
@@ -111,17 +112,18 @@ impl Ship {
 
         // Update ship type
         self.ship_type = new_ship_type.clone();
-        
+
         // Update hull to new ship's max hull
         self.hull_percentage = new_ship_type.max_hull();
-        
+
         Ok(())
     }
 
     /// Replace the equipment loadout and resize the cargo hold to match.
     /// Fails, changing nothing, if the cargo held would not fit.
     pub fn set_equipment(&mut self, equipment: Loadout) -> Result<(), String> {
-        let capacity = (self.ship_type.cargo_capacity() as f64 * equipment.cargo_multiplier()) as u32;
+        let capacity =
+            (self.ship_type.cargo_capacity() as f64 * equipment.cargo_multiplier()) as u32;
         let held = self.cargo_hold.current_weight();
         if held > capacity {
             return Err(format!(
@@ -218,7 +220,7 @@ mod tests {
     #[test]
     fn test_cargo_operations() {
         let mut ship = Ship::new_cobra_mk3();
-        
+
         // Test cargo space
         assert_eq!(ship.cargo_available(), 20);
         assert!(ship.has_cargo_space(10));
@@ -246,7 +248,7 @@ mod tests {
     #[test]
     fn test_fuel_operations() {
         let mut ship = Ship::new_cobra_mk3();
-        
+
         // Test fuel checks
         assert!(ship.has_fuel(5));
         assert!(ship.has_fuel(7));
@@ -265,7 +267,7 @@ mod tests {
     #[test]
     fn test_hull_operations() {
         let mut ship = Ship::new_cobra_mk3();
-        
+
         // Test initial state
         assert!(!ship.is_damaged());
         assert!(!ship.is_destroyed());
