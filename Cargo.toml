@@ -1,6 +1,6 @@
 [package]
 name = "elitey_rust"
-version = "0.2.0-rc.1"
+version = "0.0.0-dev"
 edition = "2021"
 authors = ["Greg Sochanik"]
 description = "Elite-style terminal trading game in Rust"
