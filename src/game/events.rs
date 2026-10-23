@@ -88,6 +88,46 @@ impl Default for EventManager {
     }
 }
 
+/// How much more or less likely an event is at this destination (1.0 is normal)
+fn event_weight(event_type: &EventType, destination: &StarSystem) -> f64 {
+    government_weight(event_type, &destination.government)
+        * economy_weight(event_type, &destination.economy)
+}
+
+fn government_weight(event_type: &EventType, government: &GovernmentType) -> f64 {
+    match (government, event_type) {
+        (GovernmentType::Anarchy, EventType::PirateAttack) => 2.5,
+        (GovernmentType::Anarchy, EventType::GovernmentInspection) => 0.2,
+        (GovernmentType::Anarchy, EventType::MilitaryPatrol) => 0.3,
+        (GovernmentType::Communist, EventType::GovernmentInspection) => 2.5,
+        (GovernmentType::Communist, EventType::MilitaryPatrol) => 1.5,
+        (GovernmentType::Communist, EventType::PirateAttack) => 0.6,
+        (GovernmentType::Dictatorship, EventType::MilitaryPatrol) => 2.5,
+        (GovernmentType::Dictatorship, EventType::GovernmentInspection) => 1.5,
+        (GovernmentType::Dictatorship, EventType::PirateAttack) => 0.7,
+        (GovernmentType::CorporateState, EventType::GovernmentInspection) => 1.5,
+        (GovernmentType::CorporateState, EventType::PirateAttack) => 0.5,
+        _ => 1.0,
+    }
+}
+
+fn economy_weight(event_type: &EventType, economy: &EconomyType) -> f64 {
+    match (economy, event_type) {
+        (EconomyType::PoorAgricultural | EconomyType::PoorIndustrial, EventType::PirateAttack) => {
+            1.5
+        }
+        (EconomyType::PoorAgricultural | EconomyType::PoorIndustrial, EventType::RescueSignal) => {
+            1.5
+        }
+        (EconomyType::RichIndustrial | EconomyType::RichAgricultural, EventType::PirateAttack) => {
+            0.6
+        }
+        (EconomyType::MainlyIndustrial, EventType::SpaceDebris) => 1.5,
+        (EconomyType::MainlyAgricultural, EventType::RescueSignal) => 1.3,
+        _ => 1.0,
+    }
+}
+
 /// Remove cargo from the hold and return what was taken
 fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(CommodityType, u32)> {
     match loss {
@@ -219,21 +259,41 @@ impl EventManager {
             .collect()
     }
 
-    /// Select a random event for a given phase, considering destination context
+    /// Select a random event for a given phase, weighted by the destination's government and economy
     pub fn select_random_event(
         &self,
         phase: &EventPhase,
-        _destination: &StarSystem,
+        destination: &StarSystem,
     ) -> Option<&Event> {
-        let available_events = self.get_available_events(phase);
-        if available_events.is_empty() {
+        self.pick_event(phase, destination, &mut rand::thread_rng())
+    }
+
+    fn pick_event<R: Rng>(
+        &self,
+        phase: &EventPhase,
+        destination: &StarSystem,
+        rng: &mut R,
+    ) -> Option<&Event> {
+        let mut available_events = self.get_available_events(phase);
+        available_events.sort_by_key(|event| format!("{:?}", event.event_type));
+
+        let weights: Vec<f64> = available_events
+            .iter()
+            .map(|event| event_weight(&event.event_type, destination))
+            .collect();
+        let total: f64 = weights.iter().sum();
+        if available_events.is_empty() || total <= 0.0 {
             return None;
         }
 
-        // For now, select randomly. In the future, we could weight based on destination
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0..available_events.len());
-        Some(available_events[index])
+        let mut roll = rng.gen_range(0.0..total);
+        for (event, weight) in available_events.iter().zip(&weights) {
+            if roll < *weight {
+                return Some(event);
+            }
+            roll -= weight;
+        }
+        available_events.last().copied()
     }
 
     /// Process an event and return the outcome
@@ -937,5 +997,145 @@ mod tests {
             .unwrap();
 
         assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Luxury), 2);
+    }
+
+    fn system(government: GovernmentType, economy: EconomyType) -> StarSystem {
+        StarSystem {
+            name: "Test".to_string(),
+            x: 0,
+            y: 0,
+            economy,
+            government,
+            tech_level: 5,
+            turnover: 1000,
+            radius: 100,
+            population: "1000000".to_string(),
+            description: "Test system".to_string(),
+        }
+    }
+
+    fn share_of(event_type: EventType, phase: EventPhase, destination: &StarSystem) -> f64 {
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+
+        let manager = EventManager::new();
+        let mut rng = StdRng::seed_from_u64(7);
+        let draws = 20_000;
+        let hits = (0..draws)
+            .filter(|_| {
+                manager
+                    .pick_event(&phase, destination, &mut rng)
+                    .unwrap()
+                    .event_type
+                    == event_type
+            })
+            .count();
+        hits as f64 / f64::from(draws)
+    }
+
+    #[test]
+    fn anarchy_attracts_pirates_more_than_democracy() {
+        let anarchy = system(GovernmentType::Anarchy, EconomyType::AverageAgricultural);
+        let democracy = system(GovernmentType::Democracy, EconomyType::AverageAgricultural);
+
+        let lawless = share_of(EventType::PirateAttack, EventPhase::Approach, &anarchy);
+        let ordered = share_of(EventType::PirateAttack, EventPhase::Approach, &democracy);
+
+        assert!(lawless > ordered * 1.8, "{} vs {}", lawless, ordered);
+    }
+
+    #[test]
+    fn communist_systems_inspect_more_often() {
+        let communist = system(GovernmentType::Communist, EconomyType::AverageAgricultural);
+        let democracy = system(GovernmentType::Democracy, EconomyType::AverageAgricultural);
+
+        let strict = share_of(
+            EventType::GovernmentInspection,
+            EventPhase::Approach,
+            &communist,
+        );
+        let normal = share_of(
+            EventType::GovernmentInspection,
+            EventPhase::Approach,
+            &democracy,
+        );
+
+        assert!(strict > normal * 1.8, "{} vs {}", strict, normal);
+    }
+
+    #[test]
+    fn dictatorships_send_more_patrols() {
+        let dictatorship = system(
+            GovernmentType::Dictatorship,
+            EconomyType::AverageAgricultural,
+        );
+        let democracy = system(GovernmentType::Democracy, EconomyType::AverageAgricultural);
+
+        let patrolled = share_of(
+            EventType::MilitaryPatrol,
+            EventPhase::Approach,
+            &dictatorship,
+        );
+        let normal = share_of(EventType::MilitaryPatrol, EventPhase::Approach, &democracy);
+
+        assert!(patrolled > normal * 1.8, "{} vs {}", patrolled, normal);
+    }
+
+    #[test]
+    fn poor_economies_have_more_pirates_and_rich_ones_fewer() {
+        let poor = system(GovernmentType::Democracy, EconomyType::PoorAgricultural);
+        let average = system(GovernmentType::Democracy, EconomyType::AverageAgricultural);
+        let rich = system(GovernmentType::Democracy, EconomyType::RichIndustrial);
+
+        let poor_share = share_of(EventType::PirateAttack, EventPhase::Approach, &poor);
+        let average_share = share_of(EventType::PirateAttack, EventPhase::Approach, &average);
+        let rich_share = share_of(EventType::PirateAttack, EventPhase::Approach, &rich);
+
+        assert!(poor_share > average_share && average_share > rich_share);
+    }
+
+    #[test]
+    fn mainly_industrial_systems_have_more_debris() {
+        let industrial = system(GovernmentType::Democracy, EconomyType::MainlyIndustrial);
+        let average = system(GovernmentType::Democracy, EconomyType::AverageAgricultural);
+
+        let debris = share_of(EventType::SpaceDebris, EventPhase::Jump, &industrial);
+        let normal = share_of(EventType::SpaceDebris, EventPhase::Jump, &average);
+
+        assert!(debris > normal);
+    }
+
+    #[test]
+    fn every_event_stays_possible_everywhere() {
+        let manager = EventManager::new();
+        for government in [
+            GovernmentType::Anarchy,
+            GovernmentType::Communist,
+            GovernmentType::CorporateState,
+            GovernmentType::Democracy,
+            GovernmentType::Dictatorship,
+            GovernmentType::Feudal,
+            GovernmentType::MultiGovernment,
+            GovernmentType::Confederacy,
+        ] {
+            let destination = system(government, EconomyType::RichIndustrial);
+            for phase in [EventPhase::Jump, EventPhase::Approach] {
+                for event in manager.get_available_events(&phase) {
+                    assert!(event_weight(&event.event_type, &destination) > 0.0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn picking_an_event_always_matches_the_phase() {
+        let manager = EventManager::new();
+        let destination = system(GovernmentType::Anarchy, EconomyType::PoorAgricultural);
+        for _ in 0..200 {
+            let event = manager
+                .select_random_event(&EventPhase::Jump, &destination)
+                .unwrap();
+            assert_eq!(event.phase, EventPhase::Jump);
+        }
     }
 }

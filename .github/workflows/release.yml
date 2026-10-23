@@ -2,35 +2,87 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [minor, patch]
   pull_request:
     paths: [".github/workflows/release.yml"]
+
+concurrency:
+  group: release-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  verify:
-    if: startsWith(github.ref, 'refs/tags/v')
+  plan:
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v7
-      - name: Tag must be semver and match Cargo.toml
+        with:
+          fetch-depth: 0
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+          BUMP_INPUT: ${{ inputs.bump }}
         run: |
-          tag="${GITHUB_REF_NAME#v}"
-          if ! echo "$tag" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
-            echo "Tag $GITHUB_REF_NAME is not a semver version" >&2
-            exit 1
+          set -eu
+          no_release() {
+            echo "$1"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "version=dev" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          bump=""
+          case "$EVENT" in
+            workflow_dispatch) bump="$BUMP_INPUT" ;;
+            push)
+              if git tag --points-at "$SHA" | grep -q '^v'; then
+                no_release "Commit is already released"
+              fi
+              title="$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[0].title // ""')"
+              echo "PR title: $title"
+              if echo "$title" | grep -Eq '^[a-z]+(\([^)]*\))?!:'; then
+                bump=minor
+              else
+                case "$(echo "$title" | sed -E 's/^([a-z]+)(\([^)]*\))?:.*/\1/')" in
+                  feat) bump=minor ;;
+                  fix) bump=patch ;;
+                esac
+              fi
+              ;;
+          esac
+          [ -n "$bump" ] || no_release "No release for this change"
+
+          latest="$(git tag --list 'v*' --sort=-v:refname | grep -Ev -- '-' | head -1 || true)"
+          latest="${latest#v}"
+          latest="${latest:-0.1.0}"
+          IFS=. read -r major minor patch <<< "$latest"
+          if [ "$bump" = minor ]; then
+            minor=$((minor + 1)); patch=0
+          else
+            patch=$((patch + 1))
           fi
-          cargo_version="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
-          if [ "$tag" != "$cargo_version" ]; then
-            echo "Tag $tag does not match Cargo.toml version $cargo_version" >&2
-            exit 1
-          fi
+          version="$major.$minor.$patch"
+          echo "Releasing $version ($bump bump from $latest)"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: [verify]
-    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    needs: [plan]
+    if: needs.plan.outputs.release == 'true' || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -44,8 +96,22 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v7
+      - name: Set version
+        if: needs.plan.outputs.release == 'true'
+        shell: bash
+        run: |
+          py="$(command -v python3 || command -v python)"
+          "$py" - <<'PY'
+          import os, re
+          version = os.environ["VERSION"]
+          text = open("Cargo.toml").read()
+          text = re.sub(r'(?m)^version = ".*"$', 'version = "%s"' % version, text, count=1)
+          open("Cargo.toml", "w").write(text)
+          PY
       - run: rustup target add ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
@@ -54,9 +120,7 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          version="${GITHUB_REF_NAME}"
-          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then version="dev"; fi
-          name="elitey_rust-${version}-${{ matrix.target }}"
+          name="elitey_rust-v${VERSION}-${{ matrix.target }}"
           mkdir "$name"
           cp README.md "$name/"
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -75,8 +139,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [plan, build]
+    if: needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -87,6 +151,7 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v3
         with:
+          tag_name: v${{ needs.plan.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: dist/*
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
