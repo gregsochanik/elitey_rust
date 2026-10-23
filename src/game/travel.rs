@@ -81,18 +81,15 @@ impl TravelHandler {
     ) -> Result<bool, String> {
         show_info("Initiating hyperspace jump...");
 
+        let fuel_cost = self
+            .jump_fuel_cost(&commander.location, destination)
+            .ok_or_else(|| format!("Unknown origin system: {}", commander.location))?;
+
         // Phase 1: Jump Events (during hyperspace)
         let jump_event_occurred =
             self.process_jump_phase(commander, ship, event_manager, destination)?;
 
-        // Consume fuel for the jump
-        ship.consume_fuel(
-            destination.distance_to(
-                self.system_manager
-                    .get_system_case_insensitive(&commander.location)
-                    .unwrap(),
-            ) as u32,
-        );
+        ship.consume_fuel(fuel_cost);
 
         // Phase 2: Approach Events (after jump, before station)
         let approach_event_occurred =
@@ -112,6 +109,11 @@ impl TravelHandler {
         }
 
         Ok(true)
+    }
+
+    fn jump_fuel_cost(&self, origin: &str, destination: &StarSystem) -> Option<u32> {
+        let origin_system = self.system_manager.get_system_case_insensitive(origin)?;
+        Some(destination.distance_to(origin_system) as u32)
     }
 
     /// Process jump phase events
@@ -260,6 +262,17 @@ impl TravelHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jump_fuel_cost_is_measured_from_the_origin() {
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let destination = system_manager.get_system("DISO").unwrap().clone();
+        let travel_handler = TravelHandler::new(system_manager);
+
+        assert_eq!(travel_handler.jump_fuel_cost("LAVE", &destination), Some(2));
+        assert_eq!(travel_handler.jump_fuel_cost("lave", &destination), Some(2));
+        assert_eq!(travel_handler.jump_fuel_cost("UNKNOWN", &destination), None);
+    }
 
     #[test]
     fn test_travel_handler_creation() {
