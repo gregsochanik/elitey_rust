@@ -157,6 +157,21 @@ Run tests with `make test` or `cargo test`.
 - **Error Handling**: Comprehensive error handling with `anyhow`
 - **Documentation**: Inline documentation for all public APIs
 
+## Releases
+
+Versions follow [semver](https://semver.org). While below 1.0, a `feat:` bumps the minor version, a `fix:` bumps the patch, and any change that breaks old save files bumps the minor version.
+
+To release:
+1. In a PR, set `version` in `Cargo.toml` (e.g. `0.2.0`) and merge it.
+2. Tag the merge commit and push the tag:
+   ```bash
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+3. The Release workflow checks the tag matches `Cargo.toml`, builds for macOS (Apple silicon and Intel), Linux and Windows, and publishes a GitHub release with the archives and generated notes. A tag with a suffix such as `v0.2.0-rc.1` is published as a pre-release.
+
+Release notes are grouped by the labels on merged PRs (see `.github/release.yml`).
+
 ## Game Design
 
 ### Starting Conditions
