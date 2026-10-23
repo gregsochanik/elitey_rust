@@ -163,5 +163,14 @@ The spread change raised the hindsight measure (best commodity profits on a trip
 
 **Limitation:** that measure is hindsight. A player buys before seeing the destination's prices, and prices re-roll on arrival. Play-testing 15 blind LAVE→DISO trips (one each of Food, Textiles and Minerals) lost money in 13 of them, typically 1–18cr. A random purchase has an expected loss of about the spread, so trading is still closer to gambling than skill.
 
-- [ ] Give players information to trade on, so "buy low, sell high" is possible. Options: show each price against the commodity's base price in `market`, show the economy-based tendency (cheap/expensive) per commodity, or let `info <system>` hint at what a system buys and sells
-- [ ] Re-run the blind-trip play-test afterwards; informed picks should usually profit and blind picks should not
+- [x] Give players information to trade on, so "buy low, sell high" is possible. Options: show each price against the commodity's base price in `market`, show the economy-based tendency (cheap/expensive) per commodity, or let `info <system>` hint at what a system buys and sells
+- [x] Re-run the blind-trip play-test afterwards; informed picks should usually profit and blind picks should not
+
+**Done:** `market` now shows each buy price as a percentage against the commodity's base price (green at −10% or lower, red at +10% or higher). Prices at the destination are independent of the origin, so buying low against base is a real edge.
+
+| Strategy (LAVE→DISO, 1 ton) | Profitable | Average profit |
+|---|---|---|
+| Buy the cheapest vs base | 14 of 23 (61%) | +5.7cr |
+| Buy blind | 4 of 24 (17%) | −2.0cr |
+
+A simulation test over four route pairs agrees: 62% for informed picks against 39% for blind ones.

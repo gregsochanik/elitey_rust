@@ -298,9 +298,19 @@ impl TradingHandler {
             let sell_str = format!("Sell: {}cr", sell_price);
             let avail_str = format!("Available: {} tons", availability);
 
+            let versus_base = commodity.percent_vs_base(buy_price);
+            let base_str = format!("{:+}% vs base", versus_base);
+            let base_coloured = if versus_base <= -10 {
+                base_str.green()
+            } else if versus_base >= 10 {
+                base_str.red()
+            } else {
+                base_str.normal()
+            };
+
             println!(
-                "{:<12} {:<12} {:<12} {:<15}",
-                commodity_name, buy_str, sell_str, avail_str
+                "{:<12} {:<12} {:<12} {:<20} {}",
+                commodity_name, buy_str, sell_str, avail_str, base_coloured
             );
         }
         println!();

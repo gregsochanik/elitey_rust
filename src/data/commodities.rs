@@ -32,6 +32,12 @@ impl CommodityType {
         }
     }
 
+    /// How far a price sits from this commodity's base price, in whole percent
+    pub fn percent_vs_base(&self, price: u32) -> i32 {
+        let base = f64::from(self.base_price());
+        ((f64::from(price) / base - 1.0) * 100.0).round() as i32
+    }
+
     /// Get the name as a string
     pub fn name(&self) -> &'static str {
         match self {
@@ -420,5 +426,46 @@ mod tests {
         for c in trading.get_commodities() {
             assert!(market.get_sell_price(c).unwrap() <= market.get_buy_price(c).unwrap());
         }
+    }
+
+    #[test]
+    fn percent_vs_base_shows_distance_from_base_price() {
+        assert_eq!(CommodityType::Food.percent_vs_base(15), 0);
+        assert_eq!(CommodityType::Food.percent_vs_base(12), -20);
+        assert_eq!(CommodityType::Food.percent_vs_base(18), 20);
+    }
+
+    #[test]
+    fn buying_the_cheapest_against_base_beats_buying_blind() {
+        let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let trading = TradingSystem::new();
+        let pairs = [("LAVE", "DISO"), ("DISO", "LAVE"), ("LAVE", "LEESTI"), ("LEESTI", "DISO")];
+
+        let (mut informed_wins, mut blind_wins, mut runs) = (0, 0, 0);
+        for (from, to) in pairs {
+            let from_economy = systems.get_system(from).unwrap().economy.clone();
+            let to_economy = systems.get_system(to).unwrap().economy.clone();
+            for seed in 0..300u64 {
+                let buy_market = trading.generate_market_prices(&from_economy, seed);
+                let sell_market = trading.generate_market_prices(&to_economy, seed + 10_000);
+                let profit = |c: &CommodityType| {
+                    i64::from(sell_market.get_sell_price(c).unwrap()) - i64::from(buy_market.get_buy_price(c).unwrap())
+                };
+
+                let cheapest = trading
+                    .get_commodities()
+                    .iter()
+                    .min_by_key(|c| c.percent_vs_base(buy_market.get_buy_price(c).unwrap()))
+                    .unwrap();
+                let blind = &trading.get_commodities()[(seed % 8) as usize];
+
+                runs += 1;
+                informed_wins += i32::from(profit(cheapest) > 0);
+                blind_wins += i32::from(profit(blind) > 0);
+            }
+        }
+
+        assert!(informed_wins as f64 / runs as f64 >= 0.6);
+        assert!(informed_wins > blind_wins);
     }
 }
