@@ -3,6 +3,7 @@ pub mod ship;
 pub mod game_state;
 pub mod trading;
 pub mod trade_log;
+pub mod equipment;
 pub mod upgrades;
 pub mod save_load;
 pub mod events;

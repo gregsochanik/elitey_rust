@@ -45,6 +45,13 @@ pub fn show_help() {
     println!("{} - Purchase ship upgrade", "upgrade <ship>".yellow());
     println!("{} - List all available ships", "ships".yellow());
     println!();
+    println!("{}", "Equipment Commands:".cyan().bold());
+    println!("{}", "===================".cyan());
+    println!("{} - Show equipment for sale", "equipment".yellow());
+    println!("{} - Buy and install equipment", "equipment buy <item>".yellow());
+    println!("{} - Sell installed equipment (half price)", "equipment sell <item>".yellow());
+    println!("{} - Show installed equipment, slots and power", "equipment installed".yellow());
+    println!();
     println!("{}", "Save/Load Commands:".cyan().bold());
     println!("{}", "===================".cyan());
     println!("{} - Save game to slot", "save <slot>".yellow());

@@ -14,10 +14,10 @@ Feature specs and implementation details live in the [features/](features/) dire
 - **05 – Save/Load**: `save`, `load`, `saves`, `delete`; multiple save slots, auto-save on quit.
 - **06 – Dynamic Events**: Two-phase events (hyperspace + approach); government/economy modifiers; integrated into travel.
 
+- **07 – Equipment** (v1): `equipment`, `equipment buy|sell|installed`; slots, power and cargo racks. Other effects wait for combat and travel.
 - **11 – Trading Log**: `log [count]` shows recent trades and stats (v1); profit uses average cost; persists in saves.
 
 ### 📋 Planned
-- **07 – Equipment**: Spec only; no code yet (merged from former 07 and 09).
 - **08 – Combat System**: Turn-based combat, enemy types, equipment integration (spec in features/).
 - **10 – Reputation System**: Factions, effects, criminal consequences.
 - **13 – UI Improvements**: Color coding, table alignment, status indicators, menus.
@@ -80,6 +80,12 @@ Feature specs and implementation details live in the [features/](features/) dire
 - `upgrade` - Show upgrade options
 - `upgrade buy <item>` - Buy an upgrade
 - `ships` - List ships for sale
+
+### Equipment
+- `equipment` - Show equipment for sale
+- `equipment buy <item>` - Buy and install (replaces the current item in single-slot categories)
+- `equipment sell <item>` - Sell installed equipment for half of what was paid
+- `equipment installed` - Show installed equipment, slots and power
 
 ### Save/Load
 - `save [name]` - Save game
