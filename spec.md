@@ -37,7 +37,6 @@ Out of scope: multiplayer, graphics, real-time combat.
 
 ## Open decisions
 
-- **Async runtime.** `main` uses `#[tokio::main]` but the game is synchronous. Keep it, or drop `tokio` until something needs it.
 - **Event reputation.** Events set `reputation_change` but nothing applies it. Wire up in 10, or earlier if wanted.
 - **Overlap.** 07 and 09 both describe equipment; consider merging into one spec when starting step 1.
 - **Numbering.** There is no feature 12. Either reserve it or renumber.

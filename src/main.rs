@@ -21,8 +21,7 @@ struct Args {
     new: bool,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
     
     // Initialize game state
