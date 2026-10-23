@@ -140,3 +140,20 @@ The trading system foundation is now ready for implementing:
 - And all subsequent features
 
 **Status: ✅ PRODUCTION READY** 
+
+## Balancing: Early-Game Profit
+
+**Problem:** Trading is rarely profitable at the start. Sampling six LAVE→DISO trips, the best per-ton margin ranged from −2cr to +10cr, and a mixed run took 10 attempts to make a profit. With 100cr starting capital, one bad trade is a large loss.
+
+**Cause:** The sell price is 85–95% of the buy price in the same system (an average 10% loss), while per-system price differences are only ±20% random. The spread eats most of the arbitrage margin.
+
+### Tasks
+- [ ] Tighten the buy/sell spread (e.g. sell at 94–98% of buy)
+- [ ] Add a simulation test: across many seeds, the best commodity on a LAVE→DISO trip makes a profit in at least 80% of runs
+- [ ] Re-check starting credits (100cr) and cargo capacity (20 tons) after the spread change
+- [ ] Play-test a few round trips and record the typical profit per trip
+
+### Acceptance Criteria
+- [ ] A player choosing the best commodity usually profits on a short trip
+- [ ] A poor choice (or bad luck) still loses money, so choices matter
+- [ ] Prices remain stable within a system visit
