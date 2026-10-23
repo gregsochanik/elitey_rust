@@ -1,3 +1,4 @@
+use crate::data::commodities::CommodityType;
 use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 use crate::game::{Commander, Ship};
 use crate::utils::display::show_info;
@@ -28,12 +29,29 @@ pub enum EventType {
     MilitaryPatrol,
 }
 
+/// Cargo an event takes from the hold
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum CargoLoss {
+    /// Up to this many tons, taken from the largest cargo first
+    Tons(u32),
+    /// Everything of one commodity
+    All(CommodityType),
+}
+
+/// Cargo an event adds to the hold, as much as fits
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct CargoGain {
+    pub commodity: CommodityType,
+    pub tons: u32,
+}
+
 /// Represents the outcome of an event choice
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EventOutcome {
     pub description: String,
     pub credits_change: i32,
-    pub cargo_loss: Option<String>, // Commodity type to lose
+    pub cargo_loss: Option<CargoLoss>,
+    pub cargo_gain: Option<CargoGain>,
     pub hull_damage: i32,
     pub fuel_change: i32,
     pub reputation_change: i32,
@@ -68,6 +86,51 @@ impl Default for EventManager {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Remove cargo from the hold and return what was taken
+fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(CommodityType, u32)> {
+    match loss {
+        CargoLoss::All(commodity) => {
+            let held = ship.cargo_hold.get_quantity(commodity);
+            if held > 0 {
+                ship.cargo_hold.remove_cargo(commodity, held);
+                vec![(commodity.clone(), held)]
+            } else {
+                Vec::new()
+            }
+        }
+        CargoLoss::Tons(tons) => {
+            let mut items = ship.cargo_hold.get_items();
+            items.sort_by(|a, b| {
+                b.quantity
+                    .cmp(&a.quantity)
+                    .then_with(|| a.commodity.name().cmp(b.commodity.name()))
+            });
+
+            let mut remaining = *tons;
+            let mut taken = Vec::new();
+            for item in items {
+                if remaining == 0 {
+                    break;
+                }
+                let amount = item.quantity.min(remaining);
+                ship.cargo_hold.remove_cargo(&item.commodity, amount);
+                remaining -= amount;
+                taken.push((item.commodity, amount));
+            }
+            taken
+        }
+    }
+}
+
+/// Add as much of the gain as fits and return the tons added
+fn apply_cargo_gain(ship: &mut Ship, gain: &CargoGain) -> u32 {
+    let tons = gain.tons.min(ship.cargo_hold.remaining_capacity());
+    if tons > 0 {
+        ship.cargo_hold.add_cargo(gain.commodity.clone(), tons);
+    }
+    tons
 }
 
 impl EventManager {
@@ -191,10 +254,27 @@ impl EventManager {
         // Apply outcome effects
         commander.credits = (commander.credits as i32 + outcome.credits_change).max(0) as u32;
 
-        if let Some(cargo_type) = &outcome.cargo_loss {
-            // Remove cargo if specified - for now, just show the message
-            show_info(&format!("Lost 1 cargo: {}", cargo_type));
-            // TODO: Implement proper cargo removal when we have string-to-commodity conversion
+        if let Some(loss) = &outcome.cargo_loss {
+            let taken = apply_cargo_loss(ship, loss);
+            if taken.is_empty() {
+                show_info("You had no cargo to lose.");
+            }
+            for (commodity, tons) in taken {
+                show_info(&format!("Lost {} tons of {}", tons, commodity.name()));
+            }
+        }
+
+        if let Some(gain) = &outcome.cargo_gain {
+            let added = apply_cargo_gain(ship, gain);
+            if added == 0 {
+                show_info("No room in your hold for the cargo.");
+            } else {
+                show_info(&format!(
+                    "Gained {} tons of {}",
+                    added,
+                    gain.commodity.name()
+                ));
+            }
         }
 
         commander.reputation += outcome.reputation_change;
@@ -227,6 +307,7 @@ impl EventManager {
                             .to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: -2,
                         reputation_change: 0,
@@ -241,6 +322,7 @@ impl EventManager {
                         description: "You carefully navigate around the wormhole".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: -1,
                         reputation_change: 0,
@@ -267,11 +349,15 @@ impl EventManager {
                         description: "You investigate and find rare materials".to_string(),
                         credits_change: 500,
                         cargo_loss: None,
+                        cargo_gain: Some(CargoGain {
+                            commodity: CommodityType::Computers,
+                            tons: 2,
+                        }),
                         hull_damage: -5,
                         fuel_change: -1,
                         reputation_change: 10,
                         new_location: None,
-                        message: "You discover valuable materials! +500 credits, +10 reputation"
+                        message: "You discover valuable materials! +500 credits, +2 tons of Computers, +10 reputation"
                             .to_string(),
                     },
                 },
@@ -281,6 +367,7 @@ impl EventManager {
                         description: "You safely avoid the anomaly".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 0,
@@ -306,6 +393,7 @@ impl EventManager {
                         description: "You correct the navigation error".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: -2,
                         reputation_change: 0,
@@ -319,6 +407,7 @@ impl EventManager {
                         description: "You continue despite the error".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: -3,
                         reputation_change: -5,
@@ -344,11 +433,15 @@ impl EventManager {
                         description: "You salvage valuable materials".to_string(),
                         credits_change: 200,
                         cargo_loss: None,
+                        cargo_gain: Some(CargoGain {
+                            commodity: CommodityType::Minerals,
+                            tons: 3,
+                        }),
                         hull_damage: -2,
                         fuel_change: 0,
                         reputation_change: 0,
                         new_location: None,
-                        message: "You salvage valuable materials! +200 credits, minor hull damage."
+                        message: "You salvage valuable materials! +200 credits, +3 tons of Minerals, minor hull damage."
                             .to_string(),
                     },
                 },
@@ -358,6 +451,7 @@ impl EventManager {
                         description: "You carefully navigate around the debris".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 0,
@@ -382,6 +476,7 @@ impl EventManager {
                         description: "You successfully communicate with the aliens".to_string(),
                         credits_change: 300,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 15,
@@ -396,6 +491,7 @@ impl EventManager {
                         description: "You flee from the alien vessel".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: -3,
                         fuel_change: -2,
                         reputation_change: -5,
@@ -409,6 +505,7 @@ impl EventManager {
                         description: "You engage in combat with the aliens".to_string(),
                         credits_change: 400,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: -8,
                         fuel_change: 0,
                         reputation_change: -10,
@@ -434,6 +531,7 @@ impl EventManager {
                         description: "You engage in combat with the pirates".to_string(),
                         credits_change: 600,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: -10,
                         fuel_change: 0,
                         reputation_change: 5,
@@ -447,12 +545,13 @@ impl EventManager {
                     outcome: EventOutcome {
                         description: "You attempt to flee from the pirates".to_string(),
                         credits_change: 0,
-                        cargo_loss: Some("Food".to_string()),
+                        cargo_loss: Some(CargoLoss::Tons(3)),
+                        cargo_gain: None,
                         hull_damage: -5,
                         fuel_change: -3,
                         reputation_change: -5,
                         new_location: None,
-                        message: "You escape but lose some cargo and take damage.".to_string(),
+                        message: "You escape but lose up to 3 tons of cargo and take damage.".to_string(),
                     },
                 },
                 EventChoice {
@@ -460,12 +559,13 @@ impl EventManager {
                     outcome: EventOutcome {
                         description: "You surrender to the pirates".to_string(),
                         credits_change: -200,
-                        cargo_loss: Some("Food".to_string()),
+                        cargo_loss: Some(CargoLoss::Tons(5)),
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -10,
                         new_location: None,
-                        message: "You surrender and lose cargo and credits, but avoid damage."
+                        message: "You surrender and lose up to 5 tons of cargo and 200 credits, but avoid damage."
                             .to_string(),
                     },
                 },
@@ -486,11 +586,15 @@ impl EventManager {
                         description: "You investigate and find a genuine distress call".to_string(),
                         credits_change: 400,
                         cargo_loss: None,
+                        cargo_gain: Some(CargoGain {
+                            commodity: CommodityType::Luxury,
+                            tons: 2,
+                        }),
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 20,
                         new_location: None,
-                        message: "You rescue the crew! +400 credits, +20 reputation.".to_string(),
+                        message: "You rescue the crew! +400 credits, +2 tons of Luxury as thanks, +20 reputation.".to_string(),
                     },
                 },
                 EventChoice {
@@ -499,6 +603,7 @@ impl EventManager {
                         description: "You ignore the distress signal".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -5,
@@ -524,6 +629,7 @@ impl EventManager {
                         description: "You comply with the government inspection".to_string(),
                         credits_change: -50,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 10,
@@ -538,6 +644,7 @@ impl EventManager {
                         description: "You attempt to bribe the officials".to_string(),
                         credits_change: -100,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -5,
@@ -551,7 +658,8 @@ impl EventManager {
                     outcome: EventOutcome {
                         description: "You resist the government inspection".to_string(),
                         credits_change: 0,
-                        cargo_loss: Some("Narcotics".to_string()),
+                        cargo_loss: Some(CargoLoss::All(CommodityType::Narcotics)),
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -15,
@@ -577,6 +685,7 @@ impl EventManager {
                         description: "You properly identify yourself to the military".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 5,
@@ -590,6 +699,7 @@ impl EventManager {
                         description: "You attempt to evade the military patrol".to_string(),
                         credits_change: 0,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: -3,
                         fuel_change: -2,
                         reputation_change: -10,
@@ -603,6 +713,7 @@ impl EventManager {
                         description: "You engage in combat with the military patrol".to_string(),
                         credits_change: 800,
                         cargo_loss: None,
+                        cargo_gain: None,
                         hull_damage: -15,
                         fuel_change: 0,
                         reputation_change: -20,
@@ -708,5 +819,123 @@ mod tests {
             }
         }
         panic!("no military patrol choice lowers reputation");
+    }
+
+    fn ship_with(cargo: &[(CommodityType, u32)]) -> Ship {
+        let mut ship = Ship::new_cobra_mk3();
+        for (commodity, tons) in cargo {
+            assert!(ship.cargo_hold.add_cargo(commodity.clone(), *tons));
+        }
+        ship
+    }
+
+    #[test]
+    fn losing_tons_takes_from_the_largest_cargo_first() {
+        let mut ship = ship_with(&[(CommodityType::Food, 2), (CommodityType::Minerals, 8)]);
+
+        let taken = apply_cargo_loss(&mut ship, &CargoLoss::Tons(5));
+
+        assert_eq!(taken, vec![(CommodityType::Minerals, 5)]);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Minerals), 3);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Food), 2);
+    }
+
+    #[test]
+    fn losing_more_than_held_takes_everything_across_commodities() {
+        let mut ship = ship_with(&[(CommodityType::Food, 2), (CommodityType::Minerals, 3)]);
+
+        let taken = apply_cargo_loss(&mut ship, &CargoLoss::Tons(10));
+
+        assert_eq!(taken.iter().map(|(_, tons)| tons).sum::<u32>(), 5);
+        assert!(ship.cargo_hold.is_empty());
+    }
+
+    #[test]
+    fn losing_cargo_from_an_empty_hold_takes_nothing() {
+        let mut ship = ship_with(&[]);
+        assert!(apply_cargo_loss(&mut ship, &CargoLoss::Tons(3)).is_empty());
+        assert!(apply_cargo_loss(&mut ship, &CargoLoss::All(CommodityType::Narcotics)).is_empty());
+    }
+
+    #[test]
+    fn losing_all_of_a_commodity_leaves_other_cargo() {
+        let mut ship = ship_with(&[(CommodityType::Narcotics, 4), (CommodityType::Food, 2)]);
+
+        let taken = apply_cargo_loss(&mut ship, &CargoLoss::All(CommodityType::Narcotics));
+
+        assert_eq!(taken, vec![(CommodityType::Narcotics, 4)]);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Narcotics), 0);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Food), 2);
+    }
+
+    #[test]
+    fn cargo_gain_is_limited_by_free_space() {
+        let mut ship = ship_with(&[(CommodityType::Food, 19)]);
+        let gain = CargoGain {
+            commodity: CommodityType::Luxury,
+            tons: 2,
+        };
+
+        assert_eq!(apply_cargo_gain(&mut ship, &gain), 1);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Luxury), 1);
+        assert_eq!(apply_cargo_gain(&mut ship, &gain), 0);
+    }
+
+    #[test]
+    fn surrendering_to_pirates_costs_cargo_and_credits() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        commander.credits = 500;
+        let mut ship = ship_with(&[(CommodityType::Computers, 8)]);
+
+        let event = manager.events.get(&EventType::PirateAttack).unwrap();
+        let surrender = event
+            .choices
+            .iter()
+            .position(|c| c.description == "Surrender")
+            .unwrap();
+        manager
+            .process_event(event, &mut commander, &mut ship, surrender)
+            .unwrap();
+
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Computers), 3);
+        assert_eq!(commander.credits, 300);
+    }
+
+    #[test]
+    fn resisting_inspection_confiscates_narcotics_only() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = ship_with(&[(CommodityType::Narcotics, 3), (CommodityType::Food, 5)]);
+
+        let event = manager
+            .events
+            .get(&EventType::GovernmentInspection)
+            .unwrap();
+        let resist = event
+            .choices
+            .iter()
+            .position(|c| c.description.starts_with("Resist"))
+            .unwrap();
+        manager
+            .process_event(event, &mut commander, &mut ship, resist)
+            .unwrap();
+
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Narcotics), 0);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Food), 5);
+    }
+
+    #[test]
+    fn rescuing_the_crew_rewards_cargo() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = ship_with(&[]);
+
+        let event = manager.events.get(&EventType::RescueSignal).unwrap();
+        manager
+            .process_event(event, &mut commander, &mut ship, 0)
+            .unwrap();
+
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Luxury), 2);
     }
 }
