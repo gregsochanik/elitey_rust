@@ -139,7 +139,7 @@ impl TradeLog {
     pub fn best_trade(&self) -> Option<&Transaction> {
         self.transactions
             .iter()
-            .filter(|t| t.profit.is_some())
+            .filter(|t| t.profit.is_some_and(|p| p > 0))
             .max_by_key(|t| t.profit)
     }
 
@@ -242,6 +242,14 @@ mod tests {
     fn selling_untracked_cargo_is_all_profit() {
         let mut log = TradeLog::new();
         assert_eq!(log.record_sell(FOOD, 3, 10, "LAVE", 3), 30);
+    }
+
+    #[test]
+    fn best_trade_ignores_losses() {
+        let mut log = TradeLog::new();
+        log.record_buy(FOOD, 2, 20, "LAVE", 0);
+        log.record_sell(FOOD, 2, 15, "LEESTI", 2);
+        assert!(log.best_trade().is_none());
     }
 
     #[test]

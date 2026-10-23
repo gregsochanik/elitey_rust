@@ -1,3 +1,5 @@
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use crate::data::systems::EconomyType;
@@ -253,7 +255,8 @@ impl TradingSystem {
     }
 
     /// Generate market prices for a system based on its economy
-    pub fn generate_market_prices(&self, economy: &EconomyType) -> MarketPrices {
+    pub fn generate_market_prices(&self, economy: &EconomyType, seed: u64) -> MarketPrices {
+        let mut rng = StdRng::seed_from_u64(seed);
         let mut market = MarketPrices::new();
         
         for commodity in &self.commodities {
@@ -261,23 +264,23 @@ impl TradingSystem {
             let economy_multiplier = commodity.economy_preference(economy);
             
             // Add ±20% random fluctuation
-            let fluctuation = 0.8 + (rand::random::<f64>() * 0.4); // 0.8 to 1.2
+            let fluctuation = 0.8 + (rng.gen::<f64>() * 0.4); // 0.8 to 1.2
             
             let adjusted_price = (base_price as f64 * economy_multiplier * fluctuation) as u32;
             
             // Buy/sell spread (typically 10-15%)
-            let spread = 0.85 + (rand::random::<f64>() * 0.1); // 0.85 to 0.95
+            let spread = 0.85 + (rng.gen::<f64>() * 0.1); // 0.85 to 0.95
             
             let buy_price = adjusted_price;
             let sell_price = (adjusted_price as f64 * spread) as u32;
             
             // Availability based on economy preference
             let availability = if economy_multiplier > 1.0 {
-                50 + (rand::random::<u32>() % 50) // 50-100 tons
+                50 + (rng.gen::<u32>() % 50) // 50-100 tons
             } else if economy_multiplier < 1.0 {
-                5 + (rand::random::<u32>() % 15) // 5-20 tons
+                5 + (rng.gen::<u32>() % 15) // 5-20 tons
             } else {
-                20 + (rand::random::<u32>() % 30) // 20-50 tons
+                20 + (rng.gen::<u32>() % 30) // 20-50 tons
             };
             
             market.buy_prices.insert(commodity.clone(), buy_price);
@@ -362,7 +365,7 @@ mod tests {
     #[test]
     fn test_market_generation() {
         let trading_system = TradingSystem::new();
-        let market = trading_system.generate_market_prices(&EconomyType::RichAgricultural);
+        let market = trading_system.generate_market_prices(&EconomyType::RichAgricultural, 1);
         
         // Check that all commodities have prices
         assert_eq!(market.buy_prices.len(), 8);
@@ -375,5 +378,17 @@ mod tests {
             let sell_price = market.get_sell_price(commodity).unwrap();
             assert!(buy_price >= sell_price);
         }
+    }
+
+    #[test]
+    fn same_seed_gives_same_prices_and_different_seed_differs() {
+        let system = TradingSystem::new();
+        let a = system.generate_market_prices(&EconomyType::RichAgricultural, 7);
+        let b = system.generate_market_prices(&EconomyType::RichAgricultural, 7);
+        let c = system.generate_market_prices(&EconomyType::RichAgricultural, 8);
+
+        assert_eq!(a.buy_prices, b.buy_prices);
+        assert_eq!(a.availability, b.availability);
+        assert_ne!(a.buy_prices, c.buy_prices);
     }
 }

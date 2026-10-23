@@ -122,7 +122,7 @@ Feature 03: Trading System has been successfully implemented with all requiremen
 - **Commodities**: Food, Textiles, Machinery, Computers, Minerals, Alloys, Luxury, Narcotics
 - **Market Mechanics**: 
   - Economy-based price modifiers (agricultural systems prefer food/textiles, industrial prefer machinery/minerals)
-  - ±20% random price fluctuations
+  - ±20% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere
   - Buy/sell price spreads (10-15%)
   - Supply/demand based availability
 - **Trading Commands**: 

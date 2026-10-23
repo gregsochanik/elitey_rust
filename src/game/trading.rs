@@ -1,5 +1,5 @@
 use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
-use crate::data::systems::{StarSystem, SystemManager};
+use crate::data::systems::{EconomyType, StarSystem, SystemManager};
 use crate::game::{Commander, Ship, TradeLog};
 use crate::utils::display::{show_error, show_success};
 use colored::*;
@@ -8,19 +8,34 @@ use colored::*;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TradingHandler {
     trading_system: TradingSystem,
+    #[serde(default)]
+    market_seed: u64,
+    #[serde(default)]
+    market_location: String,
 }
 
 impl TradingHandler {
     pub fn new() -> Self {
         Self {
             trading_system: TradingSystem::new(),
+            market_seed: rand::random(),
+            market_location: String::new(),
         }
     }
 
+    /// Prices stay fixed while the player stays in a system and re-roll on arrival elsewhere
+    fn market_for(&mut self, location: &str, economy: &EconomyType) -> MarketPrices {
+        if self.market_location != location {
+            self.market_location = location.to_string();
+            self.market_seed = rand::random();
+        }
+        self.trading_system.generate_market_prices(economy, self.market_seed)
+    }
+
     /// Handle the market command - show current system's market prices
-    pub fn handle_market(&self, system_manager: &SystemManager, current_location: &str) {
+    pub fn handle_market(&mut self, system_manager: &SystemManager, current_location: &str) {
         if let Some(system) = system_manager.get_system(current_location) {
-            let market = self.trading_system.generate_market_prices(&system.economy);
+            let market = self.market_for(current_location, &system.economy);
             self.display_market(system, &market);
         } else {
             show_error("System not found");
@@ -29,7 +44,7 @@ impl TradingHandler {
 
     /// Handle the buy command - purchase commodities
     pub fn handle_buy(
-        &self,
+        &mut self,
         args: &[String],
         commander: &mut Commander,
         ship: &mut Ship,
@@ -72,7 +87,7 @@ impl TradingHandler {
             }
         };
 
-        let market = self.trading_system.generate_market_prices(&system.economy);
+        let market = self.market_for(current_location, &system.economy);
 
         // Perform the purchase
         self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
@@ -80,7 +95,7 @@ impl TradingHandler {
 
     /// Handle the sell command - sell commodities
     pub fn handle_sell(
-        &self,
+        &mut self,
         args: &[String],
         commander: &mut Commander,
         ship: &mut Ship,
@@ -123,7 +138,7 @@ impl TradingHandler {
             }
         };
 
-        let market = self.trading_system.generate_market_prices(&system.economy);
+        let market = self.market_for(current_location, &system.economy);
 
         // Perform the sale
         self.execute_sell(commodity, quantity, commander, ship, &market, trade_log)
@@ -347,6 +362,22 @@ mod tests {
             Some(CommodityType::Machinery)
         );
         assert_eq!(handler.parse_commodity("unknown"), None);
+    }
+
+    #[test]
+    fn prices_are_stable_within_a_system_and_reroll_on_arrival() {
+        let mut handler = TradingHandler::new();
+        let economy = EconomyType::RichIndustrial;
+
+        let first = handler.market_for("LAVE", &economy);
+        let second = handler.market_for("LAVE", &economy);
+        assert_eq!(first.buy_prices, second.buy_prices);
+        assert_eq!(first.availability, second.availability);
+
+        let seed_at_lave = handler.market_seed;
+        handler.market_for("DISO", &economy);
+        handler.market_for("LAVE", &economy);
+        assert_ne!(handler.market_seed, seed_at_lave);
     }
 
     #[test]

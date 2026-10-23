@@ -248,7 +248,7 @@ impl GameState {
     }
 
     /// Handle market command
-    pub fn handle_market_command(&self) {
+    pub fn handle_market_command(&mut self) {
         self.trading_handler.handle_market(
             &self.system_manager,
             &self.commander.location,
