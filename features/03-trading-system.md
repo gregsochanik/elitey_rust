@@ -123,7 +123,7 @@ Feature 03: Trading System has been successfully implemented with all requiremen
 - **Market Mechanics**: 
   - Economy-based price modifiers (agricultural systems prefer food/textiles, industrial prefer machinery/minerals)
   - ±20% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere
-  - Buy/sell price spreads (10-15%)
+  - Buy/sell price spreads (2-6%)
   - Supply/demand based availability
 - **Trading Commands**: 
   - `market` - Shows current system's prices and availability
@@ -148,8 +148,8 @@ The trading system foundation is now ready for implementing:
 **Cause:** The sell price is 85–95% of the buy price in the same system (an average 10% loss), while per-system price differences are only ±20% random. The spread eats most of the arbitrage margin.
 
 ### Tasks
-- [ ] Tighten the buy/sell spread (e.g. sell at 94–98% of buy)
-- [ ] Add a simulation test: across many seeds, the best commodity on a LAVE→DISO trip makes a profit in at least 80% of runs
+- [x] Tighten the buy/sell spread (sell at 94–98% of buy, was 85–95%)
+- [x] Add a simulation test: across many seeds, the best commodity on a LAVE→DISO trip makes a profit in at least 90% of runs (measured 94%, was 80%)
 - [ ] Re-check starting credits (100cr) and cargo capacity (20 tons) after the spread change
 - [ ] Play-test a few round trips and record the typical profit per trip
 
@@ -157,3 +157,11 @@ The trading system foundation is now ready for implementing:
 - [ ] A player choosing the best commodity usually profits on a short trip
 - [ ] A poor choice (or bad luck) still loses money, so choices matter
 - [ ] Prices remain stable within a system visit
+
+### Result and follow-up
+The spread change raised the hindsight measure (best commodity profits on a trip) from 80% to 94%, and the simulation test now asserts at least 90%.
+
+**Limitation:** that measure is hindsight. A player buys before seeing the destination's prices, and prices re-roll on arrival. Play-testing 15 blind LAVE→DISO trips (one each of Food, Textiles and Minerals) lost money in 13 of them, typically 1–18cr. A random purchase has an expected loss of about the spread, so trading is still closer to gambling than skill.
+
+- [ ] Give players information to trade on, so "buy low, sell high" is possible. Options: show each price against the commodity's base price in `market`, show the economy-based tendency (cheap/expensive) per commodity, or let `info <system>` hint at what a system buys and sells
+- [ ] Re-run the blind-trip play-test afterwards; informed picks should usually profit and blind picks should not

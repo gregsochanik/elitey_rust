@@ -268,8 +268,8 @@ impl TradingSystem {
             
             let adjusted_price = (base_price as f64 * economy_multiplier * fluctuation) as u32;
             
-            // Buy/sell spread (typically 10-15%)
-            let spread = 0.85 + (rng.gen::<f64>() * 0.1); // 0.85 to 0.95
+            // Buy/sell spread (2-6%)
+            let spread = 0.94 + (rng.gen::<f64>() * 0.04); // 0.94 to 0.98
             
             let buy_price = adjusted_price;
             let sell_price = (adjusted_price as f64 * spread) as u32;
@@ -390,5 +390,35 @@ mod tests {
         assert_eq!(a.buy_prices, b.buy_prices);
         assert_eq!(a.availability, b.availability);
         assert_ne!(a.buy_prices, c.buy_prices);
+    }
+
+    #[test]
+    fn best_commodity_on_a_short_trip_usually_profits() {
+        let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
+        let from = systems.get_system("LAVE").unwrap().economy.clone();
+        let to = systems.get_system("DISO").unwrap().economy.clone();
+        let trading = TradingSystem::new();
+
+        let runs = 500u64;
+        let profitable = (0..runs)
+            .filter(|seed| {
+                let buy_market = trading.generate_market_prices(&from, *seed);
+                let sell_market = trading.generate_market_prices(&to, seed + 10_000);
+                trading.get_commodities().iter().any(|c| {
+                    sell_market.get_sell_price(c).unwrap() > buy_market.get_buy_price(c).unwrap()
+                })
+            })
+            .count();
+
+        assert!(profitable as f64 / runs as f64 >= 0.9, "profitable in {}/{} runs", profitable, runs);
+    }
+
+    #[test]
+    fn a_poor_choice_can_still_lose_money() {
+        let trading = TradingSystem::new();
+        let market = trading.generate_market_prices(&EconomyType::RichAgricultural, 3);
+        for c in trading.get_commodities() {
+            assert!(market.get_sell_price(c).unwrap() <= market.get_buy_price(c).unwrap());
+        }
     }
 }
