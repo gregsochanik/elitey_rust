@@ -20,25 +20,23 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 04 | Ship upgrades | Done | 03 |
 | 05 | Save/load | Done | 01 |
 | 06 | Dynamic events | Done (reputation stored; effects in 10) | 02 |
-| 07 | Weapons & equipment (design) | Spec only | 04 |
-| 09 | Equipment system (implementation) | Spec only | 04, 07 |
-| 08 | Combat | Spec only | 06, 09 |
+| 07 | Equipment (merged from former 07 + 09) | Spec only | 04 |
+| 08 | Combat | Spec only | 06, 07 |
 | 10 | Reputation | Spec only | 03, 06 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
 | 13 | UI improvements | Spec only | – |
 
 ## Roadmap
 
-1. **Equipment (07 + 09).** 07 is the design; 09 is the implementation to build. Slots, power, shop, install/remove, damage/repair, `equipment` command, save/load of equipment.
+1. **Equipment (07).** v1: slots, power, shop, buy/sell, `equipment` commands, cargo racks, save/load. Effects and damage/repair come later.
 2. **Combat (08).** Turn-based encounters triggered from travel events (06), using equipment stats. Escape, loot, and defeat consequences.
-3. **Trading log (11).** Transaction history and profit/loss. Independent of 07–09, so it can be done in parallel or first as a low-risk win.
+3. **Trading log (11).** Transaction history and profit/loss. Independent of 07, so it can be done in parallel or first as a low-risk win.
 4. **Reputation (10).** Price modifiers, criminal record, event outcomes. Hooks into trading, events and combat, so it comes after them.
 5. **UI improvements (13).** Colour, table alignment and status indicators using existing crates (`colored`, `crossterm`). Can land at any point; doing it last avoids reworking output for new commands.
 
 ## Open decisions
 
-- **Overlap.** 07 and 09 both describe equipment; consider merging into one spec when starting step 1.
-- **Numbering.** There is no feature 12. Either reserve it or renumber.
+- **Numbering.** There are no features 09 or 12 (09 was merged into 07). Either reserve them or renumber.
 - **Tests.** The README references a `tests/` directory that does not exist. Add BDD-style integration tests there as each feature lands.
 
 ## Definition of done (per feature)

@@ -17,8 +17,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 - **11 – Trading Log**: `log [count]` shows recent trades and stats (v1); profit uses average cost; persists in saves.
 
 ### 📋 Planned
-- **07 – Weapons & Equipment**: Spec only; no code yet.
-- **09 – Equipment System**: Spec only; no code yet.
+- **07 – Equipment**: Spec only; no code yet (merged from former 07 and 09).
 - **08 – Combat System**: Turn-based combat, enemy types, equipment integration (spec in features/).
 - **10 – Reputation System**: Factions, effects, criminal consequences.
 - **13 – UI Improvements**: Color coding, table alignment, status indicators, menus.
