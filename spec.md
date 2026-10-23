@@ -19,7 +19,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 03 | Trading | Done | 01, 02 |
 | 04 | Ship upgrades | Done | 03 |
 | 05 | Save/load | Done | 01 |
-| 06 | Dynamic events | Done (reputation stored; effects in 10) | 02 |
+| 06 | Dynamic events | Done (gaps in spec) | 02 |
 | 07 | Equipment (v1: slots, power, buy/sell, cargo racks) | Done (v1) | 04 |
 | 08 | Combat | Spec only | 06, 07 |
 | 10 | Reputation | Spec only | 03, 06 |
