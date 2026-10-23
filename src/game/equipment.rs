@@ -21,7 +21,7 @@ pub struct Installed {
 }
 
 impl Installed {
-    fn item(&self) -> &'static Equipment {
+    pub fn item(&self) -> &'static Equipment {
         equipment::find(&self.id).expect("installed equipment must exist in the catalog")
     }
 

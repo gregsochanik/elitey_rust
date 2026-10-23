@@ -51,6 +51,41 @@ impl Quality {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CombatStats {
+    pub damage: u32,
+    pub accuracy: f64,
+    pub protection: u32,
+    pub recharge: u32,
+}
+
+impl CombatStats {
+    pub const NONE: CombatStats = CombatStats {
+        damage: 0,
+        accuracy: 0.0,
+        protection: 0,
+        recharge: 0,
+    };
+
+    pub const fn weapon(damage: u32, accuracy: f64) -> CombatStats {
+        CombatStats {
+            damage,
+            accuracy,
+            protection: 0,
+            recharge: 0,
+        }
+    }
+
+    pub const fn shield(protection: u32, recharge: u32) -> CombatStats {
+        CombatStats {
+            damage: 0,
+            accuracy: 0.0,
+            protection,
+            recharge,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Equipment {
     pub id: &'static str,
@@ -60,6 +95,7 @@ pub struct Equipment {
     pub price: u32,
     pub power: u32,
     pub cargo_multiplier: f64,
+    pub combat: CombatStats,
     pub effect: &'static str,
 }
 
@@ -80,6 +116,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 50,
         power: 2,
         cargo_multiplier: 1.0,
+        combat: CombatStats::weapon(15, 0.9),
         effect: "Damage 15, accuracy 0.9",
     },
     Equipment {
@@ -90,6 +127,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 120,
         power: 4,
         cargo_multiplier: 1.0,
+        combat: CombatStats::weapon(25, 0.8),
         effect: "Damage 25, accuracy 0.8",
     },
     Equipment {
@@ -100,6 +138,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 250,
         power: 6,
         cargo_multiplier: 1.0,
+        combat: CombatStats::weapon(45, 0.6),
         effect: "Damage 45, accuracy 0.6",
     },
     Equipment {
@@ -110,6 +149,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 500,
         power: 8,
         cargo_multiplier: 1.0,
+        combat: CombatStats::weapon(80, 0.4),
         effect: "Damage 80, accuracy 0.4",
     },
     Equipment {
@@ -120,6 +160,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 30,
         power: 3,
         cargo_multiplier: 1.0,
+        combat: CombatStats::shield(20, 5),
         effect: "Protection 20, recharge 5",
     },
     Equipment {
@@ -130,6 +171,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 80,
         power: 5,
         cargo_multiplier: 1.0,
+        combat: CombatStats::shield(40, 8),
         effect: "Protection 40, recharge 8",
     },
     Equipment {
@@ -140,6 +182,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 180,
         power: 7,
         cargo_multiplier: 1.0,
+        combat: CombatStats::shield(70, 12),
         effect: "Protection 70, recharge 12",
     },
     Equipment {
@@ -150,6 +193,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 350,
         power: 10,
         cargo_multiplier: 1.0,
+        combat: CombatStats::shield(100, 15),
         effect: "Protection 100, recharge 15",
     },
     Equipment {
@@ -160,6 +204,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 20,
         power: 2,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Speed 1.0x, fuel 1.0x",
     },
     Equipment {
@@ -170,6 +215,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 60,
         power: 3,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Speed 1.2x, fuel 1.1x",
     },
     Equipment {
@@ -180,6 +226,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 150,
         power: 5,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Speed 1.4x, fuel 1.2x",
     },
     Equipment {
@@ -190,6 +237,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 300,
         power: 8,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Speed 1.6x, fuel 1.3x",
     },
     Equipment {
@@ -200,6 +248,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 15,
         power: 1,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Range 1.0x, targeting +0",
     },
     Equipment {
@@ -210,6 +259,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 40,
         power: 2,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Range 1.5x, targeting +10",
     },
     Equipment {
@@ -220,6 +270,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 100,
         power: 4,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Range 2.0x, targeting +25",
     },
     Equipment {
@@ -230,6 +281,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 200,
         power: 6,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Range 3.0x, targeting +50",
     },
     Equipment {
@@ -240,6 +292,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 10,
         power: 0,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Cargo capacity 1.0x",
     },
     Equipment {
@@ -250,6 +303,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 30,
         power: 1,
         cargo_multiplier: 1.25,
+        combat: CombatStats::NONE,
         effect: "Cargo capacity 1.25x",
     },
     Equipment {
@@ -260,6 +314,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 80,
         power: 2,
         cargo_multiplier: 1.5,
+        combat: CombatStats::NONE,
         effect: "Cargo capacity 1.5x",
     },
     Equipment {
@@ -270,6 +325,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 150,
         power: 3,
         cargo_multiplier: 2.0,
+        combat: CombatStats::NONE,
         effect: "Cargo capacity 2.0x",
     },
     Equipment {
@@ -280,6 +336,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 20,
         power: 1,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "-30% heat",
     },
     Equipment {
@@ -290,6 +347,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 50,
         power: 2,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "+40% evasion",
     },
     Equipment {
@@ -300,6 +358,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 120,
         power: 4,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "+60% jamming",
     },
     Equipment {
@@ -310,6 +369,7 @@ pub const CATALOG: &[Equipment] = &[
         price: 250,
         power: 8,
         cargo_multiplier: 1.0,
+        combat: CombatStats::NONE,
         effect: "Temporary invisibility",
     },
 ];
@@ -360,5 +420,52 @@ mod tests {
         assert_eq!(find("expanded-racks").unwrap().cargo_multiplier, 1.25);
         assert_eq!(find("military-racks").unwrap().cargo_multiplier, 1.5);
         assert_eq!(find("elite-racks").unwrap().cargo_multiplier, 2.0);
+    }
+
+    #[test]
+    fn weapons_and_shields_carry_the_combat_stats_from_the_spec() {
+        let pulse = find("pulse-laser").unwrap().combat;
+        assert_eq!((pulse.damage, pulse.accuracy), (15, 0.9));
+        let missile = find("missile-launcher").unwrap().combat;
+        assert_eq!((missile.damage, missile.accuracy), (80, 0.4));
+        let basic = find("basic-shield").unwrap().combat;
+        assert_eq!((basic.protection, basic.recharge), (20, 5));
+        let elite = find("elite-shield").unwrap().combat;
+        assert_eq!((elite.protection, elite.recharge), (100, 15));
+    }
+
+    #[test]
+    fn only_weapons_and_shields_have_combat_stats() {
+        for item in CATALOG {
+            match item.category {
+                EquipmentCategory::Weapon => {
+                    assert!(
+                        item.combat.damage > 0
+                            && item.combat.accuracy > 0.0
+                            && item.combat.accuracy <= 1.0,
+                        "{}",
+                        item.id
+                    );
+                    assert!(
+                        item.effect.contains(&item.combat.damage.to_string()),
+                        "{}",
+                        item.id
+                    );
+                }
+                EquipmentCategory::Shield => {
+                    assert!(
+                        item.combat.protection > 0 && item.combat.recharge > 0,
+                        "{}",
+                        item.id
+                    );
+                    assert!(
+                        item.effect.contains(&item.combat.protection.to_string()),
+                        "{}",
+                        item.id
+                    );
+                }
+                _ => assert_eq!(item.combat, CombatStats::NONE, "{}", item.id),
+            }
+        }
     }
 }
