@@ -1,0 +1,36 @@
+name: Label PR
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label from Conventional Commit prefix
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          REPO: ${{ github.repository }}
+        run: |
+          type="$(echo "$TITLE" | sed -E 's/^([a-z]+)(\([^)]*\))?!?:.*/\1/')"
+          case "$type" in
+            feat) label=feature ;;
+            fix) label=bug ;;
+            docs) label=documentation ;;
+            chore|ci|test|style|refactor|build|perf) label=chore ;;
+            *) echo "No label for title: $TITLE"; exit 0 ;;
+          esac
+
+          current="$(gh pr view "$PR" --repo "$REPO" --json labels --jq '.labels[].name')"
+          for managed in feature bug documentation chore; do
+            if [ "$managed" != "$label" ] && echo "$current" | grep -qx "$managed"; then
+              gh pr edit "$PR" --repo "$REPO" --remove-label "$managed"
+            fi
+          done
+          gh pr edit "$PR" --repo "$REPO" --add-label "$label"
