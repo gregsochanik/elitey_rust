@@ -1,121 +1,77 @@
 # Feature 11: Trading Log
 
 ## Overview
-Implement a comprehensive trading log system that tracks all buy/sell transactions, calculates profit/loss, and provides trading analytics to help players optimize their trading strategies.
+Record every buy and sell, calculate profit per sale, and show recent trades and totals via a `log` command. The log persists with the save file.
+
+Out of scope for this version (later): route analysis, per-commodity analytics, time analysis, export.
+
+## Design Decisions
+- **Profit uses average cost.** The cargo hold stores only quantities, so the log tracks a running average cost per commodity. Profit on a sale = `(sell price − average cost) × quantity`.
+- **Cargo gained or lost outside trading** (events, ship changes) is not logged. Gained cargo has no cost basis, so it counts as cost 0; lost cargo reduces held quantity but leaves average cost unchanged.
+- **Timestamps are real-world** (Unix seconds). There is no in-game clock.
+- **Profit is signed** (`i64`); credits stay `u32`.
+- **A trade is one buy or sell transaction.** Success rate = profitable sells ÷ total sells.
 
 ## Requirements
 
-### Core Trading Log Features
-- [ ] `log` command to show trading history
-- [ ] Track all buy/sell transactions with timestamps
-- [ ] Show profit/loss calculations per trade
-- [ ] Trading statistics and analytics
-- [ ] Export trading data for analysis
+### Transaction Recording
+- [ ] Buy and sell each record: commodity, quantity, unit price, location, timestamp
+- [ ] Sells also record profit using average cost
+- [ ] Only successful transactions are recorded
+- [ ] Average cost is updated on each buy and cleared when holdings reach zero
 
-### Transaction Tracking
-- [ ] **Buy Transactions**: Commodity, quantity, price, location, timestamp
-- [ ] **Sell Transactions**: Commodity, quantity, price, location, timestamp
-- [ ] **Profit Calculation**: Sell price - Buy price per commodity
-- [ ] **Route Analysis**: Track profitable routes and patterns
-- [ ] **Performance Metrics**: Success rate, average profit, best trades
+### `log` Command
+- [ ] `log` shows the last 10 transactions, newest first
+- [ ] `log <n>` shows the last n transactions
+- [ ] Empty log shows a clear message
+- [ ] Listed in `help`
 
-### Trading Analytics
-- [ ] **Profit/Loss Summary**: Total earnings, losses, net profit
-- [ ] **Best Trades**: Highest profit trades with details
-- [ ] **Worst Trades**: Biggest losses for learning
-- [ ] **Route Performance**: Most profitable system combinations
-- [ ] **Commodity Analysis**: Best/worst performing commodities
-- [ ] **Time Analysis**: Trading patterns over time
+### Statistics (shown under the transaction list)
+- [ ] Total trades (buys + sells)
+- [ ] Net profit (sum of sell profits)
+- [ ] Best trade (highest single-sell profit)
+- [ ] Success rate (profitable sells ÷ sells)
 
-## Implementation Tasks
+### Persistence
+- [ ] Log is saved and loaded with the game
+- [ ] Saves created before this feature still load, with an empty log (`#[serde(default)]`)
 
-### 1. Transaction Logging
-- [ ] Create transaction data structure
-- [ ] Implement buy/sell transaction recording
-- [ ] Add timestamp and location tracking
-- [ ] Create transaction validation
-
-### 2. Analytics Engine
-- [ ] Implement profit/loss calculations
-- [ ] Create trading statistics algorithms
-- [ ] Add route analysis functionality
-- [ ] Implement performance metrics
-
-### 3. Display System
-- [ ] Create trading log display formatting
-- [ ] Implement analytics display
-- [ ] Add export functionality
-- [ ] Create detailed trade breakdowns
-
-### 4. Integration
-- [ ] Integrate with trading system
-- [ ] Add to save/load system
-- [ ] Update help and command system
-- [ ] Add to status display
-
-## User Experience
-
-### Trading Log Display
+## Example Output
 ```
 Trading Log
 ===========
 Recent Transactions:
-- Bought 5 Food at Lave for 75cr
 - Sold 5 Food at Leesti for 90cr (+15cr profit)
-- Bought 3 Machinery at Leesti for 135cr
-- Sold 3 Machinery at Lave for 150cr (+15cr profit)
+- Bought 5 Food at Lave for 75cr
 
 Statistics:
-- Total Trades: 24
-- Total Profit: 450cr
-- Best Trade: +25cr (Food, Lave→Leesti)
-- Average Profit per Trade: 18.75cr
-- Success Rate: 85%
-```
-
-### Detailed Trade Analysis
-```
-Trade Analysis: Food (Lave ↔ Leesti)
-====================================
-Buy Price: 15cr/ton
-Sell Price: 18cr/ton
-Profit Margin: 20%
-Quantity Traded: 50 tons
-Total Profit: 150cr
-Route Frequency: 8 times
-Success Rate: 100%
-```
-
-### Route Performance
-```
-Most Profitable Routes:
-1. Lave ↔ Leesti (Food ↔ Machinery): +180cr
-2. Industrial Loop: +120cr
-3. Agricultural Circuit: +95cr
-
-Best Commodities:
-1. Food: +250cr total profit
-2. Machinery: +180cr total profit
-3. Textiles: +120cr total profit
+- Total Trades: 2
+- Net Profit: 15cr
+- Best Trade: +15cr (5 Food at Leesti)
+- Success Rate: 100%
 ```
 
 ## Acceptance Criteria
-- [ ] All buy/sell transactions are logged accurately
-- [ ] Profit/loss calculations are correct
-- [ ] Trading statistics are meaningful and useful
-- [ ] Log display is clear and informative
-- [ ] Trading log persists across save/load
-- [ ] Analytics help identify profitable patterns
+- [ ] Every successful buy and sell is logged accurately
+- [ ] Failed buys and sells (no credits, no space, no stock) are not logged
+- [ ] Profit matches average cost across multiple buys at different prices
+- [ ] Selling at a loss gives negative profit and lowers success rate
+- [ ] Log survives save then load
+- [ ] Old save files load without error
 
-## Testing
-- [ ] Test transaction logging accuracy
-- [ ] Test profit/loss calculations
-- [ ] Test analytics algorithms
-- [ ] Test log display formatting
-- [ ] Test log persistence
-- [ ] Test export functionality
+## Testing (write first)
+- [ ] Buy records a transaction
+- [ ] Sell records a transaction with correct profit
+- [ ] Average cost across two buys at different prices
+- [ ] Loss-making sale
+- [ ] Failed transactions leave the log unchanged
+- [ ] Statistics on an empty log and on a mixed log
+- [ ] Save/load round trip keeps the log
+- [ ] Loading a save without a log field gives an empty log
 
 ## Dependencies
-- Feature 01: Core Gameplay (commander, basic commands) ✅
-- Feature 03: Trading System (buy/sell transactions) ✅
-- Feature 05: Save/Load System (persistence) ✅
+- Feature 03: Trading System ✅
+- Feature 05: Save/Load System ✅
+
+## Future Work
+Route performance, per-commodity analysis, time analysis (needs an in-game clock), and export.

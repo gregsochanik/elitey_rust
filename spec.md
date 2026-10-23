@@ -24,7 +24,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 09 | Equipment system (implementation) | Spec only | 04, 07 |
 | 08 | Combat | Spec only | 06, 09 |
 | 10 | Reputation | Spec only | 03, 06 |
-| 11 | Trading log | Spec only | 03, 05 |
+| 11 | Trading log (v1: record, `log`, persist) | Spec only | 03, 05 |
 | 13 | UI improvements | Spec only | – |
 
 ## Roadmap
