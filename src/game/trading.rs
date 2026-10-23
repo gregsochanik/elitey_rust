@@ -3,6 +3,7 @@ use crate::data::systems::{EconomyType, StarSystem, SystemManager};
 use crate::game::{Commander, Ship, TradeLog};
 use crate::utils::display::{show_error, show_success};
 use colored::*;
+use std::collections::HashMap;
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -12,6 +13,9 @@ pub struct TradingHandler {
     market_seed: u64,
     #[serde(default)]
     market_location: String,
+    /// Tons bought at the current visit, per commodity
+    #[serde(default)]
+    purchased: HashMap<CommodityType, u32>,
 }
 
 impl TradingHandler {
@@ -20,6 +24,7 @@ impl TradingHandler {
             trading_system: TradingSystem::new(),
             market_seed: rand::random(),
             market_location: String::new(),
+            purchased: HashMap::new(),
         }
     }
 
@@ -28,8 +33,15 @@ impl TradingHandler {
         if self.market_location != location {
             self.market_location = location.to_string();
             self.market_seed = rand::random();
+            self.purchased.clear();
         }
-        self.trading_system.generate_market_prices(economy, self.market_seed)
+        let mut market = self.trading_system.generate_market_prices(economy, self.market_seed);
+        for (commodity, bought) in &self.purchased {
+            if let Some(stock) = market.availability.get_mut(commodity) {
+                *stock = stock.saturating_sub(*bought);
+            }
+        }
+        market
     }
 
     /// Handle the market command - show current system's market prices
@@ -167,7 +179,7 @@ impl TradingHandler {
 
     /// Execute a buy transaction
     fn execute_buy(
-        &self,
+        &mut self,
         commodity: CommodityType,
         quantity: u32,
         commander: &mut Commander,
@@ -227,6 +239,7 @@ impl TradingHandler {
         let cargo_before = ship.cargo_hold().get_quantity(&commodity);
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
+        *self.purchased.entry(commodity.clone()).or_insert(0) += quantity;
         trade_log.record_buy(commodity.clone(), quantity, buy_price, commander.location(), cargo_before);
 
         show_success(&format!(
@@ -406,7 +419,7 @@ mod tests {
 
     #[test]
     fn successful_buy_and_sell_are_logged() {
-        let handler = TradingHandler::new();
+        let mut handler = TradingHandler::new();
         let mut commander = Commander::new("Test".to_string());
         let mut ship = Ship::new_cobra_mk3();
         let mut log = TradeLog::new();
@@ -421,7 +434,7 @@ mod tests {
 
     #[test]
     fn failed_buy_and_sell_are_not_logged() {
-        let handler = TradingHandler::new();
+        let mut handler = TradingHandler::new();
         let mut commander = Commander::new("Test".to_string());
         let mut ship = Ship::new_cobra_mk3();
         let mut log = TradeLog::new();
@@ -432,5 +445,49 @@ mod tests {
         assert!(!handler.execute_sell(CommodityType::Food, 5, &mut commander, &mut ship, &market(10, 8, 20), &mut log));
 
         assert!(log.transactions().is_empty());
+    }
+
+    #[test]
+    fn buying_reduces_stock_until_the_player_leaves() {
+        let mut handler = TradingHandler::new();
+        let economy = EconomyType::RichIndustrial;
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        let mut log = TradeLog::new();
+
+        let before = handler.market_for("LAVE", &economy);
+        let stock = before.get_availability(&CommodityType::Food).unwrap();
+        assert!(handler.execute_buy(CommodityType::Food, 1, &mut commander, &mut ship, &before, &mut log));
+
+        let after = handler.market_for("LAVE", &economy);
+        assert_eq!(after.get_availability(&CommodityType::Food), Some(stock - 1));
+        assert_eq!(after.get_availability(&CommodityType::Textiles), before.get_availability(&CommodityType::Textiles));
+
+        handler.market_for("DISO", &economy);
+        assert!(handler.purchased.is_empty());
+    }
+
+    #[test]
+    fn cannot_buy_more_than_remaining_stock() {
+        let mut handler = TradingHandler::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        let mut log = TradeLog::new();
+        commander.add_credits(1_000);
+
+        handler.market_location = "LAVE".to_string();
+        let mut stock = market(10, 8, 6);
+        assert!(handler.execute_buy(CommodityType::Food, 5, &mut commander, &mut ship, &stock, &mut log));
+        stock.availability.insert(CommodityType::Food, 1);
+        assert!(!handler.execute_buy(CommodityType::Food, 2, &mut commander, &mut ship, &stock, &mut log));
+    }
+
+    #[test]
+    fn purchased_stock_survives_serialization() {
+        let mut handler = TradingHandler::new();
+        handler.purchased.insert(CommodityType::Food, 4);
+        let json = serde_json::to_string(&handler).unwrap();
+        let restored: TradingHandler = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.purchased.get(&CommodityType::Food), Some(&4));
     }
 }
