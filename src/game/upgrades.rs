@@ -1,6 +1,6 @@
 use crate::data::ships::{ShipType, ShipUpgradeManager};
 use crate::game::{Commander, Ship};
-use crate::utils::display::{show_error, show_success};
+use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
 
 /// Upgrade command handler
@@ -63,10 +63,15 @@ impl UpgradeHandler {
             return false;
         }
 
-        // Perform the upgrade
+        // Perform the upgrade; installed equipment is sold at half price
+        let equipment_refund = ship.equipment.total_refund();
         match ship.upgrade_to(new_ship_type.clone()) {
             Ok(_) => {
                 commander.remove_credits(upgrade_cost);
+                commander.add_credits(equipment_refund);
+                if equipment_refund > 0 {
+                    show_info(&format!("Sold your equipment for {}cr", equipment_refund));
+                }
                 show_success(&format!(
                     "Successfully upgraded to {} for {}cr!",
                     new_ship_type.display_name(),
@@ -181,5 +186,24 @@ mod tests {
     fn test_upgrade_handler_creation() {
         let handler = UpgradeHandler::new();
         assert_eq!(handler.upgrade_manager.get_available_upgrades(&ShipType::CobraMkIII).len(), 3);
+    }
+
+    #[test]
+    fn changing_ship_sells_equipment_at_half_price_and_resets_loadout() {
+        let handler = UpgradeHandler::new();
+        let mut commander = Commander::new("Test".to_string());
+        commander.credits = 5_000;
+        let mut ship = Ship::new_cobra_mk3();
+        let mut loadout = ship.equipment.clone();
+        loadout.install(crate::data::equipment::find("expanded-racks").unwrap(), 30).unwrap();
+        ship.set_equipment(loadout).unwrap();
+
+        let cost = handler.upgrade_manager.calculate_upgrade_cost(&ShipType::CobraMkIII, &ShipType::CobraMkIV);
+        let args = vec!["upgrade".to_string(), "cobra4".to_string()];
+        assert!(handler.handle_upgrade_purchase(&args, &mut commander, &mut ship));
+
+        assert_eq!(commander.credits(), 5_000 - cost + 15);
+        assert_eq!(ship.equipment, crate::game::equipment::Loadout::starting());
+        assert_eq!(ship.cargo_capacity(), 35);
     }
 }

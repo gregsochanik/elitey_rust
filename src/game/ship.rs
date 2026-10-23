@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::data::commodities::{CargoHold, CommodityType};
 use crate::data::ships::ShipType;
+use crate::game::equipment::Loadout;
 
 /// Represents the player's ship with all its properties
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,6 +14,9 @@ pub struct Ship {
     pub fuel_current: u32,
     /// Hull integrity percentage (0-100)
     pub hull_percentage: u32,
+    /// Installed equipment
+    #[serde(default)]
+    pub equipment: Loadout,
 }
 
 #[allow(dead_code)]
@@ -24,6 +28,7 @@ impl Ship {
             cargo_hold: CargoHold::new(20), // Starting cargo capacity as per spec
             fuel_current: 7,    // Full fuel tank (matches capacity)
             hull_percentage: 100, // Full hull integrity
+            equipment: Loadout::starting(),
         }
     }
 
@@ -102,12 +107,30 @@ impl Ship {
             self.cargo_hold.add_cargo(item.commodity, item.quantity);
         }
 
+        self.equipment = Loadout::starting();
+
         // Update ship type
         self.ship_type = new_ship_type.clone();
         
         // Update hull to new ship's max hull
         self.hull_percentage = new_ship_type.max_hull();
         
+        Ok(())
+    }
+
+    /// Replace the equipment loadout and resize the cargo hold to match.
+    /// Fails, changing nothing, if the cargo held would not fit.
+    pub fn set_equipment(&mut self, equipment: Loadout) -> Result<(), String> {
+        let capacity = (self.ship_type.cargo_capacity() as f64 * equipment.cargo_multiplier()) as u32;
+        let held = self.cargo_hold.current_weight();
+        if held > capacity {
+            return Err(format!(
+                "Cargo hold would be too small: holding {} tons, capacity would be {} tons",
+                held, capacity
+            ));
+        }
+        self.cargo_hold.capacity = capacity;
+        self.equipment = equipment;
         Ok(())
     }
 

@@ -221,6 +221,11 @@ impl GameState {
         )
     }
 
+    /// Handle equipment command
+    pub fn handle_equipment_command(&mut self, args: &[String]) -> bool {
+        super::equipment::EquipmentHandler::handle(args, &mut self.commander, &mut self.ship)
+    }
+
     /// Handle log command
     pub fn handle_log_command(&self, args: &[String]) {
         let count = match args.first() {
