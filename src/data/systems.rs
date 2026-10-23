@@ -1,7 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
 
 /// Economy types for star systems (matching galaxy1.json)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -219,13 +218,11 @@ impl Default for SystemManager {
 }
 
 impl SystemManager {
-    /// Create a new system manager by loading from galaxy1.json
+    /// Create a new system manager from the galaxy data built into the binary
     pub fn new() -> Result<Self> {
         let mut systems = HashMap::new();
-
-        // Load galaxy data from JSON file
-        let galaxy_data = fs::read_to_string("galaxies/galaxy1.json")?;
-        let galaxy_systems: HashMap<String, GalaxySystemData> = serde_json::from_str(&galaxy_data)?;
+        let galaxy_data = include_str!("../../galaxies/galaxy1.json");
+        let galaxy_systems: HashMap<String, GalaxySystemData> = serde_json::from_str(galaxy_data)?;
 
         // Convert each system from JSON data to StarSystem
         for (system_id, system_data) in galaxy_systems {
