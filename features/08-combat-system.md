@@ -1,234 +1,85 @@
-# Feature 08: Turn-Based Combat System
+# Feature 08: Combat
 
 ## Overview
-Implement a turn-based combat system for hostile encounters during space travel. Different enemy types will have unique strengths, weaknesses, and combat behaviors, requiring strategic thinking from the player.
+Turn-based ship combat. Version 1 is a small, complete slice: one pirate fight, driven by the equipment the player has installed. Everything else from the original design (initiative, heat, power, positioning, special actions, other enemies) comes later.
 
-## Combat System Design Decision
-**Hybrid System**: Combining D&D 5e mechanics with Elite Dangerous space combat and XCOM strategic elements.
+## Status
+Spec only. Pirate Attack's "Fight" choice currently resolves instantly (+600 credits, −10 hull).
 
-### Core System Foundation
-- **D&D 5e Base**: Initiative, attack rolls, damage calculation, action economy
-- **Elite Dangerous Space Combat**: Shield/hull separation, power management, heat system
-- **XCOM Strategic Elements**: Positioning, cover, reactions, tactical movement
+## Version 1 Scope
 
-## Requirements
+### Trigger
+- [ ] The Pirate Attack event's **Fight** choice starts combat instead of resolving instantly
+- [ ] **Flee** and **Surrender** on that event stay as they are
 
-### Core Combat Mechanics
-- [ ] Turn-based combat system with player and enemy turns
-- [ ] Combat state management (in-combat, victory, defeat)
-- [ ] Combat UI showing health, shields, and combat options
-- [ ] Combat log showing actions and results
-- [ ] Escape mechanism with success/failure chance
+### Combatants
+Player stats come from the ship and installed equipment (Feature 07):
+- **Hull:** the ship's hull percentage (0–100); persists after combat
+- **Shield:** points equal to the installed shield's Protection, refilled at the start of every fight
+- **Shield recharge:** the installed shield's Recharge, restored at the end of each round, up to the maximum
+- **Weapons:** each installed weapon, with its Damage and Accuracy (no shield means no shield points)
 
-### Combat System Mechanics
+| Pirate Raider | |
+|---|---|
+| Hull | 60 |
+| Shield | 20 (recharge 3) |
+| Weapon | damage 10, accuracy 0.6 |
 
-#### Initiative System (D&D-inspired)
-- [ ] **Initiative Roll**: 1d20 + Speed modifier for turn order
-- [ ] **Turn Order**: Player typically goes first (hero advantage)
-- [ ] **Speed Modifiers**: Equipment and ship type affect initiative
+Values are a starting point and get tuned by play-testing.
 
-#### Attack System (D&D-inspired)
-- [ ] **Attack Roll**: 1d20 + Accuracy vs Enemy Dodge
-- [ ] **Critical Hits**: Natural 20 = critical, special effects
-- [ ] **Advantage/Disadvantage**: Situational modifiers
-- [ ] **Damage Calculation**: Weapon Damage + Equipment + Critical
+### Round
+1. **Player turn:** choose attack, flee or surrender.
+2. **Enemy turn:** the raider attacks (skipped if it was destroyed or the player left).
+3. **Recharge:** both sides' shields recharge.
 
-#### Space Combat Elements (Elite-inspired)
-- [ ] **Shield/Hull Separation**: Different health pools
-- [ ] **Shield Regeneration**: Automatic per turn
-- [ ] **Power Management**: Shield/Weapon/Engine allocation
-- [ ] **Heat System**: Actions generate heat, affects performance
-- [ ] **Weapon Types**: Kinetic, Thermal, Explosive damage types
+- [ ] **Attack:** every installed weapon fires once. A shot hits with probability equal to its Accuracy. Damage hits shield points first, then hull
+- [ ] **Flee:** 50% chance to escape. On failure the raider attacks once more as normal. Escape ends combat with no reward or penalty
+- [ ] **Surrender:** ends combat; lose up to 5 tons of cargo (largest first) and 200 credits, no hull damage
+- [ ] Attacking with no weapons installed is refused with a message, and takes no turn
+- [ ] Combat shows both sides' hull and shield each round, and a log of what happened
 
-#### Strategic Elements (XCOM-inspired) DESCOPED
-- [ ] **Positioning**: Distance affects accuracy and damage
-- [ ] **Cover System**: Defensive bonuses based on position
-- [ ] **Reactions**: Overwatch and counter-attack opportunities
-- [ ] **Tactical Movement**: Position changes as separate action
+### Outcomes
+- [ ] **Victory** (raider hull reaches 0): +200–400 credits, 1–3 tons of a random commodity as loot (limited by free space), +5 reputation
+- [ ] **Defeat** (player hull reaches 0): lose all cargo and half the credits, hull left at 10%, −5 reputation. The game does not end
+- [ ] Shields refill after combat; hull does not
 
-### Action Economy (D&D-inspired) DESCOPED
-- [ ] **Standard Action**: Attack, Defend, Use Equipment
-- [ ] **Move Action**: Change position (affects accuracy)
-- [ ] **Bonus Action**: Quick actions (shield boost, emergency repair)
-- [ ] **Reaction**: Overwatch, counter-attacks, defensive responses
+### Rules
+- [ ] The combat rules are pure functions of the state and a random number generator, so tests can fix the dice
+- [ ] No saving or loading during a fight; a fight is resolved before returning to the game
+- [ ] Equipment drives the result: an unarmed ship cannot win, and better weapons and shields win more often
 
-### Combat Statistics
+## Later
+Kept from the original design, not in v1:
+- Other enemies: Corporate Security, Alien Scouts, Military Patrol, each with its own tactics and special ability
+- Initiative, critical hits, dodge and speed from engines and sensors
+- Heat and power management, damage types
+- Special actions: precise and heavy attacks, targeting systems, emergency repair, equipment abilities
+- Starting combat from other events (Alien Encounter, Military Patrol)
+- Difficulty levels, positioning and cover (descoped)
 
-#### Player Ship Stats
-- [ ] **Hull Health**: Ship structural integrity (0-100)
-- [ ] **Shield Strength**: Energy shield protection (0-100, regenerates)
-- [ ] **Weapon Damage**: Base attack power
-- [ ] **Accuracy**: Hit chance modifier
-- [ ] **Dodge**: Evasion chance
-- [ ] **Speed**: Initiative and movement modifier
-- [ ] **Heat**: Current heat level (0-100, affects performance)
+## Open Questions
+- **Ship destroyed.** v1 never ends the game on defeat. Should a later version, and what does permadeath look like with save slots?
+- **Repair.** Hull stays damaged until repair exists (Feature 07, later). Until then repeated fights wear the ship down.
+- **Balance.** Numbers above are untested guesses.
 
-#### Enemy Stats
-- [ ] **Health**: Enemy ship integrity
-- [ ] **Shields**: Enemy shield strength
-- [ ] **Damage**: Enemy attack power
-- [ ] **Accuracy**: Enemy hit chance
-- [ ] **Dodge**: Enemy evasion
-- [ ] **Speed**: Enemy initiative and movement
-- [ ] **Special Abilities**: Unique combat powers
+## Acceptance Criteria
+- [ ] Choosing Fight against pirates plays a fight round by round
+- [ ] The starting loadout beats a Pirate Raider in most fights, losing some hull
+- [ ] A ship with no weapons cannot win, but can flee or surrender
+- [ ] Victory, defeat, flee and surrender each leave credits, cargo, hull and reputation as specified
+- [ ] Better equipment visibly improves results
 
-### Enemy Types and Characteristics
+## Testing (write first)
+- [ ] Attack with fixed dice: hit and miss, shield absorbs before hull, damage carries over when the shield breaks
+- [ ] Shield recharge never exceeds the maximum
+- [ ] Round order: a destroyed enemy does not attack
+- [ ] Flee success and failure
+- [ ] Surrender takes the stated cargo and credits
+- [ ] Victory and defeat consequences
+- [ ] No weapons: attack refused
+- [ ] Simulation over many seeds: starting loadout wins at least 80%; unarmed ship wins 0%; an upgraded ship wins more than the starting one
+- [ ] Pirate Attack's Fight choice starts combat
 
-#### Pirate Raiders
-- **Strength**: High damage, aggressive tactics
-- **Weakness**: Poor accuracy, low shields
-- **Behavior**: Direct attacks, minimal strategy
-- **Combat Style**: Offensive, high-risk high-reward
-- **Special**: Desperate attacks (high damage when low health)
-
-#### Corporate Security
-- **Strength**: Balanced stats, good shields
-- **Weakness**: Predictable patterns, moderate damage
-- **Behavior**: Defensive tactics, shield-focused
-- **Combat Style**: Defensive, shield regeneration
-- **Special**: Shield boost ability
-
-#### Alien Scouts
-- **Strength**: High accuracy, special abilities
-- **Weakness**: Low health, vulnerable to certain weapons
-- **Behavior**: Hit-and-run tactics, special attacks
-- **Combat Style**: Tactical, uses special abilities
-- **Special**: Cloaking device, precision strikes
-
-#### Military Patrol
-- **Strength**: High shields, good accuracy
-- **Weakness**: Slow, predictable attack patterns
-- **Behavior**: Systematic approach, coordinated attacks
-- **Combat Style**: Methodical, shield-heavy
-- **Special**: Coordinated attacks, tactical positioning
-
-### Player Combat Options
-
-#### Attack Actions
-- [ ] **Standard Attack**: Basic weapon damage (1d20 + Accuracy)
-- [ ] **Precise Shot**: Higher accuracy, lower damage (Advantage on attack)
-- [ ] **Heavy Strike**: High damage, lower accuracy (Disadvantage on attack, +50% damage)
-- [ ] **Target Systems**: Attack specific enemy systems (shields, weapons, engines)
-
-#### Defensive Actions
-- [ ] **Raise Shields**: Increase shield strength (Bonus action)
-- [ ] **Evasive Maneuvers**: Increase dodge chance (Move action)
-- [ ] **Repair Systems**: Heal hull damage (Standard action)
-- [ ] **Full Defense**: Maximum defensive stance (Advantage on dodge)
-
-#### Special Actions
-- [ ] **Use Equipment**: Activate installed equipment (weapons, shields, etc.)
-- [ ] **Emergency Repair**: Quick hull repair at cost (Bonus action, generates heat)
-- [ ] **Tactical Retreat**: Attempt to escape combat (Standard action, roll vs enemy speed)
-- [ ] **Surrender**: Give up (results in cargo loss but ship preservation)
-
-### Combat Flow
-
-#### Pre-Combat
-- [ ] Enemy type identification
-- [ ] Combat environment setup
-- [ ] Initiative rolls for turn order
-- [ ] Initial positioning and stats display
-
-#### Combat Rounds
-- [ ] **Initiative Phase**: Determine turn order
-- [ ] **Player Turn**: Choose action (Attack/Defend/Special)
-- [ ] **Action Resolution**: Roll dice, calculate damage
-- [ ] **Enemy AI Decision**: AI chooses action based on type
-- [ ] **Enemy Action**: Execute enemy action
-- [ ] **Status Phase**: Process effects, heat, shield regeneration
-- [ ] **Combat Log**: Update with results
-
-#### Post-Combat
-- [ ] Victory rewards (credits, cargo, reputation)
-- [ ] Defeat consequences (cargo loss, hull damage, credits)
-- [ ] Combat experience and skill progression
-- [ ] Return to travel mode
-
-### Equipment Integration
-
-#### Combat Equipment
-- [ ] **Weapons**: Laser cannons, missile launchers, plasma weapons
-- [ ] **Shields**: Standard shields, reinforced shields, adaptive shields
-- [ ] **Engines**: Standard, military, experimental
-- [ ] **Special Systems**: ECM, cloaking devices, repair drones
-
-#### Equipment Effects
-- [ ] **Damage Modifiers**: Based on weapon type vs enemy type
-- [ ] **Shield Strength**: Base shield capacity and regeneration rate
-- [ ] **Accuracy Bonuses**: Equipment affects hit chance
-- [ ] **Heat Management**: Equipment affects heat generation and dissipation
-- [ ] **Special Abilities**: Unique equipment powers and cooldowns
-
-### AI Combat Behavior
-
-#### Difficulty Levels
-- [ ] **Easy**: Predictable patterns, lower stats, basic AI
-- [ ] **Normal**: Balanced challenge, varied tactics, moderate AI
-- [ ] **Hard**: Aggressive AI, higher stats, special abilities, advanced tactics
-
-#### AI Tactics by Enemy Type
-- [ ] **Aggressive**: Focus on damage, ignore defense (Pirates)
-- [ ] **Defensive**: Prioritize shields and survival (Corporate)
-- [ ] **Tactical**: Balance offense and defense (Military)
-- [ ] **Adaptive**: Change tactics based on player actions (Aliens)
-
-### Combat Rewards and Consequences
-
-#### Victory Rewards
-- [ ] Credits from defeated enemies
-- [ ] Salvaged equipment and cargo
-- [ ] Reputation gains in nearby systems
-- [ ] Combat experience points
-- [ ] Special items or rare commodities
-
-#### Defeat Consequences
-- [ ] Cargo loss (partial or complete)
-- [ ] Hull damage requiring repairs
-- [ ] Credit penalties
-- [ ] Reputation losses
-- [ ] Forced retreat to nearest system
-
-### Implementation Tasks
-
-#### Phase 1: Core Combat System
-- [ ] Create combat state management
-- [ ] Implement D&D-style initiative and attack rolls
-- [ ] Add basic damage calculation system
-- [ ] Create simple enemy AI
-- [ ] Implement shield/hull separation
-
-#### Phase 2: Enemy Types and AI
-- [ ] Design enemy type characteristics
-- [ ] Implement different AI behaviors
-- [ ] Add special abilities for enemies
-- [ ] Create enemy-specific combat patterns
-
-#### Phase 3: Equipment Integration
-- [ ] Connect equipment to combat stats
-- [ ] Implement equipment effects in combat
-- [ ] Add equipment-based special actions
-- [ ] Create equipment upgrade effects
-
-### Technical Requirements
-
-#### Integration Points
-- [ ] Connect to existing event system
-- [ ] Integrate with equipment system
-- [ ] Update save/load for combat state
-- [ ] Add combat statistics to commander data
-
-### Testing Requirements
-- [ ] Unit tests for combat mechanics
-- [ ] Integration tests for enemy AI
-- [ ] Balance testing for different enemy types
-- [ ] Performance testing for combat calculations
-- [ ] User experience testing for combat flow
-
-## Success Criteria
-- [ ] Engaging turn-based combat that feels strategic
-- [ ] Distinct enemy types with unique behaviors
-- [ ] Meaningful equipment choices affecting combat
-- [ ] Balanced rewards and consequences
-- [ ] Smooth integration with existing game systems
-- [ ] Clear and intuitive combat interface
+## Dependencies
+- Feature 06: Dynamic Events ✅ (Pirate Attack)
+- Feature 07: Equipment ✅ (weapons, shields)
