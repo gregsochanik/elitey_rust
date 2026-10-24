@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cobra-mk-iii",
+    "name": "Cobra Mk III",
+    "aliases": ["cobra3", "cobra mk 3"],
+    "tier": 1,
+    "cost": 0,
+    "cargo": 20,
+    "fuel": 7,
+    "hull": 100
+  },
+  {
+    "id": "cobra-mk-iv",
+    "name": "Cobra Mk IV",
+    "aliases": ["cobra4", "cobra mk 4"],
+    "tier": 2,
+    "cost": 500,
+    "cargo": 35,
+    "fuel": 10,
+    "hull": 120
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "aliases": [],
+    "tier": 3,
+    "cost": 2000,
+    "cargo": 60,
+    "fuel": 12,
+    "hull": 150
+  },
+  {
+    "id": "anaconda",
+    "name": "Anaconda",
+    "aliases": [],
+    "tier": 4,
+    "cost": 5000,
+    "cargo": 100,
+    "fuel": 15,
+    "hull": 200
+  }
+]

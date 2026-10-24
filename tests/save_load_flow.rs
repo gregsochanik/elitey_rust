@@ -75,3 +75,28 @@ fn autosaves_are_kept_per_commander() {
     let long_name = "x".repeat(300);
     assert!(SaveLoadHandler::autosave_slot(&long_name).len() < 100);
 }
+
+#[test]
+fn a_save_from_before_ships_moved_to_json_still_loads() {
+    let json = include_str!("fixtures/save_before_json_data.json");
+    let envelope: serde_json::Value = serde_json::from_str(json).unwrap();
+    let mut state = envelope["game_state"].clone();
+    assert_eq!(state["ship"]["ship_type"], "CobraMkIII");
+
+    let loaded: elitey_rust::game::GameState = serde_json::from_value(state.clone()).unwrap();
+    assert_eq!(loaded.ship.ship_type.id(), "cobra-mk-iii");
+    assert_eq!(loaded.ship.cargo_capacity(), 20);
+    assert_eq!(loaded.world_clock, 0);
+
+    state["ship"]["ship_type"] = serde_json::json!("Python");
+    let python: elitey_rust::game::GameState = serde_json::from_value(state).unwrap();
+    assert_eq!(python.ship.ship_type.id(), "python");
+    assert_eq!(python.ship.ship_type.max_hull(), 150);
+}
+
+#[test]
+fn saves_write_ships_by_id() {
+    let game = new_game(100);
+    let value = serde_json::to_value(&game).unwrap();
+    assert_eq!(value["ship"]["ship_type"], "cobra-mk-iii");
+}

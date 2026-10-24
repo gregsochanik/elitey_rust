@@ -73,7 +73,7 @@ impl UpgradeHandler {
 
         // Perform the upgrade; installed equipment is sold at half price
         let equipment_refund = ship.equipment.total_refund();
-        match ship.upgrade_to(new_ship_type.clone()) {
+        match ship.upgrade_to(new_ship_type) {
             Ok(_) => {
                 commander.remove_credits(upgrade_cost);
                 commander.add_credits(equipment_refund);
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(
             handler
                 .upgrade_manager
-                .get_available_upgrades(&ShipType::CobraMkIII)
+                .get_available_upgrades(&ShipType::starting())
                 .len(),
             3
         );
@@ -226,9 +226,10 @@ mod tests {
             .unwrap();
         ship.set_equipment(loadout).unwrap();
 
-        let cost = handler
-            .upgrade_manager
-            .calculate_upgrade_cost(&ShipType::CobraMkIII, &ShipType::CobraMkIV);
+        let cost = handler.upgrade_manager.calculate_upgrade_cost(
+            &ShipType::starting(),
+            &ShipType::from_string("cobra4").unwrap(),
+        );
         let args = vec!["cobra4".to_string()];
         assert!(handler.handle_upgrade_purchase(&args, &mut commander, &mut ship));
 
