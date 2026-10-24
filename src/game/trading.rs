@@ -7,7 +7,7 @@ use colored::*;
 use std::collections::HashMap;
 
 const ILLEGAL_TRADE_REPUTATION: i32 = -2;
-const MARKET_REFRESH_JUMPS: u32 = 10;
+const MARKET_REFRESH_JUMPS: u32 = 20;
 const IMPACT_PER_TON: f64 = 0.015;
 const MAX_IMPACT: f64 = 0.40;
 const RECOVERY_PER_JUMP: f64 = 0.10;
