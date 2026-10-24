@@ -6,7 +6,7 @@ Jobs (Feature 16) and bounties (Feature 17) pay a flat amount whatever the playe
 The reputation score is one axis. Its two ends are two paths: a lawful commander gets lawful contracts, an infamous one gets criminal contracts, and a commander in the middle gets only the ordinary board.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; the access rules, freight and smuggling jobs are done; the gateway job, standing-driven event odds and the balance pass remain.
+In progress. Slices are tracked as GitHub issues; the access rules, freight, smuggling and the gateway job are done; standing-driven event odds and the balance pass remain.
 
 ## Version 1 Scope
 
@@ -98,7 +98,7 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 - [x] Smuggling jobs run an inspection on arrival with the three choices and the stated results, in the stated order after other deliveries
 - [x] Smuggling needs free hold room to accept, and Bribe is only offered to a player who can pay
 - [x] Contract cargo cannot be sold at a market
-- [ ] Neutral commanders are offered black courier jobs at Anarchy and Feudal systems and no other criminal jobs
+- [x] Neutral commanders are offered black courier jobs at Anarchy and Feudal systems and no other criminal jobs
 - [ ] Standing changes the odds of patrol and inspection events as specified
 - [ ] Rescue, repair and refuel work for every standing
 - [ ] Old saves load: jobs without the new kinds keep working

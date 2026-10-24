@@ -25,6 +25,9 @@ const FREIGHT_SHARE: f64 = 0.3;
 const MIN_FREIGHT_TONS: u32 = 5;
 const FREIGHT_TONS_PER_BONUS: f64 = 20.0;
 const SMUGGLING_SHARE: f64 = 0.4;
+const GATEWAY_SHARE: f64 = 0.3;
+const BLACK_COURIER_REWARD_MULTIPLIER: f64 = 1.5;
+pub const BLACK_COURIER_REPUTATION: i32 = -3;
 const SMUGGLING_REWARD_MULTIPLIER: f64 = 3.0;
 const SMUGGLING_REWARD_PER_TON: f64 = 6.0;
 const MIN_SMUGGLING_TONS: u32 = 5;
@@ -42,6 +45,8 @@ pub enum JobKind {
     Freight,
     /// Run contraband narcotics into a lawful system, past a possible inspection
     Smuggling,
+    /// A courier job whose parcel is contraband, offered to Neutral commanders in lawless systems
+    BlackCourier,
 }
 
 /// Who a kind of job is posted for; the lawful, criminal and gateway kinds arrive with their jobs
@@ -106,6 +111,7 @@ impl JobKind {
             JobKind::Courier | JobKind::Bounty => Track::Ordinary,
             JobKind::Freight => Track::Lawful,
             JobKind::Smuggling => Track::Criminal,
+            JobKind::BlackCourier => Track::Gateway,
         }
     }
 
@@ -119,6 +125,9 @@ impl Job {
     pub fn describe(&self) -> String {
         match (self.kind, &self.commodity) {
             (JobKind::Courier, _) => format!("Courier to {}", self.destination),
+            (JobKind::BlackCourier, _) => {
+                format!("Black courier: contraband parcel to {}", self.destination)
+            }
             (JobKind::Bounty, _) => format!("Bounty: pirate raider near {}", self.destination),
             (JobKind::Freight, Some(commodity)) => format!(
                 "Freight: {} tons of {} to {}",
@@ -279,7 +288,12 @@ pub fn settle_arrival(
             commander.add_credits(entry.job.reward);
             let what = match entry.job.kind {
                 JobKind::Freight => format!("{} tons of freight", entry.job.tons),
+                JobKind::BlackCourier => "the contraband parcel".to_string(),
                 _ => "the parcel".to_string(),
+            };
+            let reputation = match entry.job.kind {
+                JobKind::BlackCourier => BLACK_COURIER_REPUTATION,
+                _ => DELIVERY_REPUTATION,
             };
             arrival.messages.push(format!(
                 "Delivered {} to {}: +{}cr.",
@@ -287,7 +301,7 @@ pub fn settle_arrival(
             ));
             reputation_messages(
                 &mut arrival.messages,
-                commander.change_reputation(DELIVERY_REPUTATION),
+                commander.change_reputation(reputation),
             );
         } else if entry.jumps_left == 0 {
             release_freight(&entry.job, ship);
@@ -364,6 +378,12 @@ pub fn courier_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
 
+/// Black courier pay: one and a half times the courier rate for the distance
+pub fn black_courier_reward(fuel_cost: u32, variance: f64) -> u32 {
+    (f64::from(courier_reward(fuel_cost, variance)) * BLACK_COURIER_REWARD_MULTIPLIER).round()
+        as u32
+}
+
 /// Courier pay for the same distance, scaled up by the size of the load
 pub fn freight_reward(fuel_cost: u32, tons: u32, variance: f64) -> u32 {
     let load_bonus = 1.0 + f64::from(tons) / FREIGHT_TONS_PER_BONUS;
@@ -427,6 +447,11 @@ fn generate_board_with(
                 && destination.government.is_lawful()
             {
                 JobKind::Smuggling
+            } else if roll >= bounty_share
+                && roll < bounty_share + GATEWAY_SHARE
+                && access.allows(JobKind::BlackCourier.track())
+            {
+                JobKind::BlackCourier
             } else {
                 JobKind::Courier
             };
@@ -457,6 +482,7 @@ fn generate_board_with(
                 fuel_cost,
                 reward: match kind {
                     JobKind::Courier => courier_reward(fuel_cost, variance),
+                    JobKind::BlackCourier => black_courier_reward(fuel_cost, variance),
                     JobKind::Bounty => bounty_reward(fuel_cost, variance),
                     JobKind::Freight => freight_reward(fuel_cost, tons, variance),
                     JobKind::Smuggling => smuggling_reward(fuel_cost, tons, variance),
@@ -752,6 +778,7 @@ mod tests {
                     JobKind::Smuggling => {
                         3.0 * (20.0 + 7.0 * f64::from(job.fuel_cost)) + 6.0 * f64::from(job.tons)
                     }
+                    JobKind::BlackCourier => 1.5 * (20.0 + 7.0 * f64::from(job.fuel_cost)),
                 };
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
@@ -1405,5 +1432,97 @@ mod tests {
             smuggling_job(8).job.describe(),
             "Smuggling: 8 tons of contraband to DISO"
         );
+    }
+
+    #[test]
+    fn black_courier_pays_one_and_a_half_times_a_courier_job() {
+        assert_eq!(black_courier_reward(3, 1.0), 62);
+        assert_eq!(black_courier_reward(7, 1.0), 104);
+    }
+
+    #[test]
+    fn the_gateway_job_is_offered_only_to_neutral_commanders_at_lawless_systems() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let lawless = lawless_origin(&galaxy);
+        let lawful = lawful_origin(&galaxy);
+
+        let offered = |origin: &StarSystem, standing| {
+            (0..200u64).any(|seed| {
+                generate_board_for(
+                    origin,
+                    &systems,
+                    &mut StdRng::seed_from_u64(seed),
+                    standing,
+                    20,
+                )
+                .iter()
+                .any(|job| job.kind == JobKind::BlackCourier)
+            })
+        };
+        assert!(offered(lawless, Standing::Neutral));
+        assert!(!offered(lawful, Standing::Neutral));
+        for standing in [
+            Standing::Criminal,
+            Standing::Disreputable,
+            Standing::Trusted,
+            Standing::Respected,
+        ] {
+            assert!(!offered(lawless, standing), "{:?}", standing);
+        }
+    }
+
+    #[test]
+    fn the_gateway_job_is_occasional_not_the_whole_board() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let origin = lawless_origin(&galaxy);
+
+        let (mut gateway, mut total) = (0, 0);
+        for seed in 0..300u64 {
+            for job in generate_board_for(
+                origin,
+                &systems,
+                &mut StdRng::seed_from_u64(seed),
+                Standing::Neutral,
+                20,
+            ) {
+                total += 1;
+                gateway += i32::from(job.kind == JobKind::BlackCourier);
+            }
+        }
+        let share = f64::from(gateway) / f64::from(total);
+        assert!((0.15..=0.45).contains(&share), "share {}", share);
+    }
+
+    fn black_courier(destination: &str, reward: u32) -> ActiveJob {
+        let mut entry = active_job(destination, reward, 2);
+        entry.job.kind = JobKind::BlackCourier;
+        entry
+    }
+
+    #[test]
+    fn delivering_a_black_courier_job_pays_and_costs_reputation() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![black_courier("DISO", 62)];
+
+        let messages = settle(&mut active, &mut commander, "DISO").messages;
+
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 162);
+        assert_eq!(commander.reputation, -3);
+        assert!(messages.iter().any(|m| m.contains("contraband parcel")));
+    }
+
+    #[test]
+    fn a_few_black_courier_deliveries_lead_to_the_criminal_track() {
+        let mut commander = Commander::new("Test".to_string());
+        for _ in 0..4 {
+            let mut active = vec![black_courier("DISO", 62)];
+            settle(&mut active, &mut commander, "DISO");
+        }
+        assert_eq!(commander.standing(), Standing::Disreputable);
+        let access = JobAccess::for_standing_at(commander.standing(), &GovernmentType::Anarchy);
+        assert!(access.criminal && !access.gateway);
     }
 }
