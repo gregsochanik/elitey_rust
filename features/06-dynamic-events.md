@@ -71,6 +71,17 @@ Over 400 jumps each: an anarchy destination had 40 pirate attacks against 10 for
 ### Cargo
 Losses come from the largest cargo first, or all of one commodity; gains are limited by free space in the hold.
 
+### Outcome Ranges
+The numbers on an outcome are bases; each time an outcome is applied they are rolled.
+
+- **Credits** (gains and fines): base × a roll from 0.6 to 1.4, rounded
+- **Cargo tons** (gained or lost): base ± 1 ton, at least 1
+- **Windfalls** (a gain with a base of 400 credits or more) are capped at 200 plus half the commander's credits, so a poor commander cannot jump-start the game with one event
+- **Reputation, hull and fuel** stay fixed
+- The message shows the amounts that were rolled
+- [x] Credits and cargo tons fall within their ranges, and windfalls respect the cap
+- [x] The message matches the amounts applied
+
 ### Reputation
 - [x] Outcomes change the commander's reputation, which is saved and shown in `status`
 - [ ] Reputation affects outcomes or anything else (Feature 10: prices, and the odds of patrols and inspections, via Feature 18; outcomes later)
