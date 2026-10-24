@@ -14,10 +14,34 @@ const MAX_BOARD_SIZE: usize = 5;
 const MAX_JOB_RANGE: f64 = 7.0;
 const BASE_REWARD: f64 = 20.0;
 const REWARD_PER_FUEL: f64 = 7.0;
+const BOUNTY_BASE_REWARD: f64 = 100.0;
+const BOUNTY_REWARD_PER_FUEL: f64 = 12.0;
+const BOUNTY_SHARE: f64 = 0.0;
 
-/// A courier job: carry a weightless parcel to another system within the deadline
+/// What a job asks of the player
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum JobKind {
+    /// Carry a weightless parcel to another system
+    #[default]
+    Courier,
+    /// Hunt a pirate raider at another system
+    Bounty,
+}
+
+impl JobKind {
+    pub fn describe(&self, destination: &str) -> String {
+        match self {
+            JobKind::Courier => format!("Courier to {}", destination),
+            JobKind::Bounty => format!("Bounty: pirate raider near {}", destination),
+        }
+    }
+}
+
+/// A job on the board or in the player's active list, due within a number of jumps
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Job {
+    #[serde(default)]
+    pub kind: JobKind,
     pub destination: String,
     pub distance: f64,
     pub fuel_cost: u32,
@@ -98,7 +122,9 @@ pub fn settle_arrival(
 
     for mut entry in std::mem::take(active) {
         entry.jumps_left = entry.jumps_left.saturating_sub(1);
-        if entry.job.destination.eq_ignore_ascii_case(arrived_at) {
+        let delivers = entry.job.kind == JobKind::Courier
+            && entry.job.destination.eq_ignore_ascii_case(arrived_at);
+        if delivers {
             commander.add_credits(entry.job.reward);
             messages.push(format!(
                 "Delivered the parcel to {}: +{}cr.",
@@ -137,11 +163,24 @@ pub fn courier_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
 
-/// Roll a fresh board of courier jobs from `origin` to systems within range
+pub fn bounty_reward(fuel_cost: u32, variance: f64) -> u32 {
+    ((BOUNTY_BASE_REWARD + BOUNTY_REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
+}
+
+/// Roll a fresh board of jobs from `origin` to systems within range
 pub fn generate_board(
     origin: &StarSystem,
     systems: &[&StarSystem],
     rng: &mut impl Rng,
+) -> Vec<Job> {
+    generate_board_with(origin, systems, rng, BOUNTY_SHARE)
+}
+
+fn generate_board_with(
+    origin: &StarSystem,
+    systems: &[&StarSystem],
+    rng: &mut impl Rng,
+    bounty_share: f64,
 ) -> Vec<Job> {
     let mut destinations: Vec<&&StarSystem> = systems
         .iter()
@@ -159,11 +198,21 @@ pub fn generate_board(
         .map(|destination| {
             let distance = origin.distance_to(destination);
             let fuel_cost = fuel_for_distance(distance);
+            let kind = if rng.gen_bool(bounty_share) {
+                JobKind::Bounty
+            } else {
+                JobKind::Courier
+            };
+            let variance = rng.gen_range(0.9..=1.1);
             Job {
+                kind,
                 destination: destination.name.clone(),
                 distance,
                 fuel_cost,
-                reward: courier_reward(fuel_cost, rng.gen_range(0.9..=1.1)),
+                reward: match kind {
+                    JobKind::Courier => courier_reward(fuel_cost, variance),
+                    JobKind::Bounty => bounty_reward(fuel_cost, variance),
+                },
                 deadline_jumps: rng.gen_range(2..=4),
             }
         })
@@ -218,6 +267,58 @@ mod tests {
         assert_eq!(courier_reward(1, 1.0), 27);
         assert_eq!(courier_reward(7, 0.9), 62);
         assert_eq!(courier_reward(7, 1.1), 76);
+    }
+
+    #[test]
+    fn bounty_reward_follows_the_formula() {
+        assert_eq!(bounty_reward(3, 1.0), 136);
+        assert_eq!(bounty_reward(7, 0.9), 166);
+        assert_eq!(bounty_reward(7, 1.1), 202);
+    }
+
+    #[test]
+    fn about_thirty_percent_of_jobs_are_bounties_when_enabled() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let origin = galaxy.get_system("LAVE").unwrap();
+
+        let (mut bounties, mut total) = (0, 0);
+        for seed in 0..500u64 {
+            let board =
+                generate_board_with(origin, &systems, &mut StdRng::seed_from_u64(seed), 0.3);
+            for job in &board {
+                total += 1;
+                if job.kind == JobKind::Bounty {
+                    bounties += 1;
+                    let base = 100.0 + 12.0 * f64::from(job.fuel_cost);
+                    assert!(f64::from(job.reward) >= (base * 0.9).round());
+                    assert!(f64::from(job.reward) <= (base * 1.1).round());
+                }
+            }
+        }
+        let share = f64::from(bounties) / f64::from(total);
+        assert!((0.25..=0.35).contains(&share), "share {}", share);
+    }
+
+    #[test]
+    fn jobs_saved_without_a_kind_load_as_courier_jobs() {
+        let json =
+            r#"{"destination":"DISO","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
+        let job: Job = serde_json::from_str(json).unwrap();
+        assert_eq!(job.kind, JobKind::Courier);
+    }
+
+    #[test]
+    fn bounties_are_never_delivered_like_parcels() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut bounty = active_job("DISO", 150, 3);
+        bounty.job.kind = JobKind::Bounty;
+        let mut active = vec![bounty];
+
+        settle_arrival(&mut active, &mut commander, "DISO");
+
+        assert_eq!(commander.credits(), 100);
+        assert_eq!(active.len(), 1);
     }
 
     #[test]
@@ -349,6 +450,7 @@ mod tests {
     fn active_job(destination: &str, reward: u32, jumps_left: u32) -> ActiveJob {
         ActiveJob {
             job: Job {
+                kind: JobKind::Courier,
                 destination: destination.to_string(),
                 distance: 2.3,
                 fuel_cost: 3,

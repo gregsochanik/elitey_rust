@@ -243,9 +243,9 @@ pub fn show_missions(active: &[ActiveJob]) {
     }
     for (index, entry) in active.iter().enumerate() {
         println!(
-            "{}. Courier to {} - Reward: {}cr - {} left",
+            "{}. {} - Reward: {}cr - {} left",
             index + 1,
-            entry.job.destination.yellow(),
+            entry.job.kind.describe(&entry.job.destination).yellow(),
             entry.job.reward.to_string().green(),
             jumps(entry.jumps_left)
         );
@@ -261,9 +261,9 @@ pub fn show_jobs(location: &str, jobs: &[Job]) {
     }
     for (index, job) in jobs.iter().enumerate() {
         println!(
-            "{}. Courier to {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
+            "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
             index + 1,
-            job.destination.yellow(),
+            job.kind.describe(&job.destination).yellow(),
             job.distance,
             job.fuel_cost,
             job.reward.to_string().green(),
