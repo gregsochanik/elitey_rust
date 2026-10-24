@@ -10,7 +10,7 @@ Jumps burn fuel and nothing restores it, so a ship can strand itself. `refuel` t
 - No credits are spent when the tank is full or the player cannot afford one unit
 
 ## Rescue
-A player with an empty hold and too little fuel to reach any system, who cannot afford enough fuel (`fuel + credits / 2` is below the nearest system's fuel cost), is stranded. plain `refuel` (no amount) then rescues them once: the tank is topped up to reach the nearest system for free, and reputation falls by 2.
+A player with an empty hold and too little fuel to reach any system, who cannot afford enough fuel (`fuel + credits / 2` is below the nearest system's fuel cost), is stranded. A plain `refuel` (no amount) then rescues them once: the tank is topped up to reach the nearest system for free, and reputation falls by 2.
 
 ## Not in v1
 - Station-only refuelling, prices that vary by system or government
