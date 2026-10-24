@@ -11,6 +11,7 @@ const MARKET_REFRESH_JUMPS: u32 = 20;
 const IMPACT_PER_TON: f64 = 0.015;
 const MAX_IMPACT: f64 = 0.40;
 const RECOVERY_PER_JUMP: f64 = 0.10;
+const MARKER_JUMPS: u32 = 16;
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -38,6 +39,32 @@ pub struct SystemMarket {
     /// How far selling has lowered each sell price, as a fraction of the undisturbed price
     #[serde(default)]
     pub sold_impact: HashMap<CommodityType, f64>,
+    /// The clock when each commodity was last bought here
+    #[serde(default)]
+    pub bought_at: HashMap<CommodityType, u32>,
+    /// The clock when each commodity was last sold here
+    #[serde(default)]
+    pub sold_at: HashMap<CommodityType, u32>,
+}
+
+/// Which of the player's recent trades are still showing in a commodity's price
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Pushed {
+    pub sold: bool,
+    pub bought: bool,
+}
+
+impl Pushed {
+    pub fn markers(&self) -> Vec<&'static str> {
+        let mut markers = Vec::new();
+        if self.sold {
+            markers.push("▼ sold here");
+        }
+        if self.bought {
+            markers.push("▲ bought here");
+        }
+        markers
+    }
 }
 
 impl SystemMarket {
@@ -69,14 +96,28 @@ impl SystemMarket {
     }
 
     fn record_buy(&mut self, commodity: &CommodityType, tons: u32) {
+        self.bought_at.insert(commodity.clone(), self.updated_at);
         *self.purchased.entry(commodity.clone()).or_insert(0.0) += f64::from(tons);
         let impact = self.bought_impact.entry(commodity.clone()).or_insert(0.0);
         *impact = (*impact + IMPACT_PER_TON * f64::from(tons)).min(MAX_IMPACT);
     }
 
     fn record_sell(&mut self, commodity: &CommodityType, tons: u32) {
+        self.sold_at.insert(commodity.clone(), self.updated_at);
         let impact = self.sold_impact.entry(commodity.clone()).or_insert(0.0);
         *impact = (*impact + IMPACT_PER_TON * f64::from(tons)).min(MAX_IMPACT);
+    }
+
+    fn pushed(&self, commodity: &CommodityType, clock: u32) -> Pushed {
+        let recent = |times: &HashMap<CommodityType, u32>| {
+            times
+                .get(commodity)
+                .is_some_and(|at| clock.saturating_sub(*at) < MARKER_JUMPS)
+        };
+        Pushed {
+            sold: recent(&self.sold_at),
+            bought: recent(&self.bought_at),
+        }
     }
 
     /// Apply what the player has done here to freshly generated prices and stock
@@ -130,6 +171,19 @@ impl TradingHandler {
         market
     }
 
+    /// The commodities at `location` whose prices the player's recent trading is still moving
+    pub fn pushed_commodities(&self, location: &str, clock: u32) -> HashMap<CommodityType, Pushed> {
+        let Some(state) = self.markets.get(location) else {
+            return HashMap::new();
+        };
+        self.trading_system
+            .get_commodities()
+            .iter()
+            .map(|commodity| (commodity.clone(), state.pushed(commodity, clock)))
+            .filter(|(_, pushed)| *pushed != Pushed::default())
+            .collect()
+    }
+
     /// The market at `location` as the player sees it, or `None` for an unknown system
     pub fn market_view(
         &mut self,
@@ -170,7 +224,8 @@ impl TradingHandler {
     ) {
         if let Some(system) = system_manager.get_system(current_location) {
             let market = self.priced_market(current_location, &system.economy, standing, clock);
-            self.display_market(system, &market, standing);
+            let pushed = self.pushed_commodities(current_location, clock);
+            self.display_market(system, &market, standing, &pushed);
         } else {
             show_error("System not found");
         }
@@ -469,7 +524,13 @@ impl TradingHandler {
     }
 
     /// Display market information
-    fn display_market(&self, system: &StarSystem, market: &MarketPrices, standing: Standing) {
+    fn display_market(
+        &self,
+        system: &StarSystem,
+        market: &MarketPrices,
+        standing: Standing,
+        pushed: &HashMap<CommodityType, Pushed>,
+    ) {
         println!("\n{} Market", system.name().yellow());
         println!("{}", "=".repeat(system.name().len() + 7));
         if standing != Standing::Neutral {
@@ -500,9 +561,18 @@ impl TradingHandler {
                 base_str.normal()
             };
 
+            let markers = pushed
+                .get(commodity)
+                .map(|pushed| pushed.markers().join(" "))
+                .unwrap_or_default();
             println!(
-                "{:<12} {:<12} {:<12} {:<20} {}",
-                commodity_name, buy_str, sell_str, avail_str, base_coloured
+                "{:<12} {:<12} {:<12} {:<20} {} {}",
+                commodity_name,
+                buy_str,
+                sell_str,
+                avail_str,
+                base_coloured,
+                markers.yellow()
             );
         }
         println!();
@@ -867,5 +937,64 @@ mod tests {
         let state: SystemMarket = serde_json::from_str(json).unwrap();
         assert!(state.sold_impact.is_empty());
         assert_eq!(state.updated_at, 0);
+    }
+
+    #[test]
+    fn markers_show_for_sixteen_jumps_after_trading() {
+        let mut state = SystemMarket::rolled(0);
+        state.recover(2);
+        state.record_sell(&CommodityType::Food, 5);
+        state.record_buy(&CommodityType::Textiles, 5);
+
+        let food = state.pushed(&CommodityType::Food, 2);
+        assert_eq!(
+            food,
+            Pushed {
+                sold: true,
+                bought: false
+            }
+        );
+        assert_eq!(food.markers(), vec!["▼ sold here"]);
+        let textiles = state.pushed(&CommodityType::Textiles, 2);
+        assert_eq!(textiles.markers(), vec!["▲ bought here"]);
+        assert_eq!(state.pushed(&CommodityType::Minerals, 2), Pushed::default());
+
+        assert!(
+            state
+                .pushed(&CommodityType::Food, 2 + MARKER_JUMPS - 1)
+                .sold
+        );
+        assert!(!state.pushed(&CommodityType::Food, 2 + MARKER_JUMPS).sold);
+    }
+
+    #[test]
+    fn a_commodity_both_bought_and_sold_shows_both_markers() {
+        let mut state = SystemMarket::rolled(0);
+        state.record_buy(&CommodityType::Food, 1);
+        state.record_sell(&CommodityType::Food, 1);
+
+        assert_eq!(
+            state.pushed(&CommodityType::Food, 0).markers(),
+            vec!["▼ sold here", "▲ bought here"]
+        );
+    }
+
+    #[test]
+    fn a_refresh_clears_the_markers() {
+        let mut handler = TradingHandler::new();
+        let economy = EconomyType::RichIndustrial;
+        handler.market_for("LAVE", &economy, 0);
+        handler
+            .markets
+            .get_mut("LAVE")
+            .unwrap()
+            .record_sell(&CommodityType::Food, 3);
+        assert!(!handler.pushed_commodities("LAVE", 1).is_empty());
+
+        handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
+
+        assert!(handler
+            .pushed_commodities("LAVE", MARKET_REFRESH_JUMPS)
+            .is_empty());
     }
 }

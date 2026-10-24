@@ -4,7 +4,7 @@
 Markets today re-roll every time the player arrives, and the player sees prices before committing. So a trader can carry cargo and hop between two systems until someone pays well, with almost no risk. In a simulation of that on Leesti and Riedquat (2.8 light years), a patient trader netted about 84 credits per jump at 500cr and 151 at 2,000cr, with 2% of trips losing money, beating courier jobs (53) and bounties (69). This feature makes markets remember and react to the player, so one route stops being a free loop.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; market state, the world clock, refresh, price impact and the balance pass are done; the display marker remains.
+Done (v1). Market memory, the world clock, refresh, price impact, the display marker and the balance pass are implemented.
 
 ## Version 1 Scope
 
@@ -63,7 +63,7 @@ Simulated a trader working two systems (Leesti and Riedquat, 2.8 light years) wi
 ## Acceptance Criteria
 - [ ] Arriving at a system does not change its prices; only the world clock does
 - [x] A system's undisturbed prices and stock are identical on repeat visits within a 20-jump period and re-roll after it; arriving never resets either
-- [ ] A pushed commodity's marker appears after trading and clears after 16 jumps
+- [x] A pushed commodity's marker appears after trading and clears after 16 jumps
 - [x] Selling 20 tons visibly lowers the sell price at that system, and later visits show the lowered price recovering by 10% of the gap per jump
 - [x] Buying raises the buy price and lowers stock in the same way
 - [x] A simulation of repeated trips on one route shows the margin falling as in Balance
@@ -72,7 +72,7 @@ Simulated a trader working two systems (Leesti and Riedquat, 2.8 light years) wi
 
 ## Testing (write first)
 - [x] Prices and stock at a system are stable across arrivals within a period (when nothing is traded) and change across periods, with a fixed seed
-- [ ] Marker appears after buying and selling and clears after 16 jumps
+- [x] Marker appears after buying and selling and clears after 16 jumps
 - [x] Impact: price after selling N tons, the −40% and +40% caps, recovery per jump
 - [x] Stock depletion and recovery
 - [x] Standing modifier applied after impact, and `market`, `buy` and `sell` agree

@@ -380,6 +380,15 @@ impl GameState {
         );
     }
 
+    /// Commodities here whose prices the player's recent trading is still moving
+    pub fn pushed_commodities(
+        &self,
+    ) -> std::collections::HashMap<crate::data::commodities::CommodityType, super::trading::Pushed>
+    {
+        self.trading_handler
+            .pushed_commodities(&self.commander.location, self.world_clock)
+    }
+
     /// The market here as the player sees it
     pub fn market_prices(&mut self) -> Option<crate::data::commodities::MarketPrices> {
         self.trading_handler.market_view(

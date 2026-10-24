@@ -106,3 +106,27 @@ fn buying_raises_the_buy_price_for_the_next_purchase() {
 
     assert!(after > before);
 }
+
+#[test]
+fn trading_marks_the_commodity_until_the_market_has_recovered() {
+    use elitey_rust::data::commodities::CommodityType;
+
+    let mut game = new_game(5_000);
+    assert!(game.pushed_commodities().is_empty());
+
+    assert!(game.handle_buy_command(&args("luxury 5")));
+    assert!(game.handle_sell_command(&args("luxury 5")));
+    let pushed = game.pushed_commodities();
+    assert_eq!(pushed.len(), 1);
+    let luxury = pushed[&CommodityType::Luxury];
+    assert!(luxury.sold && luxury.bought);
+
+    for _ in 0..8 {
+        game.ship.refuel();
+        game.travel_to_system("DISO").unwrap();
+        game.ship.refuel();
+        game.travel_to_system("LAVE").unwrap();
+    }
+    assert_eq!(game.world_clock, 16);
+    assert!(game.pushed_commodities().is_empty());
+}
