@@ -1,4 +1,5 @@
-use crate::data::systems::{StarSystem, SystemManager};
+use crate::data::systems::SystemManager;
+use crate::game::travel::fuel_for_distance;
 use crate::utils::display::show_error;
 use crate::utils::input;
 use colored::*;
@@ -31,6 +32,14 @@ pub struct GameState {
     /// Buy/sell history
     #[serde(default)]
     pub trade_log: TradeLog,
+}
+
+/// A system the ship can reach with its current fuel
+#[derive(Debug, Clone, PartialEq)]
+pub struct Destination {
+    pub name: String,
+    pub distance: f64,
+    pub fuel: u32,
 }
 
 #[allow(dead_code)]
@@ -392,48 +401,42 @@ impl GameState {
         }
     }
 
+    /// Systems reachable with the current fuel, nearest first
+    pub fn reachable_destinations(&self) -> Option<Vec<Destination>> {
+        let current_fuel = self.ship.fuel_current as f64;
+        let current_system = self
+            .travel_handler
+            .get_system_info(&self.commander.location)?;
+
+        let mut destinations: Vec<Destination> = self
+            .travel_handler
+            .get_available_systems()
+            .iter()
+            .filter(|system| system.name != current_system.name)
+            .filter_map(|system| {
+                let distance = current_system.distance_to(system);
+                (distance <= current_fuel).then(|| Destination {
+                    name: system.name.clone(),
+                    distance,
+                    fuel: fuel_for_distance(distance),
+                })
+            })
+            .collect();
+        destinations.sort_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        Some(destinations)
+    }
+
     /// Handle systems command
     pub fn handle_systems_command(&self) {
-        let all_systems = self.travel_handler.get_available_systems();
-        let current_fuel = self.ship.fuel_current as f64;
-
-        // Get current system for distance calculations
-        let current_system = if let Some(system) = self
-            .travel_handler
-            .get_system_info(&self.commander.location)
-        {
-            system
-        } else {
+        let Some(reachable_systems) = self.reachable_destinations() else {
             show_error("Unable to determine current location");
             return;
         };
-
-        // Filter systems that can be reached with current fuel and sort by distance
-        let mut reachable_systems: Vec<(&StarSystem, f64)> = all_systems
-            .iter()
-            .filter_map(|system| {
-                // Skip current system
-                if system.name == current_system.name {
-                    return None;
-                }
-
-                let distance = current_system.distance_to(system);
-
-                // Only include systems that can be reached with current fuel
-                if distance <= current_fuel {
-                    Some((*system, distance))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Sort by distance (low to high)
-        reachable_systems.sort_by(|(_, dist1), (_, dist2)| {
-            dist1
-                .partial_cmp(dist2)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        let current_fuel = self.ship.fuel_current;
 
         println!();
         println!("{}", "Available Star Systems".cyan().bold());
@@ -445,8 +448,13 @@ impl GameState {
             println!("{}", "No systems reachable with current fuel.".yellow());
             println!("{}", "Consider refueling or upgrading your ship.".yellow());
         } else {
-            for (system, distance) in reachable_systems {
-                println!("{} - {:.1} light years", system.name.yellow(), distance);
+            for destination in reachable_systems {
+                println!(
+                    "{} - {:.1} light years, {} fuel",
+                    destination.name.yellow(),
+                    destination.distance,
+                    destination.fuel
+                );
             }
         }
         println!();
@@ -487,7 +495,7 @@ impl GameState {
         {
             let distance = current_system.distance_to(system);
             println!("Distance: {:.1} light years", distance);
-            println!("Fuel required: {} light years", distance.ceil() as u32);
+            println!("Fuel required: {} light years", fuel_for_distance(distance));
         }
         println!();
     }
