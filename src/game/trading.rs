@@ -1,5 +1,6 @@
 use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
 use crate::data::systems::{EconomyType, StarSystem, SystemManager};
+use crate::game::commander::Standing;
 use crate::game::{Commander, Ship, TradeLog};
 use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
@@ -48,11 +49,33 @@ impl TradingHandler {
         market
     }
 
+    /// The market as the player sees it: stable prices adjusted for their standing
+    fn priced_market(
+        &mut self,
+        location: &str,
+        economy: &EconomyType,
+        standing: Standing,
+    ) -> MarketPrices {
+        let mut market = self.market_for(location, economy);
+        for price in market.buy_prices.values_mut() {
+            *price = standing.buy_price(*price);
+        }
+        for price in market.sell_prices.values_mut() {
+            *price = standing.sell_price(*price);
+        }
+        market
+    }
+
     /// Handle the market command - show current system's market prices
-    pub fn handle_market(&mut self, system_manager: &SystemManager, current_location: &str) {
+    pub fn handle_market(
+        &mut self,
+        system_manager: &SystemManager,
+        current_location: &str,
+        standing: Standing,
+    ) {
         if let Some(system) = system_manager.get_system(current_location) {
-            let market = self.market_for(current_location, &system.economy);
-            self.display_market(system, &market);
+            let market = self.priced_market(current_location, &system.economy, standing);
+            self.display_market(system, &market, standing);
         } else {
             show_error("System not found");
         }
@@ -103,7 +126,7 @@ impl TradingHandler {
             }
         };
 
-        let market = self.market_for(current_location, &system.economy);
+        let market = self.priced_market(current_location, &system.economy, commander.standing());
 
         // Perform the purchase
         self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
@@ -154,7 +177,7 @@ impl TradingHandler {
             }
         };
 
-        let market = self.market_for(current_location, &system.economy);
+        let market = self.priced_market(current_location, &system.economy, commander.standing());
 
         // Perform the sale
         self.execute_sell(commodity, quantity, commander, ship, &market, trade_log)
@@ -334,9 +357,16 @@ impl TradingHandler {
     }
 
     /// Display market information
-    fn display_market(&self, system: &StarSystem, market: &MarketPrices) {
+    fn display_market(&self, system: &StarSystem, market: &MarketPrices, standing: Standing) {
         println!("\n{} Market", system.name().yellow());
         println!("{}", "=".repeat(system.name().len() + 7));
+        if standing != Standing::Neutral {
+            println!(
+                "Prices adjusted for your standing: {} ({:+}% on trades)",
+                standing.name(),
+                standing.price_favour_percent()
+            );
+        }
 
         for commodity in self.trading_system.get_commodities() {
             let buy_price = market.get_buy_price(commodity).unwrap_or(0);
