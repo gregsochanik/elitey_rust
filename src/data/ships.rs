@@ -86,11 +86,16 @@ impl ShipType {
     }
 
     /// Parse ship type from string
+    /// Match a ship by name, ignoring case, spaces, hyphens and quotes ("Cobra Mk IV", "cobra-mk-4", "cobra4")
     pub fn from_string(name: &str) -> Option<Self> {
-        let name_lower = name.to_lowercase();
-        match name_lower.as_str() {
-            "cobra3" | "cobra mk iii" | "cobra mk 3" => Some(ShipType::CobraMkIII),
-            "cobra4" | "cobra mk iv" | "cobra mk 4" => Some(ShipType::CobraMkIV),
+        let key: String = name
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect::<String>()
+            .to_lowercase();
+        match key.as_str() {
+            "cobra3" | "cobramkiii" | "cobramk3" => Some(ShipType::CobraMkIII),
+            "cobra4" | "cobramkiv" | "cobramk4" => Some(ShipType::CobraMkIV),
             "python" => Some(ShipType::Python),
             "anaconda" => Some(ShipType::Anaconda),
             _ => None,
@@ -145,6 +150,31 @@ impl Default for ShipUpgradeManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ship_names_match_in_every_written_form() {
+        for name in [
+            "cobra4",
+            "Cobra Mk IV",
+            "\"Cobra Mk IV\"",
+            "cobra-mk-4",
+            "COBRA MK IV",
+        ] {
+            assert_eq!(
+                ShipType::from_string(name),
+                Some(ShipType::CobraMkIV),
+                "{}",
+                name
+            );
+        }
+        assert_eq!(
+            ShipType::from_string("Cobra Mk III"),
+            Some(ShipType::CobraMkIII)
+        );
+        assert_eq!(ShipType::from_string("python"), Some(ShipType::Python));
+        assert_eq!(ShipType::from_string("nonsense"), None);
+        assert_eq!(ShipType::from_string(""), None);
+    }
 
     #[test]
     fn test_ship_type_display_names() {

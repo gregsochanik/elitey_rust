@@ -28,12 +28,15 @@ impl UpgradeHandler {
         commander: &mut Commander,
         ship: &mut Ship,
     ) -> bool {
-        if args.len() != 2 {
+        let name_words = match args.first().map(|word| word.to_lowercase()) {
+            Some(word) if word == "buy" => &args[1..],
+            _ => args,
+        };
+        if name_words.is_empty() {
             show_error("Usage: upgrade <ship>");
             return false;
         }
-
-        let ship_name = &args[1];
+        let ship_name = &name_words.join(" ");
 
         // Parse ship type
         let new_ship_type = match ShipType::from_string(ship_name) {
@@ -226,7 +229,7 @@ mod tests {
         let cost = handler
             .upgrade_manager
             .calculate_upgrade_cost(&ShipType::CobraMkIII, &ShipType::CobraMkIV);
-        let args = vec!["upgrade".to_string(), "cobra4".to_string()];
+        let args = vec!["cobra4".to_string()];
         assert!(handler.handle_upgrade_purchase(&args, &mut commander, &mut ship));
 
         assert_eq!(commander.credits(), 5_000 - cost + 15);
