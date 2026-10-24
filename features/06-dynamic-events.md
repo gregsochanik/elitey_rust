@@ -73,7 +73,7 @@ Losses come from the largest cargo first, or all of one commodity; gains are lim
 
 ### Reputation
 - [x] Outcomes change the commander's reputation, which is saved and shown in `status`
-- [ ] Reputation affects outcomes or anything else (Feature 10)
+- [ ] Reputation affects outcomes or anything else (Feature 10: prices first, outcomes later)
 
 ## Gaps
 - **Movement.** The wormhole and navigation error do not change where the player ends up; the destination is always reached.

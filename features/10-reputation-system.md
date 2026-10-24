@@ -1,103 +1,74 @@
-# Feature 10: Reputation System 
+# Feature 10: Reputation
 
 ## Overview
-Implement a reputation system that tracks player standing with different systems and factions, affecting trading prices, event outcomes, and access to certain equipment and services.
+Reputation is one score for how the galaxy sees the commander. It already exists (events and combat change it, `status` shows it) but does nothing. Version 1 gives it names and two real effects: how illegal trade hurts it, and better or worse prices. Factions, per-system standing and bounties come later.
 
-## Requirements
+## Status
+Spec only. Slices are tracked as GitHub issues.
 
-### Core Reputation Mechanics
-- [ ] Trading reputation affects prices (buy/sell spreads)
-- [ ] Criminal record for illegal trading activities
-- [ ] Faction relations with different systems
-- [ ] Reputation display in status command
-- [ ] Reputation decay over time
+## Version 1 Scope
 
-### Reputation Types
-- [ ] **Trading Reputation**: Affects market prices and availability
-- [ ] **Criminal Record**: Tracks illegal activities and consequences
-- [ ] **Faction Relations**: Standing with different government types
-- [ ] **System Reputation**: Individual system standing
+### The score
+- A single integer on the commander, kept between −100 and 100 (changes clamp at the ends)
+- Changes still come from events (−10 to +20) and combat (±5)
 
-### Reputation Effects
-- [ ] **Price Modifiers**: Better reputation = better prices
-- [ ] **Equipment Access**: Elite equipment requires good reputation
-- [ ] **Event Outcomes**: Reputation affects event choices and results
-- [ ] **System Access**: Some systems require minimum reputation
-- [ ] **Bounty System**: Criminal activities result in bounties
+### Standing
+The score maps to a named standing:
 
-## Implementation Tasks
+| Score | Standing | Price modifier |
+|---|---|---|
+| −100 to −30 | Criminal | −4% |
+| −29 to −10 | Disreputable | −2% |
+| −9 to 9 | Neutral | 0% |
+| 10 to 29 | Trusted | +2% |
+| 30 to 100 | Respected | +4% |
 
-### 1. Reputation Tracking
-- [ ] Create reputation data structure
-- [ ] Implement reputation calculation algorithms
-- [ ] Add reputation persistence to save system
-- [ ] Create reputation display functions
+- `status` shows `Reputation: 12 (Trusted)`
+- A change in standing is announced when it happens
 
-### 2. Trading Integration
-- [ ] Integrate reputation with price calculations
-- [ ] Add reputation effects to market display
-- [ ] Implement criminal record for illegal goods
-- [ ] Create reputation-based equipment restrictions
+### Illegal trade
+- Buying or selling Narcotics costs 2 reputation per transaction (not per ton)
+- The message says why
 
-### 3. Event Integration
-- [ ] Add reputation effects to event outcomes
-- [ ] Implement reputation-based event choices
-- [ ] Create reputation consequences for event actions
-- [ ] Add reputation gains/losses from events
+### Prices
+- A good standing improves both sides of a trade: the player pays less when buying and receives more when selling, by the modifier above. A bad standing does the opposite
+- The modifier applies to the price the player actually pays or receives; the `market` display shows the modified prices and the standing that caused them
+- The modifier is the same in every system
+- One function does the arithmetic for `market`, `buy` and `sell`. It runs last, on the price Feature 03 already produces (economy, fluctuation, spread, stock): `final = round(price × (1 + modifier))`, rounded half up to whole credits and never below 1
 
-### 4. UI and Display
-- [ ] Add reputation to status display
-- [ ] Create detailed reputation breakdown
-- [ ] Add reputation history tracking
-- [ ] Implement reputation change notifications
+## Not in v1
+- Factions and government-specific standing
+- Per-system reputation
+- Bounties and a separate criminal record
+- Reputation decay over time
+- Equipment access, system access, new event choices (see Open Questions)
 
-## User Experience
+## Balance
+A 4% bonus is about the size of the buy/sell spread (2–6%), so a Respected trader roughly doubles the margin on a typical trade, and a Criminal trader loses most of it. Check this by simulation before tuning the numbers.
 
-### Status Display
-```
-Commander: Greg
-Credits: 1500
-Location: Leesti
-Ship: Cobra Mk III
-Cargo: 8/20 tons
-Fuel: 6/7 light years
-Hull: 95%
-
-Reputation:
-- Trading: Good (Leesti: +15% prices)
-- Criminal: Clean record
-- Factions: Agricultural (+60), Industrial (+30)
-- Access: Elite equipment available
-```
-
-### Reputation Effects
-```
-Market at Leesti (Good Reputation)
-===============================
-Food:      Buy: 16cr  Sell: 14cr  (+10% from reputation)
-Machinery: Buy: 49cr  Sell: 46cr  (+10% from reputation)
-```
-
-### Criminal Consequences
-```
-⚠️  WARNING: Illegal goods detected!
-Criminal record updated: +1 illegal trade
-Bounty added: 50 credits
-Reputation affected: -10 in corporate systems
-```
+## Open Questions
+- **Event outcomes.** Should standing change event odds or choices (for example, inspections going easier for the Trusted)? Left out of v1 to keep the first slice about prices.
+- **Equipment access.** The original spec gated elite equipment on reputation. That needs tech levels first (Feature 07, later).
+- **Recovery.** With no decay, a Criminal commander can only recover through events and combat victories. Is that enough?
 
 ## Acceptance Criteria
-- [ ] Reputation affects market prices appropriately
-- [ ] Criminal activities are tracked and have consequences
-- [ ] Reputation is displayed in status command
-- [ ] Reputation affects event outcomes
-- [ ] Reputation persists across save/load
-- [ ] Reputation changes are clearly communicated
+- [ ] The score never leaves −100 to 100
+- [ ] `status` shows the standing next to the score, and standing changes are announced
+- [ ] Trading Narcotics lowers reputation by 2 per transaction and says so
+- [ ] A Respected commander pays less and sells for more than a Neutral one; a Criminal pays more and sells for less
+- [ ] `market` shows the prices the player will actually get
+- [ ] Reputation and its effects persist across save and load
+- [ ] A simulation keeps the price effect in a sensible range
 
-## Testing
-- [ ] Test reputation effects on trading prices
-- [ ] Test criminal record tracking
-- [ ] Test reputation display accuracy
-- [ ] Test reputation effects on events
-- [ ] Test reputation persistence
-- [ ] Test reputation-based restrictions
+## Testing (write first)
+- [ ] Standing for every boundary score (−100, −30, −29, −10, −9, 9, 10, 29, 30, 100)
+- [ ] Clamping at both ends
+- [ ] Price modifier applied to buy and to sell with the rule above; `market`, `buy` and `sell` agree on the same price
+- [ ] Narcotics penalty on buy and on sell; other goods unaffected
+- [ ] Old saves without a reputation score load as 0 (Neutral); standing and price modifier are derived from the score after loading, never stored
+- [ ] Simulation: informed trader earnings by standing
+
+## Dependencies
+- Feature 03: Trading ✅
+- Feature 06: Dynamic Events ✅
+- Feature 08: Combat ✅

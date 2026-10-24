@@ -22,7 +22,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 06 | Dynamic events | Done (gaps in spec) | 02 |
 | 07 | Equipment (v1: slots, power, buy/sell, cargo racks) | Done (v1) | 04 |
 | 08 | Combat (v1: one pirate fight using equipment) | Done (v1) | 06, 07 |
-| 10 | Reputation | Spec only | 03, 06 |
+| 10 | Reputation (v1: standing, illegal-trade penalty, price modifier) | Spec only (v1 sliced) | 03, 06, 08 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
 | 12 | Ship repair (v1: `repair` for credits) | Done (v1) | 08 |
 | 14 | Refuelling (v1: `refuel` for credits) | Done (v1) | 02 |
@@ -33,7 +33,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 1. **Equipment (07).** v1: slots, power, shop, buy/sell, `equipment` commands, cargo racks, save/load. Effects and damage/repair come later.
 2. **Combat (08).** Turn-based encounters triggered from travel events (06), using equipment stats. Escape, loot, and defeat consequences.
 3. **Trading log (11).** Transaction history and profit/loss. Independent of 07, so it can be done in parallel or first as a low-risk win.
-4. **Reputation (10).** Price modifiers, criminal record, event outcomes. Hooks into trading, events and combat, so it comes after them.
+4. **Reputation (10).** Standing, illegal-trade penalty and price modifiers (v1); criminal record and event outcomes later. Hooks into trading, events and combat, so it comes after them.
 5. **UI improvements (13).** Colour, table alignment and status indicators using existing crates (`colored`, `crossterm`). Can land at any point; doing it last avoids reworking output for new commands.
 
 ## Open decisions
