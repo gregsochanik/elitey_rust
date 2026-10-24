@@ -189,3 +189,73 @@ fn random_pirate_fights_add_less_than_trading_and_courier_jobs() {
         "pirates {per_jump:.1} per jump vs courier jobs"
     );
 }
+
+fn starting_loadout_average_hull_lost() -> f64 {
+    use elitey_rust::game::combat::{Action, Combat, Combatant, Outcome};
+    use elitey_rust::game::Ship;
+    use rand::Rng;
+    use rand::SeedableRng;
+
+    let ship = Ship::new_cobra_mk3();
+    let fights = 1_000u64;
+    let mut lost = 0u64;
+    for seed in 0..fights {
+        let mut combat = Combat::new(Combatant::from_ship(&ship), Combatant::pirate_raider());
+        let start = combat.player.hull;
+        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+        let mut roll = || rng.gen::<f64>();
+        for _ in 0..500 {
+            if combat.resolve_round(Action::Attack, &mut roll) != Ok(Outcome::Ongoing) {
+                break;
+            }
+        }
+        lost += u64::from(start - combat.player.hull);
+    }
+    lost as f64 / fights as f64
+}
+
+fn best_bounty_net_per_jump(seeds: u64) -> f64 {
+    use elitey_rust::game::jobs::{generate_board, JobKind};
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+
+    let repair = starting_loadout_average_hull_lost() * 2.0;
+    let systems = SystemManager::new().unwrap();
+    let all = systems.get_all_systems();
+    let (mut total, mut count) = (0.0, 0);
+    for seed in 0..seeds {
+        for (from, _) in TRIPS {
+            let origin = systems.get_system(from).unwrap();
+            let board = generate_board(origin, &all, &mut StdRng::seed_from_u64(seed));
+            let best = board
+                .iter()
+                .filter(|job| job.kind == JobKind::Bounty)
+                .map(|job| {
+                    f64::from(job.reward)
+                        - f64::from(job.fuel_cost) * f64::from(CREDITS_PER_UNIT)
+                        - repair
+                })
+                .fold(f64::MIN, f64::max);
+            if best > f64::MIN {
+                total += best;
+                count += 1;
+            }
+        }
+    }
+    total / f64::from(count)
+}
+
+#[test]
+fn bounties_pay_more_than_courier_jobs_without_running_away() {
+    let bounty = best_bounty_net_per_jump(300);
+    let courier = best_courier_net_per_jump(300);
+
+    assert!(
+        bounty >= 1.2 * courier,
+        "bounty {bounty:.1} vs courier {courier:.1}"
+    );
+    assert!(
+        bounty <= 2.0 * courier,
+        "bounty {bounty:.1} vs courier {courier:.1}"
+    );
+}

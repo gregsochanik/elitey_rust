@@ -29,7 +29,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 15 | GUI (core refactor, then macOS front end) | Spec only | 01–08, 10, 11, 12, 14 |
 | 13 | UI improvements | Spec only | – |
 | 16 | Jobs (v1: board, courier jobs, deadlines) | Done (v1) | 02, 05, 10, 14 |
-| 17 | Bounty jobs (v1: pirate hunt jobs using combat) | Spec only | 08, 12, 16 |
+| 17 | Bounty jobs (v1: pirate hunt jobs using combat) | Done (v1) | 08, 12, 16 |
 
 ## Roadmap
 
