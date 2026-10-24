@@ -1,5 +1,6 @@
 use crate::data::commodities::TradingSystem;
 use crate::game::combat::Outcome;
+use crate::game::commander::ReputationChange;
 use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLoss};
 use crate::game::{Commander, Ship};
 use rand::Rng;
@@ -7,6 +8,15 @@ use rand::Rng;
 const DEFEAT_HULL_PERCENT: u32 = 10;
 const SURRENDER_CARGO_TONS: u32 = 5;
 const SURRENDER_CREDITS: u32 = 200;
+
+fn push_reputation_messages(messages: &mut Vec<String>, change: ReputationChange) {
+    if change.applied != 0 {
+        messages.push(format!("Reputation {:+}.", change.applied));
+    }
+    if let Some(standing) = change.new_standing {
+        messages.push(format!("Your standing is now {}.", standing.name()));
+    }
+}
 
 /// Apply the consequences of a finished fight and return what to tell the player.
 /// `player_hull` is the hull the player's fighter ended with.
@@ -24,7 +34,7 @@ pub fn settle(
         Outcome::Victory => {
             let reward = rng.gen_range(200..=400);
             commander.add_credits(reward);
-            let standing = commander.change_reputation(5);
+            let reputation = commander.change_reputation(5);
             messages.push(format!("You claim {} credits from the wreck.", reward));
 
             let commodities = TradingSystem::new().get_commodities().to_vec();
@@ -40,10 +50,7 @@ pub fn settle(
                     loot.commodity.name()
                 )),
             }
-            messages.push("Reputation +5.".to_string());
-            if let Some(standing) = standing {
-                messages.push(format!("Your standing is now {}.", standing.name()));
-            }
+            push_reputation_messages(&mut messages, reputation);
         }
         Outcome::Defeat => {
             let held = ship.cargo_hold.current_weight();
@@ -53,17 +60,14 @@ pub fn settle(
             }
             let lost = commander.credits() / 2;
             commander.remove_credits(lost);
-            let standing = commander.change_reputation(-5);
+            let reputation = commander.change_reputation(-5);
             ship.hull_percentage = ship.ship_type.max_hull() * DEFEAT_HULL_PERCENT / 100;
             messages.push(format!(
                 "They take {} credits and leave you adrift with {} hull.",
                 lost,
                 ship.hull_display()
             ));
-            messages.push("Reputation -5.".to_string());
-            if let Some(standing) = standing {
-                messages.push(format!("Your standing is now {}.", standing.name()));
-            }
+            push_reputation_messages(&mut messages, reputation);
         }
         Outcome::Surrendered => {
             let taken = apply_cargo_loss(ship, &CargoLoss::Tons(SURRENDER_CARGO_TONS));
@@ -159,6 +163,19 @@ mod tests {
 
         assert_eq!(ship.hull_percentage, 15);
         assert!(messages.iter().any(|m| m.contains("15/150")));
+    }
+
+    #[test]
+    fn reputation_message_reports_what_was_actually_applied() {
+        let (mut commander, mut ship) = setup(0, &[]);
+        commander.reputation = 98;
+
+        let messages = settle(Outcome::Victory, 50, &mut commander, &mut ship, &mut rng());
+        assert_eq!(commander.reputation, 100);
+        assert!(messages.iter().any(|m| m == "Reputation +2."));
+
+        let messages = settle(Outcome::Victory, 50, &mut commander, &mut ship, &mut rng());
+        assert!(!messages.iter().any(|m| m.starts_with("Reputation")));
     }
 
     #[test]

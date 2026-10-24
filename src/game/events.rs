@@ -338,7 +338,10 @@ impl EventManager {
             }
         }
 
-        if let Some(standing) = commander.change_reputation(outcome.reputation_change) {
+        if let Some(standing) = commander
+            .change_reputation(outcome.reputation_change)
+            .new_standing
+        {
             show_info(&format!("Your standing is now {}.", standing.name()));
         }
 

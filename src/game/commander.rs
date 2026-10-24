@@ -36,6 +36,17 @@ impl Standing {
     }
 }
 
+/// What a reputation change actually did once limits were applied
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReputationChange {
+    pub applied: i32,
+    pub new_standing: Option<Standing>,
+}
+
+fn clamped_reputation<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<i32, D::Error> {
+    Ok(i32::deserialize(deserializer)?.clamp(MIN_REPUTATION, MAX_REPUTATION))
+}
+
 /// Represents the player commander with all their data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Commander {
@@ -46,7 +57,7 @@ pub struct Commander {
     /// Current location (system name)
     pub location: String,
     /// Reputation score, kept between MIN_REPUTATION and MAX_REPUTATION
-    #[serde(default)]
+    #[serde(default, deserialize_with = "clamped_reputation")]
     pub reputation: i32,
 }
 
@@ -56,12 +67,18 @@ impl Commander {
         Standing::from_score(self.reputation)
     }
 
-    /// Change reputation within its limits; returns the new standing if it changed
-    pub fn change_reputation(&mut self, delta: i32) -> Option<Standing> {
-        let before = self.standing();
-        self.reputation = (self.reputation + delta).clamp(MIN_REPUTATION, MAX_REPUTATION);
-        let after = self.standing();
-        (after != before).then_some(after)
+    /// Change reputation within its limits
+    pub fn change_reputation(&mut self, delta: i32) -> ReputationChange {
+        let before = self.reputation;
+        let standing_before = self.standing();
+        self.reputation = before
+            .saturating_add(delta)
+            .clamp(MIN_REPUTATION, MAX_REPUTATION);
+        let standing_after = self.standing();
+        ReputationChange {
+            applied: self.reputation - before,
+            new_standing: (standing_after != standing_before).then_some(standing_after),
+        }
     }
 
     /// Create a new commander with starting conditions
@@ -188,19 +205,40 @@ mod tests {
     #[test]
     fn reputation_clamps_at_both_ends() {
         let mut commander = Commander::new("Test".to_string());
-        commander.change_reputation(500);
+        assert_eq!(commander.change_reputation(500).applied, 100);
         assert_eq!(commander.reputation, 100);
-        commander.change_reputation(-500);
+        assert_eq!(commander.change_reputation(5).applied, 0);
+        assert_eq!(commander.change_reputation(i32::MAX).applied, 0);
+        assert_eq!(commander.change_reputation(-500).applied, -200);
+        assert_eq!(commander.reputation, -100);
+        assert_eq!(commander.change_reputation(i32::MIN).applied, 0);
         assert_eq!(commander.reputation, -100);
     }
 
     #[test]
     fn change_reputation_reports_only_standing_changes() {
         let mut commander = Commander::new("Test".to_string());
-        assert_eq!(commander.change_reputation(5), None);
-        assert_eq!(commander.change_reputation(5), Some(Standing::Trusted));
-        assert_eq!(commander.change_reputation(5), None);
-        assert_eq!(commander.change_reputation(-15), Some(Standing::Neutral));
+        assert_eq!(commander.change_reputation(5).new_standing, None);
+        assert_eq!(
+            commander.change_reputation(5).new_standing,
+            Some(Standing::Trusted)
+        );
+        assert_eq!(commander.change_reputation(5).new_standing, None);
+        assert_eq!(
+            commander.change_reputation(-15).new_standing,
+            Some(Standing::Neutral)
+        );
+    }
+
+    #[test]
+    fn out_of_range_saved_reputation_is_clamped_on_load() {
+        let json = r#"{"name":"Old","credits":1,"location":"LAVE","reputation":250}"#;
+        let commander: Commander = serde_json::from_str(json).unwrap();
+        assert_eq!(commander.reputation, 100);
+
+        let json = r#"{"name":"Old","credits":1,"location":"LAVE","reputation":-250}"#;
+        let commander: Commander = serde_json::from_str(json).unwrap();
+        assert_eq!(commander.reputation, -100);
     }
 
     #[test]
