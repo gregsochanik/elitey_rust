@@ -52,14 +52,14 @@ impl Combatant {
     pub fn pirate_raider() -> Self {
         Self {
             name: "Pirate Raider".to_string(),
-            hull: 60,
-            max_hull: 60,
-            shield: 20,
-            max_shield: 20,
-            recharge: 3,
+            hull: 70,
+            max_hull: 70,
+            shield: 25,
+            max_shield: 25,
+            recharge: 4,
             weapons: vec![Weapon {
-                damage: 10,
-                accuracy: 0.6,
+                damage: 14,
+                accuracy: 0.65,
             }],
         }
     }
@@ -483,12 +483,12 @@ mod tests {
     #[test]
     fn the_pirate_raider_has_the_specified_stats() {
         let raider = Combatant::pirate_raider();
-        assert_eq!((raider.hull, raider.shield, raider.recharge), (60, 20, 3));
+        assert_eq!((raider.hull, raider.shield, raider.recharge), (70, 25, 4));
         assert_eq!(
             raider.weapons,
             vec![Weapon {
-                damage: 10,
-                accuracy: 0.6
+                damage: 14,
+                accuracy: 0.65
             }]
         );
     }

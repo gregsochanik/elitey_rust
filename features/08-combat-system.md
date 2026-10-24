@@ -4,7 +4,7 @@
 Turn-based ship combat. Version 1 is a small, complete slice: one pirate fight, driven by the equipment the player has installed. Everything else from the original design (initiative, heat, power, positioning, special actions, other enemies) comes later.
 
 ## Status
-Version 1 implemented: Pirate Attack's Fight choice starts a real fight. Numbers are untuned; see the balance issue.
+Version 1 implemented: Pirate Attack's Fight choice starts a real fight. Numbers were tuned by simulation; see Balance.
 
 ## Version 1 Scope
 
@@ -21,11 +21,11 @@ Player stats come from the ship and installed equipment (Feature 07):
 
 | Pirate Raider | |
 |---|---|
-| Hull | 60 |
-| Shield | 20 (recharge 3) |
-| Weapon | damage 10, accuracy 0.6 |
+| Hull | 70 |
+| Shield | 25 (recharge 4) |
+| Weapon | damage 14, accuracy 0.65 |
 
-Values are a starting point and get tuned by play-testing.
+Tuned by simulation (see Balance).
 
 ### Round
 1. **Player turn:** choose attack, flee or surrender.
@@ -57,10 +57,24 @@ Kept from the original design, not in v1:
 - Starting combat from other events (Alien Encounter, Military Patrol)
 - Difficulty levels, positioning and cover (descoped)
 
+## Balance
+Attacking every round against the Pirate Raider, 4,000 fights per loadout (hull lost is out of 100):
+
+| Loadout | Wins | Average hull lost |
+|---|---|---|
+| Starting (Pulse Laser, Basic Shield) | 100% | 28 |
+| No shield | 86% | 79 |
+| Standard Shield | 100% | 2 |
+| Pulse + Beam Laser | 100% | 3 |
+| Beam Laser only | 100% | 13 |
+
+An unarmed ship cannot attack, so it cannot win. The first Raider (hull 60, shield 20, damage 10) was too weak: the starting ship won every fight losing 3 hull, because shield recharge absorbed nearly all its fire. Heavier tuning (damage 16–20) made the starting ship lose 40% or more of fights, which is too punishing while repair doesn't exist.
+
+Tests in `tests/combat_balance.rs` keep these properties.
+
 ## Open Questions
 - **Ship destroyed.** v1 never ends the game on defeat. Should a later version, and what does permadeath look like with save slots?
-- **Repair.** Hull stays damaged until repair exists (Feature 07, later). Until then repeated fights wear the ship down.
-- **Balance.** Numbers above are untested guesses.
+- **Repair.** Hull stays damaged until repair exists (Feature 07, later). The starting ship loses about 28 hull per fight, so three or four fights wear it down.
 
 ## Acceptance Criteria
 - [x] Choosing Fight against pirates plays a fight round by round
