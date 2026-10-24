@@ -26,15 +26,22 @@ fn buying_then_selling_updates_credits_cargo_and_log() {
 }
 
 #[test]
-fn prices_hold_still_while_trading_in_one_system() {
+fn trading_moves_only_the_commodity_traded_and_only_a_little_per_ton() {
+    use elitey_rust::data::commodities::CommodityType;
+
     let mut game = new_game(10_000);
+    let before = game.market_prices().unwrap();
 
     assert!(game.handle_buy_command(&args("minerals 1")));
-    let first = game.trade_log.recent(1)[0].unit_price;
-    assert!(game.handle_buy_command(&args("minerals 1")));
-    let second = game.trade_log.recent(1)[0].unit_price;
+    let after = game.market_prices().unwrap();
 
-    assert_eq!(first, second);
+    let first = f64::from(before.buy_prices[&CommodityType::Minerals]);
+    let second = f64::from(after.buy_prices[&CommodityType::Minerals]);
+    assert!(second >= first && second <= (first * 1.015).ceil());
+    assert_eq!(
+        before.buy_prices[&CommodityType::Textiles],
+        after.buy_prices[&CommodityType::Textiles]
+    );
 }
 
 #[test]
@@ -94,48 +101,47 @@ fn latest_unit_price(game: &elitey_rust::game::GameState) -> u32 {
     game.trade_log.recent(1)[0].unit_price
 }
 
-#[test]
-fn good_standing_pays_less_and_earns_more_on_the_same_market() {
-    use elitey_rust::game::commander::Standing;
+fn standing_adjusts_the_same_market(
+    reputation: i32,
+    standing: elitey_rust::game::commander::Standing,
+) {
+    use elitey_rust::data::commodities::CommodityType;
 
     let mut game = new_game(5000);
-    assert!(game.handle_buy_command(&args("food 1")));
-    let neutral_buy = latest_unit_price(&game);
-    assert!(game.handle_sell_command(&args("food 1")));
-    let neutral_sell = latest_unit_price(&game);
+    let neutral = game.market_prices().unwrap();
+    let neutral_buy = neutral.buy_prices[&CommodityType::Food];
+    let neutral_sell = neutral.sell_prices[&CommodityType::Food];
 
-    game.commander.reputation = 30;
+    game.commander.reputation = reputation;
+    let adjusted = game.market_prices().unwrap();
+    assert_eq!(
+        adjusted.buy_prices[&CommodityType::Food],
+        standing.buy_price(neutral_buy)
+    );
+    assert_eq!(
+        adjusted.sell_prices[&CommodityType::Food],
+        standing.sell_price(neutral_sell)
+    );
+
     assert!(game.handle_buy_command(&args("food 1")));
     assert_eq!(
         latest_unit_price(&game),
-        Standing::Respected.buy_price(neutral_buy)
+        adjusted.buy_prices[&CommodityType::Food]
     );
+    let after_buy = game.market_prices().unwrap();
     assert!(game.handle_sell_command(&args("food 1")));
     assert_eq!(
         latest_unit_price(&game),
-        Standing::Respected.sell_price(neutral_sell)
+        after_buy.sell_prices[&CommodityType::Food]
     );
 }
 
 #[test]
+fn good_standing_pays_less_and_earns_more_on_the_same_market() {
+    standing_adjusts_the_same_market(30, elitey_rust::game::commander::Standing::Respected);
+}
+
+#[test]
 fn bad_standing_pays_more_and_earns_less_on_the_same_market() {
-    use elitey_rust::game::commander::Standing;
-
-    let mut game = new_game(5000);
-    assert!(game.handle_buy_command(&args("food 1")));
-    let neutral_buy = latest_unit_price(&game);
-    assert!(game.handle_sell_command(&args("food 1")));
-    let neutral_sell = latest_unit_price(&game);
-
-    game.commander.reputation = -30;
-    assert!(game.handle_buy_command(&args("food 1")));
-    assert_eq!(
-        latest_unit_price(&game),
-        Standing::Criminal.buy_price(neutral_buy)
-    );
-    assert!(game.handle_sell_command(&args("food 1")));
-    assert_eq!(
-        latest_unit_price(&game),
-        Standing::Criminal.sell_price(neutral_sell)
-    );
+    standing_adjusts_the_same_market(-30, elitey_rust::game::commander::Standing::Criminal);
 }
