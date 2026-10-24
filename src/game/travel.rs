@@ -118,7 +118,7 @@ impl TravelHandler {
 
     fn jump_fuel_cost(&self, origin: &str, destination: &StarSystem) -> Option<u32> {
         let origin_system = self.system_manager.get_system_case_insensitive(origin)?;
-        Some(destination.distance_to(origin_system) as u32)
+        Some(destination.distance_to(origin_system).ceil() as u32)
     }
 
     /// Process jump phase events
@@ -302,13 +302,25 @@ mod tests {
     use super::*;
 
     #[test]
+    fn jump_fuel_cost_rounds_distance_up() {
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let diso = system_manager.get_system("DISO").unwrap().clone();
+        let lave = system_manager.get_system("LAVE").unwrap().clone();
+        let distance = diso.distance_to(&lave);
+        assert!(distance > 2.0 && distance < 3.0);
+
+        let travel_handler = TravelHandler::new(system_manager);
+        assert_eq!(travel_handler.jump_fuel_cost("LAVE", &diso), Some(3));
+    }
+
+    #[test]
     fn jump_fuel_cost_is_measured_from_the_origin() {
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         let destination = system_manager.get_system("DISO").unwrap().clone();
         let travel_handler = TravelHandler::new(system_manager);
 
-        assert_eq!(travel_handler.jump_fuel_cost("LAVE", &destination), Some(2));
-        assert_eq!(travel_handler.jump_fuel_cost("lave", &destination), Some(2));
+        assert_eq!(travel_handler.jump_fuel_cost("LAVE", &destination), Some(3));
+        assert_eq!(travel_handler.jump_fuel_cost("lave", &destination), Some(3));
         assert_eq!(travel_handler.jump_fuel_cost("UNKNOWN", &destination), None);
     }
 
