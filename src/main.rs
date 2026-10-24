@@ -3,13 +3,9 @@ use clap::Parser;
 use colored::*;
 use std::io::{self, Write};
 
-mod data;
-mod game;
-mod utils;
-
-use game::GameState;
-use utils::display;
-use utils::input;
+use elitey_rust::game::GameState;
+use elitey_rust::utils::display;
+use elitey_rust::utils::input;
 
 #[derive(Parser)]
 #[command(name = "Elite Rust")]

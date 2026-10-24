@@ -8,7 +8,6 @@ pub fn get_input() -> Result<String, io::Error> {
 }
 
 /// Get user input with a prompt
-#[allow(dead_code)]
 pub fn get_input_with_prompt(prompt: &str) -> Result<String, io::Error> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -16,13 +15,11 @@ pub fn get_input_with_prompt(prompt: &str) -> Result<String, io::Error> {
 }
 
 /// Parse command into parts
-#[allow(dead_code)]
 pub fn parse_command(input: &str) -> Vec<&str> {
     input.split_whitespace().collect()
 }
 
 /// Validate command format
-#[allow(dead_code)]
 pub fn validate_command(parts: &[&str]) -> bool {
     !parts.is_empty()
 }

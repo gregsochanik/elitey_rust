@@ -19,7 +19,6 @@ pub struct Ship {
     pub equipment: Loadout,
 }
 
-#[allow(dead_code)]
 impl Ship {
     /// Create a new Cobra Mk III (starting ship as per spec)
     pub fn new_cobra_mk3() -> Self {

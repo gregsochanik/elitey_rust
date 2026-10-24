@@ -86,7 +86,6 @@ pub struct Commander {
     pub reputation: i32,
 }
 
-#[allow(dead_code)]
 impl Commander {
     pub fn standing(&self) -> Standing {
         Standing::from_score(self.reputation)
