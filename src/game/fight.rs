@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::game::combat::{Action, Combat, CombatError, Combatant, Outcome};
 use colored::*;
 use std::io::{self, BufRead, Write};

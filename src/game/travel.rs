@@ -1,8 +1,13 @@
 use crate::data::systems::{StarSystem, SystemManager};
+use crate::game::aftermath::settle;
+use crate::game::combat::{Combat, Combatant};
+use crate::game::fight::run_fight;
 use crate::game::{Commander, Event, EventManager, EventPhase, Ship};
 use crate::utils::display::{show_error, show_info, show_success};
 use crate::utils::input;
 use colored::*;
+use rand::Rng;
+use std::io;
 
 /// Handles travel between star systems with event integration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -228,12 +233,45 @@ impl TravelHandler {
                     show_info(&format!("Fuel: {}", ship.fuel_current));
                 }
 
+                if outcome.starts_combat {
+                    self.fight_pirates(commander, ship);
+                }
+
                 Ok(true)
             }
             Err(e) => {
                 show_error(&format!("Error processing event: {}", e));
                 Ok(false)
             }
+        }
+    }
+
+    /// Fight a pirate raider and apply the result to the player
+    fn fight_pirates(&self, commander: &mut Commander, ship: &mut Ship) {
+        let mut combat = Combat::new(Combatant::from_ship(ship), Combatant::pirate_raider());
+        let mut dice = rand::thread_rng();
+        let mut roll = || dice.gen::<f64>();
+
+        let result = run_fight(
+            &mut combat,
+            &mut io::stdin().lock(),
+            &mut io::stdout(),
+            &mut roll,
+        );
+        match result {
+            Ok(outcome) => {
+                println!();
+                for message in settle(
+                    outcome,
+                    combat.player.hull,
+                    commander,
+                    ship,
+                    &mut rand::thread_rng(),
+                ) {
+                    show_info(&message);
+                }
+            }
+            Err(error) => show_error(&format!("The fight was interrupted: {}", error)),
         }
     }
 

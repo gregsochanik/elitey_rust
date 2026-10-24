@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::data::equipment::{CombatStats, EquipmentCategory};
 use crate::game::Ship;
 
