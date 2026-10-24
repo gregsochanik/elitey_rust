@@ -39,3 +39,16 @@ fn a_stranded_ship_can_refuel_and_jump_again() {
     assert_eq!(game.commander.credits(), 88);
     assert!(!game.reachable_destinations().unwrap().is_empty());
 }
+
+#[test]
+fn a_ship_with_no_fuel_credits_or_cargo_is_rescued_and_can_move_again() {
+    let mut game = new_game(0);
+    game.ship.fuel_current = 1;
+    assert!(game.reachable_destinations().unwrap().is_empty());
+
+    assert!(game.handle_refuel_command(&[]));
+
+    assert!(!game.reachable_destinations().unwrap().is_empty());
+    assert_eq!(game.commander.reputation, -2);
+    assert_eq!(game.commander.credits(), 0);
+}
