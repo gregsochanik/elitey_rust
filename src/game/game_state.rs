@@ -219,6 +219,7 @@ impl GameState {
         self.commander.location = destination.to_string();
 
         self.job_board.clear();
+        self.settle_jobs();
 
         Ok(())
     }
@@ -433,6 +434,7 @@ impl GameState {
             Ok(success) => {
                 if success {
                     self.job_board.clear();
+                    self.settle_jobs();
                 }
                 success
             }
@@ -450,6 +452,15 @@ impl GameState {
             .get_system_info(&self.commander.location)?;
         let systems = self.travel_handler.get_available_systems();
         Some(self.job_board.jobs_at(origin, &systems, rng).to_vec())
+    }
+
+    /// Deliver or fail active jobs after arriving at the commander's location
+    pub fn settle_jobs(&mut self) {
+        let arrived_at = self.commander.location.clone();
+        for message in jobs::settle_arrival(&mut self.active_jobs, &mut self.commander, &arrived_at)
+        {
+            println!("{}", message);
+        }
     }
 
     /// The jobs left on the board
