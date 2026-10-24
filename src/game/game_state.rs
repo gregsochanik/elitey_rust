@@ -236,6 +236,11 @@ impl GameState {
         super::equipment::EquipmentHandler::handle(args, &mut self.commander, &mut self.ship)
     }
 
+    /// Handle repair command
+    pub fn handle_repair_command(&mut self, args: &[String]) -> bool {
+        super::repair::handle(args, &mut self.commander, &mut self.ship)
+    }
+
     /// Handle log command
     pub fn handle_log_command(&self, args: &[String]) {
         let count = match args.first() {

@@ -87,6 +87,14 @@ fn main() -> Result<()> {
                     .collect();
                 game_state.handle_equipment_command(&args);
             }
+            "repair" => {
+                let args: Vec<String> = command_parts
+                    .iter()
+                    .skip(1)
+                    .map(|s| s.to_string())
+                    .collect();
+                game_state.handle_repair_command(&args);
+            }
             "log" => {
                 let args: Vec<String> = command_parts
                     .iter()

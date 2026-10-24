@@ -73,3 +73,17 @@ fn surrendering_costs_cargo_and_credits_only() {
     assert_eq!(game.commander.credits(), 300);
     assert_eq!(game.ship.hull_percentage, 100);
 }
+
+#[test]
+fn repair_restores_hull_lost_in_a_fight() {
+    let mut game = new_game(500);
+    game.ship.hull_percentage = 100;
+    fight(&mut game, "a\na\na\na\na\na\na\na\n", 0.55);
+    let lost = 100 - game.ship.hull_percentage;
+    assert!(lost > 0);
+
+    let credits_before = game.commander.credits;
+    game.handle_repair_command(&[]);
+    assert_eq!(game.ship.hull_percentage, 100);
+    assert_eq!(game.commander.credits, credits_before - lost * 2);
+}

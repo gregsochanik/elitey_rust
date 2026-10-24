@@ -24,6 +24,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 08 | Combat (v1: one pirate fight using equipment) | Done (v1) | 06, 07 |
 | 10 | Reputation | Spec only | 03, 06 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
+| 12 | Ship repair (v1: `repair` for credits) | Done (v1) | 08 |
 | 13 | UI improvements | Spec only | – |
 
 ## Roadmap
@@ -36,7 +37,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 
 ## Open decisions
 
-- **Numbering.** There are no features 09 or 12 (09 was merged into 07). Either reserve them or renumber.
+- **Numbering.** There is no feature 09 (it was merged into 07). Either reserve the number or renumber.
 - **Tests.** The README references a `tests/` directory that does not exist. Add BDD-style integration tests there as each feature lands.
 
 ## Definition of done (per feature)
