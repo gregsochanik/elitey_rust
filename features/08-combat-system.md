@@ -4,7 +4,7 @@
 Turn-based ship combat. Version 1 is a small, complete slice: one pirate fight, driven by the equipment the player has installed. Everything else from the original design (initiative, heat, power, positioning, special actions, other enemies) comes later.
 
 ## Status
-Version 1 implemented: Pirate Attack's Fight choice starts a real fight. Numbers are untuned; see the balance issue.
+Version 1 implemented: Pirate Attack's Fight choice starts a real fight. Numbers were tuned by simulation; see Balance.
 
 ## Version 1 Scope
 
