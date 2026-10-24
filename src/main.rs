@@ -97,6 +97,25 @@ fn main() -> Result<()> {
             "jobs" => {
                 game_state.handle_jobs_command();
             }
+            "accept" => {
+                let args: Vec<String> = command_parts
+                    .iter()
+                    .skip(1)
+                    .map(|s| s.to_string())
+                    .collect();
+                game_state.handle_accept_command(&args);
+            }
+            "missions" => {
+                game_state.handle_missions_command();
+            }
+            "abandon" => {
+                let args: Vec<String> = command_parts
+                    .iter()
+                    .skip(1)
+                    .map(|s| s.to_string())
+                    .collect();
+                game_state.handle_abandon_command(&args);
+            }
             "refuel" => {
                 let args: Vec<String> = command_parts
                     .iter()

@@ -1,9 +1,12 @@
 use crate::data::systems::StarSystem;
 use crate::game::travel::fuel_for_distance;
+use crate::game::Commander;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+pub const MAX_ACTIVE_JOBS: usize = 3;
+pub const ABANDON_REPUTATION: i32 = -3;
 const MIN_BOARD_SIZE: usize = 3;
 const MAX_BOARD_SIZE: usize = 5;
 const MAX_JOB_RANGE: f64 = 7.0;
@@ -18,6 +21,57 @@ pub struct Job {
     pub fuel_cost: u32,
     pub reward: u32,
     pub deadline_jumps: u32,
+}
+
+/// A job the player has accepted and is working towards
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ActiveJob {
+    pub job: Job,
+    pub jumps_left: u32,
+}
+
+/// Take job `number` (1-based) from the board at `location` into the active list
+pub fn accept(
+    board: &mut JobBoard,
+    active: &mut Vec<ActiveJob>,
+    location: &str,
+    number: usize,
+) -> Result<Job, String> {
+    if board.location != location {
+        return Err("Check the board first with 'jobs'.".to_string());
+    }
+    if active.len() >= MAX_ACTIVE_JOBS {
+        return Err(format!(
+            "You already have {} jobs. Finish or abandon one first.",
+            MAX_ACTIVE_JOBS
+        ));
+    }
+    if number == 0 || number > board.jobs.len() {
+        return Err(format!("There is no job {} on the board.", number));
+    }
+    let job = board.jobs.remove(number - 1);
+    active.push(ActiveJob {
+        jumps_left: job.deadline_jumps,
+        job: job.clone(),
+    });
+    Ok(job)
+}
+
+/// Drop active job `number` (1-based), costing reputation
+pub fn abandon(
+    active: &mut Vec<ActiveJob>,
+    commander: &mut Commander,
+    number: usize,
+) -> Result<Job, String> {
+    if number == 0 || number > active.len() {
+        return Err(format!("You have no job {}.", number));
+    }
+    let abandoned = active.remove(number - 1);
+    let change = commander.change_reputation(ABANDON_REPUTATION);
+    if let Some(standing) = change.new_standing {
+        crate::utils::display::show_info(&format!("Your standing is now {}.", standing.name()));
+    }
+    Ok(abandoned.job)
 }
 
 /// The jobs on offer at the system the player is docked at
@@ -80,6 +134,11 @@ impl JobBoard {
             self.jobs = generate_board(origin, systems, rng);
             self.location = origin.name.clone();
         }
+        &self.jobs
+    }
+
+    /// The jobs currently on the board
+    pub fn jobs(&self) -> &[Job] {
         &self.jobs
     }
 
@@ -196,6 +255,68 @@ mod tests {
         let a = generate_board(origin, &systems, &mut StdRng::seed_from_u64(7));
         let b = generate_board(origin, &systems, &mut StdRng::seed_from_u64(7));
         assert_eq!(a, b);
+    }
+
+    fn board_with_jobs() -> (JobBoard, Vec<ActiveJob>) {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let lave = galaxy.get_system("LAVE").unwrap();
+        let mut board = JobBoard::new();
+        board.jobs_at(lave, &systems, &mut StdRng::seed_from_u64(2));
+        (board, Vec::new())
+    }
+
+    #[test]
+    fn accepting_moves_a_job_from_the_board_to_the_active_list() {
+        let (mut board, mut active) = board_with_jobs();
+        let before = board.jobs.len();
+        let second = board.jobs[1].clone();
+
+        let job = accept(&mut board, &mut active, "LAVE", 2).unwrap();
+
+        assert_eq!(job, second);
+        assert_eq!(board.jobs.len(), before - 1);
+        assert!(!board.jobs.contains(&second));
+        assert_eq!(active.len(), 1);
+        assert_eq!(active[0].jumps_left, second.deadline_jumps);
+    }
+
+    #[test]
+    fn a_fourth_active_job_is_refused() {
+        let (mut board, mut active) = board_with_jobs();
+        for _ in 0..3 {
+            accept(&mut board, &mut active, "LAVE", 1).unwrap();
+        }
+        let remaining = board.jobs.len();
+
+        assert!(accept(&mut board, &mut active, "LAVE", 1).is_err());
+        assert_eq!(active.len(), 3);
+        assert_eq!(board.jobs.len(), remaining);
+    }
+
+    #[test]
+    fn bad_numbers_and_unseen_boards_are_refused() {
+        let (mut board, mut active) = board_with_jobs();
+        assert!(accept(&mut board, &mut active, "LAVE", 0).is_err());
+        assert!(accept(&mut board, &mut active, "LAVE", 99).is_err());
+        assert!(accept(&mut board, &mut active, "DISO", 1).is_err());
+        assert!(active.is_empty());
+    }
+
+    #[test]
+    fn abandoning_removes_the_job_and_costs_reputation() {
+        let (mut board, mut active) = board_with_jobs();
+        accept(&mut board, &mut active, "LAVE", 1).unwrap();
+        accept(&mut board, &mut active, "LAVE", 1).unwrap();
+        let kept = active[1].clone();
+        let mut commander = Commander::new("Test".to_string());
+
+        abandon(&mut active, &mut commander, 1).unwrap();
+
+        assert_eq!(active, vec![kept]);
+        assert_eq!(commander.reputation, -3);
+        assert!(abandon(&mut active, &mut commander, 5).is_err());
+        assert_eq!(commander.reputation, -3);
     }
 
     #[test]

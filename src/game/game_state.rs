@@ -1,11 +1,11 @@
 use crate::data::systems::SystemManager;
 use crate::game::travel::fuel_for_distance;
-use crate::utils::display::show_error;
+use crate::utils::display::{show_error, show_success};
 use crate::utils::input;
 use colored::*;
 use std::io::Write;
 
-use super::jobs::Job;
+use super::jobs::{self, ActiveJob, Job};
 use super::{
     Commander, EventManager, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
@@ -36,6 +36,9 @@ pub struct GameState {
     /// Jobs on offer at the current system
     #[serde(default)]
     pub job_board: JobBoard,
+    /// Accepted jobs, numbered by position
+    #[serde(default)]
+    pub active_jobs: Vec<ActiveJob>,
 }
 
 /// A system the ship can reach with its current fuel
@@ -66,6 +69,7 @@ impl GameState {
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         }
     }
 
@@ -448,6 +452,74 @@ impl GameState {
         Some(self.job_board.jobs_at(origin, &systems, rng).to_vec())
     }
 
+    /// The jobs left on the board
+    pub fn job_board_jobs(&self) -> &[Job] {
+        self.job_board.jobs()
+    }
+
+    /// Take job `number` from the board here
+    pub fn accept_job(&mut self, number: usize) -> Result<Job, String> {
+        jobs::accept(
+            &mut self.job_board,
+            &mut self.active_jobs,
+            &self.commander.location,
+            number,
+        )
+    }
+
+    /// Drop active job `number`, losing reputation
+    pub fn abandon_job(&mut self, number: usize) -> Result<Job, String> {
+        jobs::abandon(&mut self.active_jobs, &mut self.commander, number)
+    }
+
+    /// Handle accept command
+    pub fn handle_accept_command(&mut self, args: &[String]) {
+        let Some(number) = Self::job_number(args, "accept") else {
+            return;
+        };
+        match self.accept_job(number) {
+            Ok(job) => show_success(&format!(
+                "Accepted: courier to {} for {}cr within {} jumps.",
+                job.destination, job.reward, job.deadline_jumps
+            )),
+            Err(e) => show_error(&e),
+        }
+    }
+
+    /// Handle abandon command
+    pub fn handle_abandon_command(&mut self, args: &[String]) {
+        let Some(number) = Self::job_number(args, "abandon") else {
+            return;
+        };
+        match self.abandon_job(number) {
+            Ok(job) => println!(
+                "{}",
+                format!(
+                    "Abandoned the courier job to {}. Reputation {:+}.",
+                    job.destination,
+                    jobs::ABANDON_REPUTATION
+                )
+                .yellow()
+            ),
+            Err(e) => show_error(&e),
+        }
+    }
+
+    /// Handle missions command
+    pub fn handle_missions_command(&self) {
+        crate::utils::display::show_missions(&self.active_jobs);
+    }
+
+    fn job_number(args: &[String], command: &str) -> Option<usize> {
+        match args.first().map(|arg| arg.parse::<usize>()) {
+            Some(Ok(number)) if number > 0 && args.len() == 1 => Some(number),
+            _ => {
+                show_error(&format!("Usage: {} <number>", command));
+                None
+            }
+        }
+    }
+
     /// Handle jobs command
     pub fn handle_jobs_command(&mut self) {
         match self.jobs_here(&mut rand::thread_rng()) {
@@ -579,6 +651,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -603,6 +676,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         assert!(game_state.is_running());
@@ -627,6 +701,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         assert!(!game_state.is_running());
@@ -646,6 +721,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         };
         let mut value = serde_json::to_value(&state).unwrap();
         value.as_object_mut().unwrap().remove("trade_log");
@@ -668,6 +744,7 @@ mod tests {
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
+            active_jobs: Vec::new(),
         };
         state.trade_log.record_buy(
             crate::data::commodities::CommodityType::Food,
