@@ -3,33 +3,111 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
-/// Represents a commodity in the trading system
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum CommodityType {
-    Food,
-    Textiles,
-    Machinery,
-    Computers,
-    Minerals,
-    Alloys,
-    Luxury,
-    Narcotics,
+/// One tradeable good, as described in `data/commodities.json`
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CommodityData {
+    pub id: String,
+    pub name: String,
+    pub base_price: u32,
+    #[serde(default)]
+    pub illegal: bool,
+    /// Price multiplier in economies not listed below
+    #[serde(default = "no_preference")]
+    pub default_multiplier: f64,
+    /// Price multiplier by economy, as named in the galaxy data ("Rich Ind", "Poor Agri", ...)
+    #[serde(default)]
+    pub economy_multipliers: HashMap<EconomyType, f64>,
+}
+
+fn no_preference() -> f64 {
+    1.0
+}
+
+/// Every commodity in the game, in the order the market lists them
+pub fn commodity_data() -> &'static [CommodityData] {
+    static COMMODITIES: OnceLock<Vec<CommodityData>> = OnceLock::new();
+    COMMODITIES.get_or_init(|| {
+        serde_json::from_str(include_str!("../../data/commodities.json"))
+            .expect("data/commodities.json is valid")
+    })
+}
+
+/// Lower case letters and digits only, so "Food" and "food" are the same name
+fn name_key(name: &str) -> String {
+    name.chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect::<String>()
+        .to_lowercase()
+}
+
+/// A commodity, identified by its id in `data/commodities.json`. It serialises as that id and
+/// loads the capitalised names older saves used (`Food`, `Narcotics`).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CommodityType(&'static str);
+
+/// Names for the commodities the code refers to directly; any other commodity in the data
+/// is reached by id with `CommodityType::from_string`
+#[allow(non_upper_case_globals, dead_code)]
+impl CommodityType {
+    pub const Food: CommodityType = CommodityType("food");
+    pub const Textiles: CommodityType = CommodityType("textiles");
+    pub const Machinery: CommodityType = CommodityType("machinery");
+    pub const Computers: CommodityType = CommodityType("computers");
+    pub const Minerals: CommodityType = CommodityType("minerals");
+    pub const Alloys: CommodityType = CommodityType("alloys");
+    pub const Luxury: CommodityType = CommodityType("luxury");
+    pub const Narcotics: CommodityType = CommodityType("narcotics");
+}
+
+impl Serialize for CommodityType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.id())
+    }
+}
+
+impl<'de> Deserialize<'de> for CommodityType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let name = String::deserialize(deserializer)?;
+        CommodityType::from_string(&name)
+            .ok_or_else(|| serde::de::Error::custom(format!("unknown commodity '{}'", name)))
+    }
 }
 
 impl CommodityType {
+    /// Match a commodity by id or name, ignoring case
+    pub fn from_string(name: &str) -> Option<Self> {
+        let key = name_key(name);
+        commodity_data()
+            .iter()
+            .find(|data| name_key(&data.id) == key || name_key(&data.name) == key)
+            .map(|data| CommodityType(data.id.as_str()))
+    }
+
+    /// Every commodity, in market order
+    pub fn all() -> Vec<CommodityType> {
+        commodity_data()
+            .iter()
+            .map(|data| CommodityType(data.id.as_str()))
+            .collect()
+    }
+
+    fn data(&self) -> &'static CommodityData {
+        commodity_data()
+            .iter()
+            .find(|data| data.id == self.0)
+            .unwrap_or_else(|| panic!("commodity '{}' is not in data/commodities.json", self.0))
+    }
+
+    pub fn id(&self) -> &'static str {
+        self.0
+    }
+
     /// Get the base price for this commodity
     pub fn base_price(&self) -> u32 {
-        match self {
-            CommodityType::Food => 15,
-            CommodityType::Textiles => 25,
-            CommodityType::Machinery => 45,
-            CommodityType::Computers => 65,
-            CommodityType::Minerals => 35,
-            CommodityType::Alloys => 55,
-            CommodityType::Luxury => 85,
-            CommodityType::Narcotics => 120,
-        }
+        self.data().base_price
     }
 
     /// How far a price sits from this commodity's base price, in whole percent
@@ -40,69 +118,21 @@ impl CommodityType {
 
     /// Get the name as a string
     pub fn name(&self) -> &'static str {
-        match self {
-            CommodityType::Food => "Food",
-            CommodityType::Textiles => "Textiles",
-            CommodityType::Machinery => "Machinery",
-            CommodityType::Computers => "Computers",
-            CommodityType::Minerals => "Minerals",
-            CommodityType::Alloys => "Alloys",
-            CommodityType::Luxury => "Luxury",
-            CommodityType::Narcotics => "Narcotics",
-        }
+        &self.data().name
     }
 
     /// Check if this commodity is illegal
     pub fn is_illegal(&self) -> bool {
-        matches!(self, CommodityType::Narcotics)
+        self.data().illegal
     }
 
     /// Get economy preference multiplier for this commodity
     pub fn economy_preference(&self, economy: &EconomyType) -> f64 {
-        match (self, economy) {
-            // Food is preferred in agricultural economies
-            (CommodityType::Food, EconomyType::PoorAgricultural) => 1.3,
-            (CommodityType::Food, EconomyType::AverageAgricultural) => 1.4,
-            (CommodityType::Food, EconomyType::RichAgricultural) => 1.5,
-            (CommodityType::Food, EconomyType::MainlyAgricultural) => 1.4,
-
-            // Textiles are preferred in agricultural economies
-            (CommodityType::Textiles, EconomyType::PoorAgricultural) => 1.2,
-            (CommodityType::Textiles, EconomyType::AverageAgricultural) => 1.3,
-            (CommodityType::Textiles, EconomyType::RichAgricultural) => 1.4,
-            (CommodityType::Textiles, EconomyType::MainlyAgricultural) => 1.3,
-
-            // Machinery is preferred in industrial economies
-            (CommodityType::Machinery, EconomyType::PoorIndustrial) => 1.3,
-            (CommodityType::Machinery, EconomyType::AverageIndustrial) => 1.4,
-            (CommodityType::Machinery, EconomyType::RichIndustrial) => 1.5,
-            (CommodityType::Machinery, EconomyType::MainlyIndustrial) => 1.4,
-
-            // Computers are preferred in high-tech economies
-            (CommodityType::Computers, EconomyType::RichIndustrial) => 1.4,
-            (CommodityType::Computers, EconomyType::MainlyIndustrial) => 1.3,
-
-            // Minerals are preferred in industrial economies
-            (CommodityType::Minerals, EconomyType::PoorIndustrial) => 1.2,
-            (CommodityType::Minerals, EconomyType::AverageIndustrial) => 1.3,
-            (CommodityType::Minerals, EconomyType::RichIndustrial) => 1.4,
-            (CommodityType::Minerals, EconomyType::MainlyIndustrial) => 1.3,
-
-            // Alloys are preferred in industrial economies
-            (CommodityType::Alloys, EconomyType::AverageIndustrial) => 1.3,
-            (CommodityType::Alloys, EconomyType::RichIndustrial) => 1.4,
-            (CommodityType::Alloys, EconomyType::MainlyIndustrial) => 1.3,
-
-            // Luxury goods are preferred in rich economies
-            (CommodityType::Luxury, EconomyType::RichAgricultural) => 1.4,
-            (CommodityType::Luxury, EconomyType::RichIndustrial) => 1.4,
-
-            // Narcotics have no economy preference (illegal everywhere)
-            (CommodityType::Narcotics, _) => 0.8,
-
-            // Default case - no preference
-            _ => 1.0,
-        }
+        let data = self.data();
+        data.economy_multipliers
+            .get(economy)
+            .copied()
+            .unwrap_or(data.default_multiplier)
     }
 }
 
@@ -249,16 +279,7 @@ pub struct TradingSystem {
 impl TradingSystem {
     pub fn new() -> Self {
         Self {
-            commodities: vec![
-                CommodityType::Food,
-                CommodityType::Textiles,
-                CommodityType::Machinery,
-                CommodityType::Computers,
-                CommodityType::Minerals,
-                CommodityType::Alloys,
-                CommodityType::Luxury,
-                CommodityType::Narcotics,
-            ],
+            commodities: CommodityType::all(),
         }
     }
 
@@ -482,5 +503,113 @@ mod tests {
 
         assert!(informed_wins as f64 / runs as f64 >= 0.6);
         assert!(informed_wins > blind_wins);
+    }
+
+    #[test]
+    fn commodity_data_is_consistent() {
+        let data = commodity_data();
+        assert!(data.len() >= 2);
+
+        let ids: std::collections::HashSet<_> = data.iter().map(|c| c.id.as_str()).collect();
+        assert_eq!(ids.len(), data.len(), "commodity ids must be unique");
+        let names: std::collections::HashSet<_> = data.iter().map(|c| name_key(&c.name)).collect();
+        assert_eq!(names.len(), data.len(), "commodity names must be unique");
+
+        for commodity in data {
+            assert!(!commodity.id.is_empty() && !commodity.name.is_empty());
+            assert!(commodity.base_price > 0, "{}", commodity.id);
+            assert!(
+                commodity.id.chars().all(|c| c.is_ascii_lowercase()),
+                "{}",
+                commodity.id
+            );
+            for multiplier in std::iter::once(&commodity.default_multiplier)
+                .chain(commodity.economy_multipliers.values())
+            {
+                assert!(
+                    (0.5..=2.0).contains(multiplier),
+                    "{} has multiplier {}",
+                    commodity.id,
+                    multiplier
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_named_commodities_exist_in_the_data() {
+        for (named, id) in [
+            (CommodityType::Food, "food"),
+            (CommodityType::Textiles, "textiles"),
+            (CommodityType::Machinery, "machinery"),
+            (CommodityType::Computers, "computers"),
+            (CommodityType::Minerals, "minerals"),
+            (CommodityType::Alloys, "alloys"),
+            (CommodityType::Luxury, "luxury"),
+            (CommodityType::Narcotics, "narcotics"),
+        ] {
+            assert_eq!(named.id(), id);
+            assert!(!named.name().is_empty(), "{}", id);
+        }
+        assert_eq!(CommodityType::all().len(), commodity_data().len());
+    }
+
+    #[test]
+    fn only_narcotics_are_illegal_and_cheaper_everywhere() {
+        let illegal: Vec<_> = CommodityType::all()
+            .into_iter()
+            .filter(CommodityType::is_illegal)
+            .collect();
+        assert_eq!(illegal, vec![CommodityType::Narcotics]);
+        assert_eq!(
+            CommodityType::Narcotics.economy_preference(&EconomyType::RichIndustrial),
+            0.8
+        );
+        assert_eq!(
+            CommodityType::Food.economy_preference(&EconomyType::RichIndustrial),
+            1.0
+        );
+        assert_eq!(
+            CommodityType::Food.economy_preference(&EconomyType::RichAgricultural),
+            1.5
+        );
+    }
+
+    #[test]
+    fn commodities_serialise_as_ids_and_load_the_names_old_saves_used() {
+        assert_eq!(
+            serde_json::to_string(&CommodityType::Luxury).unwrap(),
+            "\"luxury\""
+        );
+        for (old, expected) in [
+            ("Food", CommodityType::Food),
+            ("Narcotics", CommodityType::Narcotics),
+            ("luxury", CommodityType::Luxury),
+        ] {
+            let loaded: CommodityType = serde_json::from_str(&format!("\"{}\"", old)).unwrap();
+            assert_eq!(loaded, expected, "{}", old);
+        }
+        assert!(serde_json::from_str::<CommodityType>("\"Spice\"").is_err());
+
+        let mut hold = CargoHold::new(10);
+        hold.add_cargo(CommodityType::Food, 3);
+        let json = serde_json::to_string(&hold).unwrap();
+        assert!(json.contains("\"food\""));
+        let old = r#"{"items":{"Food":3},"capacity":10}"#;
+        let loaded: CargoHold = serde_json::from_str(old).unwrap();
+        assert_eq!(loaded.get_quantity(&CommodityType::Food), 3);
+    }
+
+    #[test]
+    fn unknown_fields_and_unknown_economies_in_the_data_are_rejected() {
+        let extra = r#"[{"id":"x","name":"X","base_price":1,"colour":"red"}]"#;
+        assert!(serde_json::from_str::<Vec<CommodityData>>(extra).is_err());
+        let economy =
+            r#"[{"id":"x","name":"X","base_price":1,"economy_multipliers":{"Moon Base":1.2}}]"#;
+        assert!(serde_json::from_str::<Vec<CommodityData>>(economy).is_err());
+        let minimal = r#"[{"id":"x","name":"X","base_price":1}]"#;
+        let parsed: Vec<CommodityData> = serde_json::from_str(minimal).unwrap();
+        assert_eq!(parsed[0].default_multiplier, 1.0);
+        assert!(!parsed[0].illegal);
     }
 }
