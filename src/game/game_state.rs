@@ -296,7 +296,25 @@ impl GameState {
 
     /// Handle refuel command
     pub fn handle_refuel_command(&mut self, args: &[String]) -> bool {
-        super::refuel::handle(args, &mut self.commander, &mut self.ship)
+        let nearest = self.nearest_jump_cost();
+        super::refuel::handle(args, &mut self.commander, &mut self.ship, nearest)
+    }
+
+    /// Fuel needed to reach the closest other system
+    pub fn nearest_jump_cost(&self) -> u32 {
+        let Some(current) = self
+            .travel_handler
+            .get_system_info(&self.commander.location)
+        else {
+            return self.ship.fuel_capacity();
+        };
+        self.travel_handler
+            .get_available_systems()
+            .iter()
+            .filter(|system| system.name != current.name)
+            .map(|system| fuel_for_distance(current.distance_to(system)))
+            .min()
+            .unwrap_or_else(|| self.ship.fuel_capacity())
     }
 
     /// Handle repair command
