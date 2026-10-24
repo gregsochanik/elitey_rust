@@ -80,7 +80,7 @@ Pirate attacks happen on about 3.1% of jumps (measured over every system; any ev
 | 200–400 (old) | about 7.6cr |
 | 100–200 (now) | about 2.9cr |
 
-Trading nets about 12cr per trip at 100cr, so fights are a bonus, not a strategy. `tests/economy_balance.rs` keeps the expected income per jump from random fights at or below trading at starting capital.
+Trading nets about 12cr per trip at 100cr and the best courier job about 55cr per jump (Feature 16), so fights are a bonus, not a strategy. `tests/economy_balance.rs` keeps the expected income per jump from random fights at or below both.
 
 ## Open Questions
 - **Ship destroyed.** v1 never ends the game on defeat. Should a later version, and what does permadeath look like with save slots?

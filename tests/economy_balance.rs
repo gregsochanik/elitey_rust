@@ -166,7 +166,7 @@ fn courier_jobs_beat_trading_when_poor_and_fall_behind_as_capital_grows() {
 }
 
 #[test]
-fn random_pirate_fights_add_less_than_trading_at_starting_capital() {
+fn random_pirate_fights_add_less_than_trading_and_courier_jobs() {
     use elitey_rust::game::aftermath::VICTORY_REWARD;
 
     // Measured share of jumps that meet a pirate attack, over every system
@@ -181,5 +181,9 @@ fn random_pirate_fights_add_less_than_trading_at_starting_capital() {
         per_jump <= trading_net_per_trip(100),
         "pirates {per_jump:.1} per jump vs trading {:.1}",
         trading_net_per_trip(100)
+    );
+    assert!(
+        per_jump <= best_courier_net_per_jump(300),
+        "pirates {per_jump:.1} per jump vs courier jobs"
     );
 }
