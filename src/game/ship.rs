@@ -179,12 +179,19 @@ impl Ship {
 
     /// Check if hull is damaged
     pub fn is_damaged(&self) -> bool {
-        self.hull_percentage < 100
+        self.hull_percentage < self.ship_type.max_hull()
+    }
+
+    /// Hull points missing from the maximum
+    pub fn damage(&self) -> u32 {
+        self.ship_type
+            .max_hull()
+            .saturating_sub(self.hull_percentage)
     }
 
     /// Repair hull damage
     pub fn repair_hull(&mut self, amount: u32) {
-        self.hull_percentage = (self.hull_percentage + amount).min(100);
+        self.hull_percentage = (self.hull_percentage + amount).min(self.ship_type.max_hull());
     }
 
     /// Take hull damage

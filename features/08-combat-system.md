@@ -74,7 +74,7 @@ Tests in `tests/combat_balance.rs` keep these properties.
 
 ## Open Questions
 - **Ship destroyed.** v1 never ends the game on defeat. Should a later version, and what does permadeath look like with save slots?
-- **Repair.** Hull stays damaged until repair exists (Feature 07, later). The starting ship loses about 28 hull per fight, so three or four fights wear it down.
+- **Repair.** Hull is restored with `repair` (Feature 12). The starting ship loses about 28 hull per fight.
 
 ## Acceptance Criteria
 - [x] Choosing Fight against pirates plays a fight round by round

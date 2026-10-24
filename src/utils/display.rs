@@ -75,6 +75,13 @@ pub fn show_help() {
         "equipment installed".yellow()
     );
     println!();
+    println!("{}", "Repair Commands:".cyan().bold());
+    println!("{}", "================".cyan());
+    println!(
+        "{} - Repair hull damage (2 credits per point)",
+        "repair [points]".yellow()
+    );
+    println!();
     println!("{}", "Save/Load Commands:".cyan().bold());
     println!("{}", "===================".cyan());
     println!("{} - Save game to slot", "save <slot>".yellow());

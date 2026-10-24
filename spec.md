@@ -24,6 +24,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 08 | Combat (v1: one pirate fight using equipment) | Done (v1) | 06, 07 |
 | 10 | Reputation | Spec only | 03, 06 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
+| 12 | Ship repair (v1: `repair` for credits) | Done (v1) | 08 |
 | 13 | UI improvements | Spec only | – |
 
 ## Roadmap
