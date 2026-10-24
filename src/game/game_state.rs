@@ -5,9 +5,10 @@ use crate::utils::input;
 use colored::*;
 use std::io::Write;
 
+use super::jobs::Job;
 use super::{
-    Commander, EventManager, SaveLoadHandler, Ship, TradeLog, TradingHandler, TravelHandler,
-    UpgradeHandler,
+    Commander, EventManager, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
+    TravelHandler, UpgradeHandler,
 };
 
 /// Represents the complete game state
@@ -32,6 +33,9 @@ pub struct GameState {
     /// Buy/sell history
     #[serde(default)]
     pub trade_log: TradeLog,
+    /// Jobs on offer at the current system
+    #[serde(default)]
+    pub job_board: JobBoard,
 }
 
 /// A system the ship can reach with its current fuel
@@ -61,6 +65,7 @@ impl GameState {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         }
     }
 
@@ -419,11 +424,33 @@ impl GameState {
             &self.event_manager,
             destination,
         ) {
-            Ok(success) => success,
+            Ok(success) => {
+                if success {
+                    self.job_board.clear();
+                }
+                success
+            }
             Err(e) => {
                 show_error(&e);
                 false
             }
+        }
+    }
+
+    /// The jobs on offer here, rolled with the given randomness on first sight
+    pub fn jobs_here(&mut self, rng: &mut impl rand::Rng) -> Option<Vec<Job>> {
+        let origin = self
+            .travel_handler
+            .get_system_info(&self.commander.location)?;
+        let systems = self.travel_handler.get_available_systems();
+        Some(self.job_board.jobs_at(origin, &systems, rng).to_vec())
+    }
+
+    /// Handle jobs command
+    pub fn handle_jobs_command(&mut self) {
+        match self.jobs_here(&mut rand::thread_rng()) {
+            Some(jobs) => crate::utils::display::show_jobs(&self.commander.location, &jobs),
+            None => show_error("Unable to determine current location"),
         }
     }
 
@@ -549,6 +576,7 @@ mod tests {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -572,6 +600,7 @@ mod tests {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         };
 
         assert!(game_state.is_running());
@@ -595,6 +624,7 @@ mod tests {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager_clone),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         };
 
         assert!(!game_state.is_running());
@@ -613,6 +643,7 @@ mod tests {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         };
         let mut value = serde_json::to_value(&state).unwrap();
         value.as_object_mut().unwrap().remove("trade_log");
@@ -634,6 +665,7 @@ mod tests {
             event_manager: EventManager::new(),
             travel_handler: TravelHandler::new(system_manager),
             trade_log: TradeLog::new(),
+            job_board: JobBoard::new(),
         };
         state.trade_log.record_buy(
             crate::data::commodities::CommodityType::Food,

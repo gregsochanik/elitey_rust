@@ -2,7 +2,7 @@
 
 use elitey_rust::data::systems::SystemManager;
 use elitey_rust::game::{
-    Commander, EventManager, GameState, SaveLoadHandler, Ship, TradeLog, TradingHandler,
+    Commander, EventManager, GameState, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
 };
 use std::sync::Once;
@@ -33,6 +33,7 @@ pub fn new_game(credits: u32) -> GameState {
         event_manager: EventManager::new(),
         travel_handler: TravelHandler::new(system_manager),
         trade_log: TradeLog::new(),
+        job_board: JobBoard::new(),
     }
 }
 

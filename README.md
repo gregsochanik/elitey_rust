@@ -16,6 +16,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 
 - **07 – Equipment** (v1): `equipment`, `equipment buy|sell|installed`; slots, power and cargo racks. Other effects wait for combat and travel.
 - **08 – Combat** (v1): choosing Fight against pirates starts a turn-based fight using your weapons and shield; win loot, lose cargo, flee or surrender.
+- **16 – Jobs** (in progress): `jobs` shows the board; accepting and delivering come next.
 - **14 – Refuelling** (v1): `refuel [units]` tops up the tank for credits.
 - **12 – Ship Repair** (v1): `repair [points]` restores hull for credits.
 - **11 – Trading Log**: `log [count]` shows recent trades and stats (v1); profit uses average cost; persists in saves.
@@ -89,6 +90,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 - `equipment buy <item>` - Buy and install (replaces the current item in single-slot categories)
 - `equipment sell <item>` - Sell installed equipment for half of what was paid
 - `equipment installed` - Show installed equipment, slots and power
+- `jobs` - Show the courier jobs on offer here
 - `repair [points]` - Repair hull damage for 2 credits per point
 - `refuel [units]` - Refuel for 2 credits per light year
 

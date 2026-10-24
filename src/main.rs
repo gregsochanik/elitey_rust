@@ -94,6 +94,9 @@ fn main() -> Result<()> {
                     .collect();
                 game_state.handle_equipment_command(&args);
             }
+            "jobs" => {
+                game_state.handle_jobs_command();
+            }
             "refuel" => {
                 let args: Vec<String> = command_parts
                     .iter()

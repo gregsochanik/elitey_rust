@@ -4,7 +4,7 @@
 Each system has a jobs board. The player can take paying jobs that give trips a purpose beyond buy-low-sell-high: deliver a parcel, haul a cargo, hunt a pirate. Version 1 is the smallest complete slice: **courier jobs only**, with a board, acceptance, deadlines and payment. Other job types come later and reuse the same board.
 
 ## Status
-Spec only. Slices are tracked as GitHub issues.
+In progress. Slices are tracked as GitHub issues; the board and courier generation are done.
 
 ## Why
 Playing the game showed the loop has no goals beyond a 500cr ship, money rather than cargo space is the early limit, and a player with no credits has nothing to do. Jobs add short-term objectives, route planning against deadlines, and a way to earn without capital.
@@ -69,8 +69,8 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - **Reputation gating.** When reputation affects what is offered, a Criminal could be locked out of work. That worsens dead ends, and relies on the stranded rescue in Feature 14.
 
 ## Acceptance Criteria
-- [ ] `jobs` shows 3 to 5 courier jobs with number, destination, reward and deadline, all reachable on a full tank
-- [ ] The board is the same on repeat visits to the same screen and re-rolls on arrival elsewhere
+- [x] `jobs` shows 3 to 5 courier jobs with number, destination, reward and deadline, all reachable on a full tank
+- [x] The board is the same on repeat visits to the same screen and re-rolls on arrival elsewhere
 - [ ] `accept <n>` moves the job to `missions`; a fourth active job is refused
 - [ ] Delivering in time pays the reward, adds 2 reputation and clears the job
 - [ ] A job that runs out of jumps fails, is removed and costs 3 reputation
@@ -79,8 +79,8 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - [ ] A simulation shows courier jobs out-earn trading at starting capital
 
 ## Testing (write first)
-- [ ] Board generation from a fixed seed: count, reachable destinations, reward range, deadline range
-- [ ] Reward formula at known fuel costs
+- [x] Board generation from a fixed seed: count, reachable destinations, reward range, deadline range
+- [x] Reward formula at known fuel costs
 - [ ] Accept, the three-job limit, abandon
 - [ ] A job with deadline N: delivered on jump N succeeds; if jump N ends elsewhere it fails at once
 - [ ] Several jobs for one destination
