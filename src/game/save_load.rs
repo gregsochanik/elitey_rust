@@ -191,9 +191,9 @@ impl SaveLoadHandler {
 
     /// Handle auto-save on quit
     pub fn auto_save(&self, game_state: &GameState) -> bool {
-        let slot_name = "autosave";
+        let slot_name = Self::autosave_slot(game_state.commander().name());
 
-        match self.save_manager.save_game(game_state, slot_name) {
+        match self.save_manager.save_game(game_state, &slot_name) {
             Ok(_) => {
                 println!("{}", "Auto-saving game state...".yellow());
                 show_success(&format!(
@@ -209,41 +209,45 @@ impl SaveLoadHandler {
         }
     }
 
-    /// Check for existing save on game start
-    #[allow(dead_code)]
-    pub fn check_existing_save(&self, commander_name: &str) -> Result<Option<GameState>, String> {
-        // Look for a save with this commander name
-        let saves = self.save_manager.list_saves()?;
+    /// Slot the autosave for a commander is written to
+    pub fn autosave_slot(commander_name: &str) -> String {
+        let name = commander_name.to_ascii_lowercase();
+        let slug: String = name
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+            .take(40)
+            .collect();
+        let hash = name.bytes().fold(0x811c_9dc5_u32, |hash, byte| {
+            (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193)
+        });
+        format!("autosave-{}-{:08x}", slug, hash)
+    }
 
-        for save in saves {
-            if save.commander_name == commander_name {
-                // Found existing save for this commander
-                self.display_save_info(&save);
-
-                print!("Found existing save for {} at {} with {} credits.\nWould you like to load this save? (y/n): ", 
-                       save.commander_name.green(),
-                       save.location.cyan(),
-                       save.credits.to_string().green());
-                std::io::stdout().flush().expect("Failed to flush stdout");
-
-                match input::get_input() {
-                    Ok(input) => {
-                        let response = input.trim().to_lowercase();
-                        if response == "y" || response == "yes" {
-                            let slot_name = self.get_slot_name_from_metadata(&save);
-                            return self.save_manager.load_game(&slot_name).map(Some);
-                        } else {
-                            return Ok(None);
-                        }
-                    }
-                    Err(_) => {
-                        return Ok(None);
-                    }
-                }
+    /// The autosave for this commander. `Ok(None)` means there is none;
+    /// an unreadable save is an error.
+    pub fn find_autosave(&self, commander_name: &str) -> Result<Option<GameState>, String> {
+        let slot = Self::autosave_slot(commander_name);
+        if self.save_manager.save_exists(&slot) {
+            let meta = self.save_manager.load_save_metadata(&slot)?;
+            if !meta.commander_name.eq_ignore_ascii_case(commander_name) {
+                return Err(format!(
+                    "slot '{}' belongs to commander {}",
+                    slot, meta.commander_name
+                ));
             }
+            return self.save_manager.load_game(&slot).map(Some);
         }
 
-        Ok(None)
+        let legacy_matches = self
+            .save_manager
+            .load_save_metadata("autosave")
+            .map(|meta| meta.commander_name.eq_ignore_ascii_case(commander_name))
+            .unwrap_or(false);
+        if legacy_matches {
+            self.save_manager.load_game("autosave").map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     /// Display save information
