@@ -230,7 +230,7 @@ impl EquipmentHandler {
         };
 
         let mut trial = ship.equipment.clone();
-        let removed = match trial.remove(item.id) {
+        let removed = match trial.remove(&item.id) {
             Some(removed) => removed,
             None => {
                 show_error(&format!("{} is not installed", item.name));
