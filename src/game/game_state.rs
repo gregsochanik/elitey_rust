@@ -8,6 +8,7 @@ use std::io::Write;
 use super::combat::{Combat, Combatant, Outcome};
 use super::fight::run_fight;
 use super::jobs::{self, ActiveJob, Job};
+use super::smuggling;
 use super::{
     Commander, EventManager, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
@@ -495,7 +496,7 @@ impl GameState {
         )
     }
 
-    /// Deliver, fight or fail active jobs after arriving at the commander's location
+    /// Deliver, inspect, fight or fail active jobs after arriving at the commander's location
     pub fn settle_jobs(&mut self) {
         let arrived_at = self.commander.location.clone();
         let arrival = jobs::settle_arrival(
@@ -507,31 +508,82 @@ impl GameState {
         for message in &arrival.messages {
             println!("{}", message);
         }
-        if arrival.bounties.is_empty() {
-            return;
+
+        if !arrival.smuggling.is_empty() {
+            let government = self
+                .travel_handler
+                .get_system_info(&arrived_at)
+                .map(|system| system.government.clone());
+            if let Some(government) = government {
+                let messages = smuggling::resolve_smuggling(
+                    arrival.smuggling,
+                    &mut self.commander,
+                    &mut self.ship,
+                    &government,
+                    &mut rand::thread_rng(),
+                    &mut Self::ask_inspection_choice,
+                    &mut |ship: &Ship| Self::play_fight(ship, Combatant::patrol_vessel()),
+                );
+                for message in messages {
+                    println!("{}", message);
+                }
+            }
         }
 
+        if !arrival.bounties.is_empty() {
+            let messages = jobs::resolve_bounties(
+                arrival.bounties,
+                &mut self.commander,
+                &mut self.ship,
+                &mut |ship: &Ship| Self::play_fight(ship, Combatant::pirate_raider()),
+                &mut rand::thread_rng(),
+            );
+            for message in messages {
+                println!("{}", message);
+            }
+        }
+    }
+
+    /// Fight `enemy` at the terminal and return how it ended and the player's remaining hull
+    fn play_fight(ship: &Ship, enemy: Combatant) -> std::io::Result<(Outcome, u32)> {
+        let mut combat = Combat::new(Combatant::from_ship(ship), enemy);
         let mut dice = rand::thread_rng();
-        let mut fight = |ship: &Ship| -> std::io::Result<(Outcome, u32)> {
-            let mut combat = Combat::new(Combatant::from_ship(ship), Combatant::pirate_raider());
-            let mut roll = || dice.gen::<f64>();
-            let outcome = run_fight(
-                &mut combat,
-                &mut std::io::stdin().lock(),
-                &mut std::io::stdout(),
-                &mut roll,
-            )?;
-            Ok((outcome, combat.player.hull))
-        };
-        let messages = jobs::resolve_bounties(
-            arrival.bounties,
-            &mut self.commander,
-            &mut self.ship,
-            &mut fight,
-            &mut rand::thread_rng(),
-        );
-        for message in messages {
-            println!("{}", message);
+        let mut roll = || dice.gen::<f64>();
+        let outcome = run_fight(
+            &mut combat,
+            &mut std::io::stdin().lock(),
+            &mut std::io::stdout(),
+            &mut roll,
+        )?;
+        Ok((outcome, combat.player.hull))
+    }
+
+    /// Ask what to do about an inspection; running out of input hands the cargo over
+    fn ask_inspection_choice(bribe_cost: u32, can_bribe: bool) -> smuggling::InspectionChoice {
+        use smuggling::InspectionChoice;
+        loop {
+            if can_bribe {
+                print!(
+                    "[b]ribe ({}cr), [r]un or [h]and over the cargo? ",
+                    bribe_cost
+                );
+            } else {
+                print!(
+                    "[r]un or [h]and over the cargo (you cannot afford the {}cr bribe)? ",
+                    bribe_cost
+                );
+            }
+            std::io::stdout().flush().expect("Failed to flush stdout");
+            let line = match input::get_input() {
+                Ok(line) if !line.is_empty() => line,
+                _ => return InspectionChoice::HandOver,
+            };
+            match line.trim().to_lowercase().as_str() {
+                "b" | "bribe" if can_bribe => return InspectionChoice::Bribe,
+                "r" | "run" => return InspectionChoice::Run,
+                "h" | "hand" | "hand over" => return InspectionChoice::HandOver,
+                _ => println!("Please choose one of the options."),
+            }
         }
     }
 

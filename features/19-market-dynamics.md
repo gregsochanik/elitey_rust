@@ -53,7 +53,7 @@ Simulated a trader working two systems (Leesti and Riedquat, 2.8 light years) wi
 - The informed single-trip numbers in Feature 03 stay valid for first visits.
 - **Caveat.** A real player has many systems to choose from and will move on when a route is spent, so this measures the safe two-system loop, not trading in general.
 
-`tests/market_sim.rs` keeps this: a worked route nets at most 80 and at least 40 per jump at each capital level, and later trips pay at most half what the first trips do.
+`tests/market_sim.rs` keeps this: a worked route nets at most 88 (a noise allowance over the bounty's 69) and at least 40 per jump at each capital level, and later trips pay at most half what the first trips do.
 
 ## Open Questions
 - **Period length.** 20 jumps, set by simulation (see Balance). A longer period starves a single route for longer; a bad market stays bad for the whole period, though the player can trade elsewhere.

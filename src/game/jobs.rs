@@ -24,6 +24,11 @@ const BOUNTY_SHARE: f64 = 0.3;
 const FREIGHT_SHARE: f64 = 0.3;
 const MIN_FREIGHT_TONS: u32 = 5;
 const FREIGHT_TONS_PER_BONUS: f64 = 20.0;
+const SMUGGLING_SHARE: f64 = 0.4;
+const SMUGGLING_REWARD_MULTIPLIER: f64 = 3.0;
+const SMUGGLING_REWARD_PER_TON: f64 = 6.0;
+const MIN_SMUGGLING_TONS: u32 = 5;
+const MAX_SMUGGLING_TONS: u32 = 10;
 
 /// What a job asks of the player
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -35,6 +40,8 @@ pub enum JobKind {
     Bounty,
     /// Haul client cargo to another system for a premium that grows with the load
     Freight,
+    /// Run contraband narcotics into a lawful system, past a possible inspection
+    Smuggling,
 }
 
 /// Who a kind of job is posted for; the lawful, criminal and gateway kinds arrive with their jobs
@@ -98,7 +105,13 @@ impl JobKind {
         match self {
             JobKind::Courier | JobKind::Bounty => Track::Ordinary,
             JobKind::Freight => Track::Lawful,
+            JobKind::Smuggling => Track::Criminal,
         }
+    }
+
+    /// Whether the client's cargo takes up room in the player's hold
+    pub fn carries_cargo(&self) -> bool {
+        matches!(self, JobKind::Freight | JobKind::Smuggling)
     }
 }
 
@@ -114,6 +127,10 @@ impl Job {
                 self.destination
             ),
             (JobKind::Freight, None) => format!("Freight to {}", self.destination),
+            (JobKind::Smuggling, _) => format!(
+                "Smuggling: {} tons of contraband to {}",
+                self.tons, self.destination
+            ),
         }
     }
 }
@@ -164,9 +181,9 @@ pub fn accept(
         return Err(format!("There is no job {} on the board.", number));
     }
     let wanted = &board.jobs[number - 1];
-    if wanted.kind == JobKind::Freight && !ship.cargo_hold.reserve(wanted.tons) {
+    if wanted.kind.carries_cargo() && !ship.cargo_hold.reserve(wanted.tons) {
         return Err(format!(
-            "No room: the freight is {} tons and you have {} free.",
+            "No room: the cargo is {} tons and you have {} free.",
             wanted.tons,
             ship.cargo_available()
         ));
@@ -210,7 +227,7 @@ fn reputation_messages(
 
 /// Give the hold room back when a freight job ends, however it ends
 fn release_freight(job: &Job, ship: &mut Ship) {
-    if job.kind == JobKind::Freight {
+    if job.kind.carries_cargo() {
         ship.cargo_hold.release(job.tons);
     }
 }
@@ -221,6 +238,8 @@ pub struct Arrival {
     pub messages: Vec<String>,
     /// Bounties whose target is here and still in time; each now needs a fight
     pub bounties: Vec<ActiveJob>,
+    /// Smuggling jobs whose cargo has reached a lawful system and may be inspected
+    pub smuggling: Vec<ActiveJob>,
 }
 
 /// Use up one deadline jump on every active job after the player arrives at `arrived_at`:
@@ -246,13 +265,15 @@ pub fn settle_arrival(
         {
             ship.cargo_hold.release(entry.job.tons);
             arrival.messages.push(format!(
-                "The freight for {} was lost on the way and the contract is void.",
+                "The cargo for {} was lost on the way and the contract is void.",
                 entry.job.destination
             ));
             reputation_messages(
                 &mut arrival.messages,
                 commander.change_reputation(FAILURE_REPUTATION),
             );
+        } else if here && entry.job.kind == JobKind::Smuggling {
+            arrival.smuggling.push(entry);
         } else if here {
             release_freight(&entry.job, ship);
             commander.add_credits(entry.job.reward);
@@ -349,6 +370,12 @@ pub fn freight_reward(fuel_cost: u32, tons: u32, variance: f64) -> u32 {
     ((BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * load_bonus * variance).round() as u32
 }
 
+/// About three times the courier rate for the distance, plus a premium per ton of contraband
+pub fn smuggling_reward(fuel_cost: u32, tons: u32, variance: f64) -> u32 {
+    let base = (BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * SMUGGLING_REWARD_MULTIPLIER;
+    ((base + SMUGGLING_REWARD_PER_TON * f64::from(tons)) * variance).round() as u32
+}
+
 pub fn bounty_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BOUNTY_BASE_REWARD + BOUNTY_REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
@@ -394,11 +421,22 @@ fn generate_board_with(
                 JobKind::Bounty
             } else if roll >= 1.0 - FREIGHT_SHARE && access.allows(JobKind::Freight.track()) {
                 JobKind::Freight
+            } else if roll >= bounty_share
+                && roll < bounty_share + SMUGGLING_SHARE
+                && access.allows(JobKind::Smuggling.track())
+                && destination.government.is_lawful()
+            {
+                JobKind::Smuggling
             } else {
                 JobKind::Courier
             };
             let variance = rng.gen_range(0.9..=1.1);
-            let (tons, commodity) = if kind == JobKind::Freight {
+            let (tons, commodity) = if kind == JobKind::Smuggling {
+                (
+                    rng.gen_range(MIN_SMUGGLING_TONS..=MAX_SMUGGLING_TONS),
+                    Some(CommodityType::Narcotics),
+                )
+            } else if kind == JobKind::Freight {
                 let legal: Vec<CommodityType> = CommodityType::all()
                     .into_iter()
                     .filter(|commodity| !commodity.is_illegal())
@@ -421,6 +459,7 @@ fn generate_board_with(
                     JobKind::Courier => courier_reward(fuel_cost, variance),
                     JobKind::Bounty => bounty_reward(fuel_cost, variance),
                     JobKind::Freight => freight_reward(fuel_cost, tons, variance),
+                    JobKind::Smuggling => smuggling_reward(fuel_cost, tons, variance),
                 },
                 deadline_jumps: rng.gen_range(2..=4),
             }
@@ -709,6 +748,9 @@ mod tests {
                     JobKind::Bounty => 80.0 + 10.0 * f64::from(job.fuel_cost),
                     JobKind::Freight => {
                         (20.0 + 7.0 * f64::from(job.fuel_cost)) * (1.0 + f64::from(job.tons) / 20.0)
+                    }
+                    JobKind::Smuggling => {
+                        3.0 * (20.0 + 7.0 * f64::from(job.fuel_cost)) + 6.0 * f64::from(job.tons)
                     }
                 };
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
@@ -1244,5 +1286,124 @@ mod tests {
             "Freight: 12 tons of Machinery to DISO"
         );
         assert_eq!(active_job("DISO", 41, 2).job.describe(), "Courier to DISO");
+    }
+
+    fn lawless_origin(galaxy: &SystemManager) -> &StarSystem {
+        galaxy
+            .get_all_systems()
+            .into_iter()
+            .find(|system| !system.government.is_lawful())
+            .expect("a lawless system")
+    }
+
+    #[test]
+    fn smuggling_pays_about_three_times_a_courier_job_plus_a_premium_per_ton() {
+        assert_eq!(smuggling_reward(3, 0, 1.0), 123);
+        assert_eq!(smuggling_reward(3, 10, 1.0), 183);
+        assert_eq!(smuggling_reward(3, 5, 1.1), 168);
+    }
+
+    #[test]
+    fn smuggling_is_only_offered_to_bad_standing_at_lawless_systems_with_lawful_destinations() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let lawless = lawless_origin(&galaxy);
+        let lawful = lawful_origin(&galaxy);
+
+        let boards = |origin: &StarSystem, standing| {
+            (0..200u64)
+                .flat_map(|seed| {
+                    generate_board_for(
+                        origin,
+                        &systems,
+                        &mut StdRng::seed_from_u64(seed),
+                        standing,
+                        20,
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        let galaxy_ref = &galaxy;
+        let smuggling: Vec<Job> = boards(lawless, Standing::Criminal)
+            .into_iter()
+            .filter(|job| job.kind == JobKind::Smuggling)
+            .collect();
+        assert!(!smuggling.is_empty());
+        for job in &smuggling {
+            assert!((MIN_SMUGGLING_TONS..=MAX_SMUGGLING_TONS).contains(&job.tons));
+            assert_eq!(job.commodity, Some(CommodityType::Narcotics));
+            let destination = galaxy_ref.get_system(&job.destination).unwrap();
+            assert!(destination.government.is_lawful(), "{}", job.destination);
+        }
+        assert!(boards(lawless, Standing::Disreputable)
+            .iter()
+            .any(|job| job.kind == JobKind::Smuggling));
+
+        for standing in [Standing::Neutral, Standing::Trusted, Standing::Respected] {
+            assert!(boards(lawless, standing)
+                .iter()
+                .all(|job| job.kind != JobKind::Smuggling));
+        }
+        for standing in [Standing::Criminal, Standing::Disreputable] {
+            assert!(boards(lawful, standing)
+                .iter()
+                .all(|job| job.kind != JobKind::Smuggling));
+        }
+    }
+
+    fn smuggling_job(tons: u32) -> ActiveJob {
+        let mut entry = freight("DISO", tons, 150, 3);
+        entry.job.kind = JobKind::Smuggling;
+        entry.job.commodity = Some(CommodityType::Narcotics);
+        entry
+    }
+
+    #[test]
+    fn smuggling_needs_hold_room_to_accept_and_frees_it_when_it_ends() {
+        let (mut board, mut active) = board_with_jobs();
+        board.jobs[0] = smuggling_job(8).job;
+        let location = board.location.clone();
+        let mut ship = Ship::new_cobra_mk3();
+        ship.add_cargo(CommodityType::Food, 15);
+        assert!(accept(&mut board, &mut active, &mut ship, &location, 1).is_err());
+        assert_eq!(ship.cargo_hold.reserved, 0);
+
+        let mut ship = Ship::new_cobra_mk3();
+        accept(&mut board, &mut active, &mut ship, &location, 1).unwrap();
+        assert_eq!(ship.cargo_hold.reserved, 8);
+
+        let mut commander = Commander::new("Test".to_string());
+        abandon(&mut active, &mut commander, &mut ship, 1).unwrap();
+        assert_eq!(ship.cargo_hold.reserved, 0);
+
+        assert!(ship.cargo_hold.reserve(8));
+        let mut active = vec![smuggling_job(8)];
+        active[0].jumps_left = 1;
+        settle_arrival(&mut active, &mut commander, &mut ship, "LEESTI");
+        assert!(active.is_empty());
+        assert_eq!(ship.cargo_hold.reserved, 0);
+    }
+
+    #[test]
+    fn smuggling_at_its_destination_is_handed_back_for_inspection_not_paid() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        assert!(ship.cargo_hold.reserve(8));
+        let mut active = vec![smuggling_job(8)];
+
+        let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+
+        assert_eq!(arrival.smuggling.len(), 1);
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 100);
+        assert_eq!(ship.cargo_hold.reserved, 8);
+    }
+
+    #[test]
+    fn smuggling_describes_itself() {
+        assert_eq!(
+            smuggling_job(8).job.describe(),
+            "Smuggling: 8 tons of contraband to DISO"
+        );
     }
 }

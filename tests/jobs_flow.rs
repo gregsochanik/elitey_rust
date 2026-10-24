@@ -210,3 +210,84 @@ fn contract_cargo_survives_saving_and_loading_and_old_holds_load_empty() {
     let old: elitey_rust::game::GameState = serde_json::from_value(value).unwrap();
     assert_eq!(old.ship.cargo_hold().reserved, 0);
 }
+
+fn criminal_game_with_smuggling_on_the_board() -> elitey_rust::game::GameState {
+    use elitey_rust::game::jobs::JobKind;
+
+    let mut game = new_game(500);
+    game.commander.reputation = -40;
+    let lawless = game
+        .travel_handler
+        .get_available_systems()
+        .into_iter()
+        .find(|system| !system.government.is_lawful())
+        .map(|system| system.name.clone())
+        .expect("a lawless system");
+    game.commander.location = lawless;
+    for seed in 0..300u64 {
+        game.job_board.clear();
+        game.jobs_here(&mut StdRng::seed_from_u64(seed)).unwrap();
+        if game
+            .job_board_jobs()
+            .iter()
+            .any(|job| job.kind == JobKind::Smuggling)
+        {
+            return game;
+        }
+    }
+    panic!("no smuggling offered to a Criminal commander at a lawless system");
+}
+
+#[test]
+fn smuggling_ends_with_the_job_gone_the_hold_empty_and_either_pay_or_a_fine() {
+    use elitey_rust::game::jobs::JobKind;
+
+    let mut game = criminal_game_with_smuggling_on_the_board();
+    let index = game
+        .job_board_jobs()
+        .iter()
+        .position(|job| job.kind == JobKind::Smuggling)
+        .unwrap()
+        + 1;
+    let job = game.job_board_jobs()[index - 1].clone();
+    game.accept_job(index).unwrap();
+    assert_eq!(game.ship.cargo_hold().reserved, job.tons);
+    assert_eq!(game.ship.cargo_hold().goods_weight(), 0);
+    let credits = game.commander.credits();
+    let reputation = game.commander.reputation;
+
+    game.commander.location = job.destination.clone();
+    game.settle_jobs();
+
+    assert!(game.active_jobs.is_empty());
+    assert_eq!(game.ship.cargo_hold().reserved, 0);
+    let paid = game.commander.credits() > credits;
+    if paid {
+        assert_eq!(game.commander.reputation, reputation - 3);
+    } else {
+        assert_eq!(game.commander.reputation, reputation - 5);
+        assert!(game.commander.credits() <= credits);
+    }
+}
+
+#[test]
+fn a_neutral_commander_is_not_offered_smuggling() {
+    use elitey_rust::game::jobs::JobKind;
+
+    let mut game = new_game(500);
+    game.commander.location = game
+        .travel_handler
+        .get_available_systems()
+        .into_iter()
+        .find(|system| !system.government.is_lawful())
+        .map(|system| system.name.clone())
+        .unwrap();
+    for seed in 0..100u64 {
+        game.job_board.clear();
+        game.jobs_here(&mut StdRng::seed_from_u64(seed)).unwrap();
+        assert!(game
+            .job_board_jobs()
+            .iter()
+            .all(|job| job.kind != JobKind::Smuggling));
+    }
+}

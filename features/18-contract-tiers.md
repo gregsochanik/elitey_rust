@@ -6,7 +6,7 @@ Jobs (Feature 16) and bounties (Feature 17) pay a flat amount whatever the playe
 The reputation score is one axis. Its two ends are two paths: a lawful commander gets lawful contracts, an infamous one gets criminal contracts, and a commander in the middle gets only the ordinary board.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; the access rules and freight jobs are done; smuggling and the gateway job join the board with their own issues.
+In progress. Slices are tracked as GitHub issues; the access rules, freight and smuggling jobs are done; the gateway job, standing-driven event odds and the balance pass remain.
 
 ## Version 1 Scope
 
@@ -95,8 +95,8 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 - [ ] The kinds of job on a board depend on the commander's standing and the system's government, as in the table
 - [x] Freight jobs need room in the hold, put the cargo in it, and pay more for bigger loads
 - [x] Freight delivery and failure follow the job rules, losing the cargo on failure
-- [ ] Smuggling jobs run an inspection on arrival with the three choices and the stated results, in the stated order after other deliveries
-- [ ] Smuggling needs free hold room to accept, and Bribe is only offered to a player who can pay
+- [x] Smuggling jobs run an inspection on arrival with the three choices and the stated results, in the stated order after other deliveries
+- [x] Smuggling needs free hold room to accept, and Bribe is only offered to a player who can pay
 - [x] Contract cargo cannot be sold at a market
 - [ ] Neutral commanders are offered black courier jobs at Anarchy and Feudal systems and no other criminal jobs
 - [ ] Standing changes the odds of patrol and inspection events as specified
@@ -107,8 +107,8 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 ## Testing (write first)
 - [ ] Board generation per standing and government: which kinds can and cannot appear, with a fixed seed
 - [x] Freight: reward scales with tons, acceptance needs room, cargo is lost on failure
-- [ ] Smuggling: each inspection choice and each run outcome (victory, escape, surrender, defeat) with injected randomness and dice; fine capped by credits; penalties do not stack
-- [ ] Smuggling acceptance with a full hold; Bribe unavailable with too few credits
+- [x] Smuggling: each inspection choice and each run outcome (victory, escape, surrender, defeat) with injected randomness and dice; fine capped by credits; penalties do not stack
+- [x] Smuggling acceptance with a full hold; Bribe unavailable with too few credits
 - [ ] Arrival order with a courier job, a freight job, a smuggling job and a bounty for the same system
 - [x] Contract cargo cannot be sold
 - [ ] Event weights by standing
