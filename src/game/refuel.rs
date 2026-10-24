@@ -1,7 +1,7 @@
 use crate::game::{Commander, Ship};
 use crate::utils::display::{show_error, show_info, show_success};
 
-pub const CREDITS_PER_UNIT: u32 = 5;
+pub const CREDITS_PER_UNIT: u32 = 2;
 
 pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
     let requested = match args.first() {
@@ -60,19 +60,19 @@ mod tests {
     }
 
     #[test]
-    fn fills_the_tank_at_five_credits_per_light_year() {
+    fn fills_the_tank_at_the_unit_price() {
         let (mut commander, mut ship) = low_on_fuel(100, 2);
         assert!(handle(&[], &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 7);
-        assert_eq!(commander.credits(), 75);
+        assert_eq!(commander.credits(), 90);
     }
 
     #[test]
     fn refuels_as_much_as_affordable() {
-        let (mut commander, mut ship) = low_on_fuel(12, 0);
+        let (mut commander, mut ship) = low_on_fuel(5, 0);
         assert!(handle(&[], &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 2);
-        assert_eq!(commander.credits(), 2);
+        assert_eq!(commander.credits(), 1);
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod tests {
         let (mut commander, mut ship) = low_on_fuel(100, 1);
         assert!(handle(&args("2"), &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 3);
-        assert_eq!(commander.credits(), 90);
+        assert_eq!(commander.credits(), 96);
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
         let (mut commander, mut ship) = low_on_fuel(100, 6);
         assert!(handle(&args("50"), &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 7);
-        assert_eq!(commander.credits(), 95);
+        assert_eq!(commander.credits(), 98);
     }
 
     #[test]
@@ -100,10 +100,10 @@ mod tests {
 
     #[test]
     fn no_credits_leaves_the_tank_alone() {
-        let (mut commander, mut ship) = low_on_fuel(4, 1);
+        let (mut commander, mut ship) = low_on_fuel(1, 1);
         assert!(!handle(&[], &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 1);
-        assert_eq!(commander.credits(), 4);
+        assert_eq!(commander.credits(), 1);
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod tests {
         ship.ship_type = crate::data::ships::ShipType::Python;
         assert!(handle(&[], &mut commander, &mut ship));
         assert_eq!(ship.fuel_current, 12);
-        assert_eq!(commander.credits(), 940);
+        assert_eq!(commander.credits(), 976);
     }
 
     #[test]

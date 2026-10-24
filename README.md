@@ -90,7 +90,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 - `equipment sell <item>` - Sell installed equipment for half of what was paid
 - `equipment installed` - Show installed equipment, slots and power
 - `repair [points]` - Repair hull damage for 2 credits per point
-- `refuel [units]` - Refuel for 5 credits per light year
+- `refuel [units]` - Refuel for 2 credits per light year
 
 ### Save/Load
 - `save [name]` - Save game

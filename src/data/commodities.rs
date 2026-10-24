@@ -272,8 +272,8 @@ impl TradingSystem {
             let base_price = commodity.base_price();
             let economy_multiplier = commodity.economy_preference(economy);
 
-            // Add ±20% random fluctuation
-            let fluctuation = 0.8 + (rng.gen::<f64>() * 0.4); // 0.8 to 1.2
+            // Add ±30% random fluctuation
+            let fluctuation = 0.7 + (rng.gen::<f64>() * 0.6); // 0.7 to 1.3
 
             let adjusted_price = (base_price as f64 * economy_multiplier * fluctuation) as u32;
 
