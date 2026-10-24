@@ -34,6 +34,7 @@ The score maps to a named standing:
 - A good standing improves both sides of a trade: the player pays less when buying and receives more when selling, by the modifier above. A bad standing does the opposite
 - The modifier applies to the price the player actually pays or receives; the `market` display shows the modified prices and the standing that caused them
 - The modifier is the same in every system
+- One function does the arithmetic for `market`, `buy` and `sell`. It runs last, on the price Feature 03 already produces (economy, fluctuation, spread, stock): `final = round(price × (1 + modifier))`, rounded half up to whole credits and never below 1
 
 ## Not in v1
 - Factions and government-specific standing
@@ -62,9 +63,9 @@ A 4% bonus is about the size of the buy/sell spread (2–6%), so a Respected tra
 ## Testing (write first)
 - [ ] Standing for every boundary score (−100, −30, −29, −10, −9, 9, 10, 29, 30, 100)
 - [ ] Clamping at both ends
-- [ ] Price modifier applied to buy and to sell, rounded consistently
+- [ ] Price modifier applied to buy and to sell with the rule above; `market`, `buy` and `sell` agree on the same price
 - [ ] Narcotics penalty on buy and on sell; other goods unaffected
-- [ ] Old saves without the new fields still load
+- [ ] Old saves without a reputation score load as 0 (Neutral); standing and price modifier are derived from the score after loading, never stored
 - [ ] Simulation: informed trader earnings by standing
 
 ## Dependencies
