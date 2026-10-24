@@ -39,7 +39,7 @@ Tuned by simulation (see Balance).
 - [x] Combat shows both sides' hull and shield each round, and a log of what happened
 
 ### Outcomes
-- [x] **Victory** (raider hull reaches 0): +200–400 credits, 1–3 tons of a random commodity as loot (limited by free space), +5 reputation
+- [x] **Victory** (raider hull reaches 0): +100–200 credits, 1–3 tons of a random commodity as loot (limited by free space), +5 reputation
 - [x] **Defeat** (player hull reaches 0): lose all cargo and half the credits, hull left at 10%, −5 reputation. The game does not end
 - [x] Shields refill after combat; hull does not
 
@@ -71,6 +71,16 @@ Attacking every round against the Pirate Raider, 4,000 fights per loadout (hull 
 An unarmed ship cannot attack, so it cannot win. The first Raider (hull 60, shield 20, damage 10) was too weak: the starting ship won every fight losing 3 hull, because shield recharge absorbed nearly all its fire. Heavier tuning (damage 16–20) made the starting ship lose 40% or more of fights, which is too punishing while repair doesn't exist.
 
 Tests in `tests/combat_balance.rs` keep these properties.
+
+### Rewards against the economy
+Pirate attacks happen on about 3.1% of jumps (measured over every system; any event happens on about 24%). A starting-loadout win costs about 28 hull, or 56cr to repair. A victory used to pay 200–400cr, about 25 trades' worth at the start, so a lucky first fight tripled the player's money and a pirate fight paid much more than a courier job or a bounty. It now pays 100–200cr plus loot.
+
+| Payout | Expected per jump (payout − repair, × 3.1%) |
+|---|---|
+| 200–400 (old) | about 7.6cr |
+| 100–200 (now) | about 2.9cr |
+
+Trading nets about 12cr per trip at 100cr and the best courier job about 55cr per jump (Feature 16), so fights are a bonus, not a strategy. `tests/economy_balance.rs` keeps the expected income per jump from random fights at or below both.
 
 ## Open Questions
 - **Ship destroyed.** v1 never ends the game on defeat. Should a later version, and what does permadeath look like with save slots?

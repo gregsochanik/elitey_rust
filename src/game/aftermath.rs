@@ -5,6 +5,7 @@ use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLo
 use crate::game::{Commander, Ship};
 use rand::Rng;
 
+pub const VICTORY_REWARD: std::ops::RangeInclusive<u32> = 100..=200;
 const DEFEAT_HULL_PERCENT: u32 = 10;
 const SURRENDER_CARGO_TONS: u32 = 5;
 const SURRENDER_CREDITS: u32 = 200;
@@ -32,7 +33,7 @@ pub fn settle(
 
     match outcome {
         Outcome::Victory => {
-            let reward = rng.gen_range(200..=400);
+            let reward = rng.gen_range(VICTORY_REWARD);
             commander.add_credits(reward);
             let reputation = commander.change_reputation(5);
             messages.push(format!("You claim {} credits from the wreck.", reward));
@@ -119,7 +120,7 @@ mod tests {
             );
 
             let reward = commander.credits() - 100;
-            assert!((200..=400).contains(&reward), "{}", reward);
+            assert!(VICTORY_REWARD.contains(&reward), "{}", reward);
             assert!(
                 (1..=3).contains(&ship.cargo_used()),
                 "{}",

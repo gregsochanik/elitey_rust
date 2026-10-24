@@ -35,7 +35,7 @@ fn winning_a_fight_pays_out_and_keeps_the_damage() {
     let outcome = fight(&mut game, &"a\n".repeat(20), 0.0);
 
     assert_eq!(outcome, Outcome::Victory);
-    assert!(game.commander.credits() >= 300);
+    assert!(game.commander.credits() >= 200);
     assert_eq!(game.commander.reputation, 5);
     assert!(game.ship.cargo_used() >= 1);
     assert!(game.ship.hull_percentage < 100);
