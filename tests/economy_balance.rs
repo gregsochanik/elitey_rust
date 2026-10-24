@@ -1,6 +1,6 @@
 use elitey_rust::data::commodities::TradingSystem;
 use elitey_rust::data::systems::SystemManager;
-use elitey_rust::game::commander::STARTING_CREDITS;
+use elitey_rust::game::commander::{Standing, STARTING_CREDITS};
 use elitey_rust::game::refuel::CREDITS_PER_UNIT;
 
 const TRIPS: [(&str, &str); 5] = [
@@ -19,7 +19,7 @@ struct Totals {
 }
 
 /// A trader who buys the affordable commodity furthest below its base price
-fn informed_trader_totals(seeds: u64) -> Totals {
+fn informed_trader_totals(seeds: u64, standing: Standing) -> Totals {
     let systems = SystemManager::new().unwrap();
     let trading = TradingSystem::new();
     let mut totals = Totals {
@@ -35,19 +35,20 @@ fn informed_trader_totals(seeds: u64) -> Totals {
             let destination = systems.get_system(to).unwrap();
             let buy_market = trading.generate_market_prices(&origin.economy, seed);
             let sell_market = trading.generate_market_prices(&destination.economy, seed + 10_000);
+            let buy_price_of = |c: &_| standing.buy_price(buy_market.get_buy_price(c).unwrap());
+            let sell_price_of = |c: &_| standing.sell_price(sell_market.get_sell_price(c).unwrap());
 
             let pick = trading
                 .get_commodities()
                 .iter()
-                .filter(|c| buy_market.get_buy_price(c).unwrap() <= STARTING_CREDITS)
-                .min_by_key(|c| c.percent_vs_base(buy_market.get_buy_price(c).unwrap()))
+                .filter(|c| buy_price_of(c) <= STARTING_CREDITS)
+                .min_by_key(|c| c.percent_vs_base(buy_price_of(c)))
                 .unwrap();
-            let buy_price = buy_market.get_buy_price(pick).unwrap();
+            let buy_price = buy_price_of(pick);
             let tons = (STARTING_CREDITS / buy_price)
                 .min(20)
                 .min(buy_market.availability[pick]);
-            let gross = i64::from(tons)
-                * (i64::from(sell_market.get_sell_price(pick).unwrap()) - i64::from(buy_price));
+            let gross = i64::from(tons) * (i64::from(sell_price_of(pick)) - i64::from(buy_price));
             let fuel_cost =
                 (origin.distance_to(destination).ceil() as i64) * i64::from(CREDITS_PER_UNIT);
 
@@ -62,7 +63,7 @@ fn informed_trader_totals(seeds: u64) -> Totals {
 
 #[test]
 fn informed_trading_from_the_starting_credits_outearns_its_fuel() {
-    let totals = informed_trader_totals(300);
+    let totals = informed_trader_totals(300, Standing::Neutral);
     let gross = totals.gross as f64 / totals.trips as f64;
     let fuel = totals.fuel_cost as f64 / totals.trips as f64;
 
@@ -78,9 +79,36 @@ fn informed_trading_from_the_starting_credits_outearns_its_fuel() {
 
 #[test]
 fn trips_can_still_lose_money_after_fuel() {
-    let totals = informed_trader_totals(300);
+    let totals = informed_trader_totals(300, Standing::Neutral);
     let losing = totals.losing as f64 / totals.trips as f64;
 
     assert!(losing > 0.05, "losing {:.0}%", losing * 100.0);
     assert!(losing < 0.4, "losing {:.0}%", losing * 100.0);
+}
+
+fn gross_per_trip(standing: Standing) -> f64 {
+    let totals = informed_trader_totals(300, standing);
+    totals.gross as f64 / totals.trips as f64
+}
+
+#[test]
+fn better_standing_earns_more_but_a_criminal_can_still_trade() {
+    let criminal = gross_per_trip(Standing::Criminal);
+    let disreputable = gross_per_trip(Standing::Disreputable);
+    let neutral = gross_per_trip(Standing::Neutral);
+    let trusted = gross_per_trip(Standing::Trusted);
+    let respected = gross_per_trip(Standing::Respected);
+
+    assert!(criminal < disreputable && disreputable < neutral);
+    assert!(neutral < trusted && trusted < respected);
+
+    assert!(respected >= 1.2 * neutral && respected <= 1.6 * neutral);
+    assert!(criminal >= 0.5 * neutral && criminal <= 0.8 * neutral);
+
+    let fuel = informed_trader_totals(300, Standing::Criminal).fuel_cost as f64
+        / informed_trader_totals(300, Standing::Criminal).trips as f64;
+    assert!(
+        criminal > fuel,
+        "criminal gross {criminal:.1}, fuel {fuel:.1}"
+    );
 }
