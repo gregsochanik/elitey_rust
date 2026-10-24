@@ -380,6 +380,16 @@ impl GameState {
         );
     }
 
+    /// The market here as the player sees it
+    pub fn market_prices(&mut self) -> Option<crate::data::commodities::MarketPrices> {
+        self.trading_handler.market_view(
+            &self.system_manager,
+            &self.commander.location,
+            self.commander.standing(),
+            self.world_clock,
+        )
+    }
+
     /// Handle cargo command
     pub fn handle_cargo_command(&self) {
         self.trading_handler.handle_cargo(&self.ship);

@@ -34,3 +34,44 @@ fn markets_still_trade_after_the_state_change() {
     assert!(game.handle_buy_command(&args("food 2")));
     assert!(game.handle_sell_command(&args("food 2")));
 }
+
+#[test]
+fn hopping_between_systems_does_not_reroll_prices_or_stock() {
+    let mut game = new_game(500);
+    let before = game.market_prices().unwrap();
+
+    game.travel_to_system("DISO").unwrap();
+    game.ship.refuel();
+    game.travel_to_system("LAVE").unwrap();
+    let after = game.market_prices().unwrap();
+
+    assert_eq!(before.buy_prices, after.buy_prices);
+    assert_eq!(before.sell_prices, after.sell_prices);
+    assert_eq!(before.availability, after.availability);
+}
+
+#[test]
+fn stock_bought_stays_gone_after_a_hop_and_prices_refresh_after_the_period() {
+    let mut game = new_game(500);
+    let before = game.market_prices().unwrap();
+    assert!(game.handle_buy_command(&args("food 3")));
+    let stock = before.availability[&elitey_rust::data::commodities::CommodityType::Food];
+
+    game.travel_to_system("DISO").unwrap();
+    game.ship.refuel();
+    game.travel_to_system("LAVE").unwrap();
+    let after = game.market_prices().unwrap();
+    assert_eq!(
+        after.availability[&elitey_rust::data::commodities::CommodityType::Food],
+        stock - 3
+    );
+
+    for _ in 0..4 {
+        game.ship.refuel();
+        game.travel_to_system("DISO").unwrap();
+        game.travel_to_system("LAVE").unwrap();
+    }
+    let refreshed = game.market_prices().unwrap();
+    assert_eq!(game.world_clock, 10);
+    assert_ne!(refreshed.buy_prices, before.buy_prices);
+}
