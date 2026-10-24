@@ -4,7 +4,7 @@
 Each system has a jobs board. The player can take paying jobs that give trips a purpose beyond buy-low-sell-high: deliver a parcel, haul a cargo, hunt a pirate. Version 1 is the smallest complete slice: **courier jobs only**, with a board, acceptance, deadlines and payment. Other job types come later and reuse the same board.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; the board, courier generation, accept, missions and abandon are done.
+In progress. Slices are tracked as GitHub issues; the board, courier generation, accept, missions, abandon, delivery and deadlines are done; the balance pass remains.
 
 ## Why
 Playing the game showed the loop has no goals beyond a 500cr ship, money rather than cargo space is the early limit, and a player with no credits has nothing to do. Jobs add short-term objectives, route planning against deadlines, and a way to earn without capital.
@@ -72,8 +72,8 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - [x] `jobs` shows 3 to 5 courier jobs with number, destination, reward and deadline, all reachable on a full tank
 - [x] The board is the same on repeat visits to the same screen and re-rolls on arrival elsewhere
 - [x] `accept <n>` moves the job to `missions`; a fourth active job is refused
-- [ ] Delivering in time pays the reward, adds 2 reputation and clears the job
-- [ ] A job that runs out of jumps fails, is removed and costs 3 reputation
+- [x] Delivering in time pays the reward, adds 2 reputation and clears the job
+- [x] A job that runs out of jumps fails, is removed and costs 3 reputation
 - [x] `abandon <n>` removes the job and costs 3 reputation
 - [x] Jobs and the board persist across save and load; old saves still load
 - [ ] A simulation shows courier jobs out-earn trading at starting capital
@@ -82,8 +82,8 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - [x] Board generation from a fixed seed: count, reachable destinations, reward range, deadline range
 - [x] Reward formula at known fuel costs
 - [x] Accept, the three-job limit, abandon
-- [ ] A job with deadline N: delivered on jump N succeeds; if jump N ends elsewhere it fails at once
-- [ ] Several jobs for one destination
+- [x] A job with deadline N: delivered on jump N succeeds; if jump N ends elsewhere it fails at once
+- [x] Several jobs for one destination
 - [ ] Delivery after an event on the jump
 - [x] Save, load and old-save compatibility
 

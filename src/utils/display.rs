@@ -231,6 +231,10 @@ pub fn show_info(message: &str) {
     println!("{}", format!("Info: {}", message).blue());
 }
 
+fn jumps(count: u32) -> String {
+    format!("{} jump{}", count, if count == 1 { "" } else { "s" })
+}
+
 pub fn show_missions(active: &[ActiveJob]) {
     println!("\n{}", "Active Jobs".cyan().bold());
     println!("{}", "===========".cyan());
@@ -239,11 +243,11 @@ pub fn show_missions(active: &[ActiveJob]) {
     }
     for (index, entry) in active.iter().enumerate() {
         println!(
-            "{}. Courier to {} - Reward: {}cr - {} jumps left",
+            "{}. Courier to {} - Reward: {}cr - {} left",
             index + 1,
             entry.job.destination.yellow(),
             entry.job.reward.to_string().green(),
-            entry.jumps_left
+            jumps(entry.jumps_left)
         );
     }
     println!();
@@ -257,13 +261,13 @@ pub fn show_jobs(location: &str, jobs: &[Job]) {
     }
     for (index, job) in jobs.iter().enumerate() {
         println!(
-            "{}. Courier to {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {} jumps",
+            "{}. Courier to {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
             index + 1,
             job.destination.yellow(),
             job.distance,
             job.fuel_cost,
             job.reward.to_string().green(),
-            job.deadline_jumps
+            jumps(job.deadline_jumps)
         );
     }
     println!();

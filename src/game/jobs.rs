@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 
 pub const MAX_ACTIVE_JOBS: usize = 3;
 pub const ABANDON_REPUTATION: i32 = -3;
+pub const DELIVERY_REPUTATION: i32 = 2;
+pub const FAILURE_REPUTATION: i32 = -3;
 const MIN_BOARD_SIZE: usize = 3;
 const MAX_BOARD_SIZE: usize = 5;
 const MAX_JOB_RANGE: f64 = 7.0;
@@ -72,6 +74,56 @@ pub fn abandon(
         crate::utils::display::show_info(&format!("Your standing is now {}.", standing.name()));
     }
     Ok(abandoned.job)
+}
+
+fn reputation_messages(
+    messages: &mut Vec<String>,
+    change: crate::game::commander::ReputationChange,
+) {
+    messages.push(format!("Reputation {:+}.", change.applied));
+    if let Some(standing) = change.new_standing {
+        messages.push(format!("Your standing is now {}.", standing.name()));
+    }
+}
+
+/// Use up one deadline jump on every active job after the player arrives at `arrived_at`:
+/// jobs for this system are delivered and paid, jobs out of jumps fail
+pub fn settle_arrival(
+    active: &mut Vec<ActiveJob>,
+    commander: &mut Commander,
+    arrived_at: &str,
+) -> Vec<String> {
+    let mut messages = Vec::new();
+    let mut remaining = Vec::new();
+
+    for mut entry in std::mem::take(active) {
+        entry.jumps_left = entry.jumps_left.saturating_sub(1);
+        if entry.job.destination.eq_ignore_ascii_case(arrived_at) {
+            commander.add_credits(entry.job.reward);
+            messages.push(format!(
+                "Delivered the parcel to {}: +{}cr.",
+                entry.job.destination, entry.job.reward
+            ));
+            reputation_messages(
+                &mut messages,
+                commander.change_reputation(DELIVERY_REPUTATION),
+            );
+        } else if entry.jumps_left == 0 {
+            messages.push(format!(
+                "The courier job to {} ran out of time and was cancelled.",
+                entry.job.destination
+            ));
+            reputation_messages(
+                &mut messages,
+                commander.change_reputation(FAILURE_REPUTATION),
+            );
+        } else {
+            remaining.push(entry);
+        }
+    }
+
+    *active = remaining;
+    messages
 }
 
 /// The jobs on offer at the system the player is docked at
@@ -292,6 +344,84 @@ mod tests {
         assert!(accept(&mut board, &mut active, "LAVE", 1).is_err());
         assert_eq!(active.len(), 3);
         assert_eq!(board.jobs.len(), remaining);
+    }
+
+    fn active_job(destination: &str, reward: u32, jumps_left: u32) -> ActiveJob {
+        ActiveJob {
+            job: Job {
+                destination: destination.to_string(),
+                distance: 2.3,
+                fuel_cost: 3,
+                reward,
+                deadline_jumps: 3,
+            },
+            jumps_left,
+        }
+    }
+
+    #[test]
+    fn arriving_in_time_pays_the_reward_and_clears_the_job() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![active_job("DISO", 50, 3)];
+
+        let messages = settle_arrival(&mut active, &mut commander, "DISO");
+
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 150);
+        assert_eq!(commander.reputation, 2);
+        assert!(messages.iter().any(|m| m.contains("Delivered")));
+    }
+
+    #[test]
+    fn delivering_on_the_last_allowed_jump_still_counts() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![active_job("DISO", 50, 1)];
+
+        settle_arrival(&mut active, &mut commander, "diso");
+
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 150);
+    }
+
+    #[test]
+    fn a_job_that_runs_out_of_jumps_fails_at_once() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![active_job("DISO", 50, 1)];
+
+        let messages = settle_arrival(&mut active, &mut commander, "LEESTI");
+
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 100);
+        assert_eq!(commander.reputation, -3);
+        assert!(messages.iter().any(|m| m.contains("ran out of time")));
+    }
+
+    #[test]
+    fn jobs_with_time_left_lose_one_jump_per_arrival() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![active_job("DISO", 50, 3)];
+
+        settle_arrival(&mut active, &mut commander, "LEESTI");
+
+        assert_eq!(active[0].jumps_left, 2);
+        assert_eq!(commander.reputation, 0);
+    }
+
+    #[test]
+    fn several_jobs_for_one_destination_all_complete() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut active = vec![
+            active_job("DISO", 50, 3),
+            active_job("DISO", 60, 2),
+            active_job("LEESTI", 70, 3),
+        ];
+
+        settle_arrival(&mut active, &mut commander, "DISO");
+
+        assert_eq!(commander.credits(), 210);
+        assert_eq!(commander.reputation, 4);
+        assert_eq!(active.len(), 1);
+        assert_eq!(active[0].job.destination, "LEESTI");
     }
 
     #[test]

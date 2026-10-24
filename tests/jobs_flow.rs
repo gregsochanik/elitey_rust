@@ -61,3 +61,38 @@ fn old_saves_without_active_jobs_load_with_none() {
 
     assert!(loaded.active_jobs.is_empty());
 }
+
+#[test]
+fn a_delivered_job_pays_out_through_the_game() {
+    let mut game = game_with_board();
+    let job = game.job_board_jobs()[0].clone();
+    game.accept_job(1).unwrap();
+    let credits = game.commander.credits();
+
+    game.commander.location = job.destination.clone();
+    game.settle_jobs();
+
+    assert!(game.active_jobs.is_empty());
+    assert_eq!(game.commander.credits(), credits + job.reward);
+    assert_eq!(game.commander.reputation, 2);
+}
+
+#[test]
+fn a_late_job_fails_through_the_game() {
+    let mut game = game_with_board();
+    game.accept_job(1).unwrap();
+    let destination = game.active_jobs[0].job.destination.clone();
+    let deadline = game.active_jobs[0].job.deadline_jumps;
+    let elsewhere = ["LAVE", "DISO", "LEESTI", "ZAONCE"]
+        .into_iter()
+        .find(|name| *name != destination)
+        .unwrap();
+
+    for jump in 1..=deadline {
+        game.commander.location = elsewhere.to_string();
+        game.settle_jobs();
+        assert_eq!(game.active_jobs.is_empty(), jump == deadline);
+    }
+
+    assert_eq!(game.commander.reputation, -3);
+}
