@@ -16,8 +16,8 @@ const MAX_BOARD_SIZE: usize = 5;
 const MAX_JOB_RANGE: f64 = 7.0;
 const BASE_REWARD: f64 = 20.0;
 const REWARD_PER_FUEL: f64 = 7.0;
-const BOUNTY_BASE_REWARD: f64 = 100.0;
-const BOUNTY_REWARD_PER_FUEL: f64 = 12.0;
+const BOUNTY_BASE_REWARD: f64 = 80.0;
+const BOUNTY_REWARD_PER_FUEL: f64 = 10.0;
 const BOUNTY_SHARE: f64 = 0.3;
 
 /// What a job asks of the player
@@ -328,9 +328,9 @@ mod tests {
 
     #[test]
     fn bounty_reward_follows_the_formula() {
-        assert_eq!(bounty_reward(3, 1.0), 136);
-        assert_eq!(bounty_reward(7, 0.9), 166);
-        assert_eq!(bounty_reward(7, 1.1), 202);
+        assert_eq!(bounty_reward(3, 1.0), 110);
+        assert_eq!(bounty_reward(7, 0.9), 135);
+        assert_eq!(bounty_reward(7, 1.1), 165);
     }
 
     #[test]
@@ -347,7 +347,7 @@ mod tests {
                 total += 1;
                 if job.kind == JobKind::Bounty {
                     bounties += 1;
-                    let base = 100.0 + 12.0 * f64::from(job.fuel_cost);
+                    let base = 80.0 + 10.0 * f64::from(job.fuel_cost);
                     assert!(f64::from(job.reward) >= (base * 0.9).round());
                     assert!(f64::from(job.reward) <= (base * 1.1).round());
                 }
@@ -509,7 +509,7 @@ mod tests {
                 assert!((2..=4).contains(&job.deadline_jumps));
                 let base = match job.kind {
                     JobKind::Courier => 20.0 + 7.0 * f64::from(job.fuel_cost),
-                    JobKind::Bounty => 100.0 + 12.0 * f64::from(job.fuel_cost),
+                    JobKind::Bounty => 80.0 + 10.0 * f64::from(job.fuel_cost),
                 };
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
