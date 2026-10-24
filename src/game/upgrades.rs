@@ -139,10 +139,10 @@ impl UpgradeHandler {
                 upgrade_ship.fuel_capacity() as i32 - ship.fuel_capacity() as i32
             );
             println!(
-                "- Hull: {}% → {}% ({:+}%)",
-                ship.hull_percentage(),
+                "- Hull: {} → {} ({:+})",
+                ship.ship_type.max_hull(),
                 upgrade_ship.max_hull(),
-                upgrade_ship.max_hull() as i32 - ship.hull_percentage() as i32
+                upgrade_ship.max_hull() as i32 - ship.ship_type.max_hull() as i32
             );
             println!();
         }
@@ -167,7 +167,7 @@ impl UpgradeHandler {
             println!("{}", ship_name);
             println!("- Cargo: {} tons", ship_type.cargo_capacity());
             println!("- Fuel: {} light years", ship_type.fuel_capacity());
-            println!("- Hull: {}%", ship_type.max_hull());
+            println!("- Hull: {}", ship_type.max_hull());
             println!("- Cost: {}cr", ship_type.cost());
 
             if !is_current {

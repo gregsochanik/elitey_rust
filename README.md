@@ -107,7 +107,7 @@ Location: [System Name]
 Ship: [Ship Type]
 Cargo: [Used]/[Total] tons
 Fuel: [Current]/[Max] light years
-Hull: [Percentage]%
+Hull: [Current]/[Max]
 ```
 
 ## Development

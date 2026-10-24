@@ -236,7 +236,7 @@ impl TravelHandler {
                     show_info(&format!("Credits: {}", commander.credits));
                 }
                 if outcome.hull_damage != 0 {
-                    show_info(&format!("Hull: {}%", ship.hull_percentage));
+                    show_info(&format!("Hull: {}", ship.hull_display()));
                 }
                 if outcome.fuel_change != 0 {
                     show_info(&format!("Fuel: {}", ship.fuel_current));
