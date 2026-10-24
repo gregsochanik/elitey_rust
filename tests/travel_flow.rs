@@ -1,6 +1,7 @@
 mod common;
 
 use common::new_game;
+use rand::SeedableRng;
 
 #[test]
 fn reachable_systems_list_the_fuel_each_jump_costs() {
@@ -51,4 +52,42 @@ fn a_ship_with_no_fuel_credits_or_cargo_is_rescued_and_can_move_again() {
     assert!(!game.reachable_destinations().unwrap().is_empty());
     assert_eq!(game.commander.reputation, -2);
     assert_eq!(game.commander.credits(), 0);
+}
+
+#[test]
+fn the_jobs_board_is_stable_while_docked_and_rerolls_after_a_jump() {
+    let mut game = new_game(100);
+    let first = game
+        .jobs_here(&mut rand::rngs::StdRng::seed_from_u64(1))
+        .unwrap();
+    let again = game
+        .jobs_here(&mut rand::rngs::StdRng::seed_from_u64(99))
+        .unwrap();
+    assert_eq!(first, again);
+    assert!((3..=5).contains(&first.len()));
+    assert!(first
+        .iter()
+        .all(|job| job.fuel_cost <= game.ship.fuel_capacity()));
+
+    game.job_board.clear();
+    let rerolled = game
+        .jobs_here(&mut rand::rngs::StdRng::seed_from_u64(99))
+        .unwrap();
+    assert_ne!(first, rerolled);
+}
+
+#[test]
+fn old_saves_without_a_job_board_load_with_an_empty_one() {
+    let game = new_game(100);
+    let mut value = serde_json::to_value(&game).unwrap();
+    value.as_object_mut().unwrap().remove("job_board");
+
+    let mut loaded: elitey_rust::game::GameState = serde_json::from_value(value).unwrap();
+    assert!(
+        loaded
+            .jobs_here(&mut rand::rngs::StdRng::seed_from_u64(3))
+            .unwrap()
+            .len()
+            >= 3
+    );
 }

@@ -28,7 +28,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 14 | Refuelling (v1: `refuel` for credits) | Done (v1) | 02 |
 | 15 | GUI (core refactor, then macOS front end) | Spec only | 01–08, 10, 11, 12, 14 |
 | 13 | UI improvements | Spec only | – |
-| 16 | Jobs (v1: board, courier jobs, deadlines) | Spec only | 02, 05, 10, 14 |
+| 16 | Jobs (v1: board, courier jobs, deadlines) | In progress | 02, 05, 10, 14 |
 
 ## Roadmap
 
