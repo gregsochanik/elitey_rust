@@ -2,6 +2,7 @@ pub mod combat;
 pub mod commander;
 pub mod equipment;
 pub mod events;
+pub mod fight;
 pub mod game_state;
 pub mod save_load;
 pub mod ship;
