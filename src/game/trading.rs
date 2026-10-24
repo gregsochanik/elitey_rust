@@ -12,36 +12,50 @@ const ILLEGAL_TRADE_REPUTATION: i32 = -2;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TradingHandler {
     trading_system: TradingSystem,
+    /// Each system's market, kept between visits
     #[serde(default)]
-    market_seed: u64,
+    markets: HashMap<String, SystemMarket>,
+    /// Where the player last traded, to notice an arrival elsewhere
     #[serde(default)]
     market_location: String,
-    /// Tons bought at the current visit, per commodity
-    #[serde(default)]
-    purchased: HashMap<CommodityType, u32>,
+}
+
+/// What a system's market remembers: its price roll, when it was rolled and what was bought
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct SystemMarket {
+    pub seed: u64,
+    pub rolled_at: u32,
+    /// Tons bought since the roll, per commodity
+    pub purchased: HashMap<CommodityType, u32>,
 }
 
 impl TradingHandler {
     pub fn new() -> Self {
         Self {
             trading_system: TradingSystem::new(),
-            market_seed: rand::random(),
+            markets: HashMap::new(),
             market_location: String::new(),
-            purchased: HashMap::new(),
         }
     }
 
     /// Prices stay fixed while the player stays in a system and re-roll on arrival elsewhere
-    fn market_for(&mut self, location: &str, economy: &EconomyType) -> MarketPrices {
-        if self.market_location != location {
+    fn market_for(&mut self, location: &str, economy: &EconomyType, clock: u32) -> MarketPrices {
+        if self.market_location != location || !self.markets.contains_key(location) {
             self.market_location = location.to_string();
-            self.market_seed = rand::random();
-            self.purchased.clear();
+            self.markets.insert(
+                location.to_string(),
+                SystemMarket {
+                    seed: rand::random(),
+                    rolled_at: clock,
+                    purchased: HashMap::new(),
+                },
+            );
         }
+        let state = &self.markets[location];
         let mut market = self
             .trading_system
-            .generate_market_prices(economy, self.market_seed);
-        for (commodity, bought) in &self.purchased {
+            .generate_market_prices(economy, state.seed);
+        for (commodity, bought) in &state.purchased {
             if let Some(stock) = market.availability.get_mut(commodity) {
                 *stock = stock.saturating_sub(*bought);
             }
@@ -55,8 +69,9 @@ impl TradingHandler {
         location: &str,
         economy: &EconomyType,
         standing: Standing,
+        clock: u32,
     ) -> MarketPrices {
-        let mut market = self.market_for(location, economy);
+        let mut market = self.market_for(location, economy, clock);
         for price in market.buy_prices.values_mut() {
             *price = standing.buy_price(*price);
         }
@@ -72,9 +87,10 @@ impl TradingHandler {
         system_manager: &SystemManager,
         current_location: &str,
         standing: Standing,
+        clock: u32,
     ) {
         if let Some(system) = system_manager.get_system(current_location) {
-            let market = self.priced_market(current_location, &system.economy, standing);
+            let market = self.priced_market(current_location, &system.economy, standing, clock);
             self.display_market(system, &market, standing);
         } else {
             show_error("System not found");
@@ -89,6 +105,7 @@ impl TradingHandler {
         ship: &mut Ship,
         system_manager: &SystemManager,
         trade_log: &mut TradeLog,
+        clock: u32,
     ) -> bool {
         if args.is_empty() {
             show_error("Usage: buy <item> [quantity]");
@@ -126,7 +143,12 @@ impl TradingHandler {
             }
         };
 
-        let market = self.priced_market(current_location, &system.economy, commander.standing());
+        let market = self.priced_market(
+            current_location,
+            &system.economy,
+            commander.standing(),
+            clock,
+        );
 
         // Perform the purchase
         self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
@@ -140,6 +162,7 @@ impl TradingHandler {
         ship: &mut Ship,
         system_manager: &SystemManager,
         trade_log: &mut TradeLog,
+        clock: u32,
     ) -> bool {
         if args.is_empty() {
             show_error("Usage: sell <item> [quantity]");
@@ -177,7 +200,12 @@ impl TradingHandler {
             }
         };
 
-        let market = self.priced_market(current_location, &system.economy, commander.standing());
+        let market = self.priced_market(
+            current_location,
+            &system.economy,
+            commander.standing(),
+            clock,
+        );
 
         // Perform the sale
         self.execute_sell(commodity, quantity, commander, ship, &market, trade_log)
@@ -266,7 +294,9 @@ impl TradingHandler {
         let cargo_before = ship.cargo_hold().get_quantity(&commodity);
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
-        *self.purchased.entry(commodity.clone()).or_insert(0) += quantity;
+        if let Some(state) = self.markets.get_mut(commander.location()) {
+            *state.purchased.entry(commodity.clone()).or_insert(0) += quantity;
+        }
         trade_log.record_buy(
             commodity.clone(),
             quantity,
@@ -459,15 +489,15 @@ mod tests {
         let mut handler = TradingHandler::new();
         let economy = EconomyType::RichIndustrial;
 
-        let first = handler.market_for("LAVE", &economy);
-        let second = handler.market_for("LAVE", &economy);
+        let first = handler.market_for("LAVE", &economy, 0);
+        let second = handler.market_for("LAVE", &economy, 0);
         assert_eq!(first.buy_prices, second.buy_prices);
         assert_eq!(first.availability, second.availability);
 
-        let seed_at_lave = handler.market_seed;
-        handler.market_for("DISO", &economy);
-        handler.market_for("LAVE", &economy);
-        assert_ne!(handler.market_seed, seed_at_lave);
+        let seed_at_lave = handler.markets["LAVE"].seed;
+        handler.market_for("DISO", &economy, 1);
+        handler.market_for("LAVE", &economy, 2);
+        assert_ne!(handler.markets["LAVE"].seed, seed_at_lave);
     }
 
     #[test]
@@ -557,7 +587,7 @@ mod tests {
         let mut ship = Ship::new_cobra_mk3();
         let mut log = TradeLog::new();
 
-        let before = handler.market_for("LAVE", &economy);
+        let before = handler.market_for("LAVE", &economy, 0);
         let stock = before.get_availability(&CommodityType::Food).unwrap();
         assert!(handler.execute_buy(
             CommodityType::Food,
@@ -568,7 +598,7 @@ mod tests {
             &mut log
         ));
 
-        let after = handler.market_for("LAVE", &economy);
+        let after = handler.market_for("LAVE", &economy, 0);
         assert_eq!(
             after.get_availability(&CommodityType::Food),
             Some(stock - 1)
@@ -578,8 +608,10 @@ mod tests {
             before.get_availability(&CommodityType::Textiles)
         );
 
-        handler.market_for("DISO", &economy);
-        assert!(handler.purchased.is_empty());
+        assert_eq!(handler.markets["LAVE"].purchased.len(), 1);
+        handler.market_for("DISO", &economy, 1);
+        handler.market_for("LAVE", &economy, 2);
+        assert!(handler.markets["LAVE"].purchased.is_empty());
     }
 
     #[test]
@@ -612,11 +644,43 @@ mod tests {
     }
 
     #[test]
-    fn purchased_stock_survives_serialization() {
+    fn system_markets_remember_their_state_across_visits() {
         let mut handler = TradingHandler::new();
-        handler.purchased.insert(CommodityType::Food, 4);
+        let economy = EconomyType::RichIndustrial;
+        handler.market_for("LAVE", &economy, 3);
+        handler.market_for("DISO", &economy, 4);
+
+        assert_eq!(handler.markets.len(), 2);
+        assert_eq!(handler.markets["LAVE"].rolled_at, 3);
+        assert_eq!(handler.markets["DISO"].rolled_at, 4);
+    }
+
+    #[test]
+    fn markets_survive_serialization() {
+        let mut handler = TradingHandler::new();
+        handler.market_for("LAVE", &EconomyType::RichIndustrial, 7);
+        handler
+            .markets
+            .get_mut("LAVE")
+            .unwrap()
+            .purchased
+            .insert(CommodityType::Food, 4);
+
         let json = serde_json::to_string(&handler).unwrap();
         let restored: TradingHandler = serde_json::from_str(&json).unwrap();
-        assert_eq!(restored.purchased.get(&CommodityType::Food), Some(&4));
+
+        assert_eq!(restored.markets["LAVE"].seed, handler.markets["LAVE"].seed);
+        assert_eq!(restored.markets["LAVE"].rolled_at, 7);
+        assert_eq!(
+            restored.markets["LAVE"].purchased.get(&CommodityType::Food),
+            Some(&4)
+        );
+    }
+
+    #[test]
+    fn old_saves_with_the_single_market_fields_load_with_no_markets() {
+        let json = r#"{"trading_system":{"commodities":["Food"]},"market_seed":5,"market_location":"LAVE","purchased":{"Food":2}}"#;
+        let restored: TradingHandler = serde_json::from_str(json).unwrap();
+        assert!(restored.markets.is_empty());
     }
 }

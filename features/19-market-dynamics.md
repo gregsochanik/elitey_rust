@@ -4,7 +4,7 @@
 Markets today re-roll every time the player arrives, and the player sees prices before committing. So a trader can carry cargo and hop between two systems until someone pays well, with almost no risk. In a simulation of that on Leesti and Riedquat (2.8 light years), a patient trader netted about 84 credits per jump at 500cr and 151 at 2,000cr, with 2% of trips losing money, beating courier jobs (53) and bounties (69). This feature makes markets remember and react to the player, so one route stops being a free loop.
 
 ## Status
-Spec only. Slices are tracked as GitHub issues.
+In progress. Slices are tracked as GitHub issues; per-system market state and the world clock are done.
 
 ## Version 1 Scope
 
@@ -61,7 +61,7 @@ Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capit
 - [ ] Buying raises the buy price and lowers stock in the same way
 - [ ] A simulation of repeated trips on one route shows the margin falling as in Balance
 - [ ] The patient-trader strategy no longer beats bounties
-- [ ] The world clock and market state persist; old saves still load
+- [x] The world clock and market state persist; old saves still load
 
 ## Testing (write first)
 - [ ] Prices and stock at a system are stable across arrivals within a period (when nothing is traded) and change across periods, with a fixed seed
@@ -69,7 +69,7 @@ Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capit
 - [ ] Impact: price after selling N tons, the −40% and +40% caps, recovery per jump
 - [ ] Stock depletion and recovery
 - [ ] Standing modifier applied after impact, and `market`, `buy` and `sell` agree
-- [ ] Old-save compatibility
+- [x] Old-save compatibility
 - [ ] Simulation: repeated-route income by trip number, and the patient-trader strategy
 
 ## Dependencies

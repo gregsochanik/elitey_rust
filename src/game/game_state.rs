@@ -42,6 +42,9 @@ pub struct GameState {
     /// Accepted jobs, numbered by position
     #[serde(default)]
     pub active_jobs: Vec<ActiveJob>,
+    /// Jumps made so far; markets change with it
+    #[serde(default)]
+    pub world_clock: u32,
 }
 
 /// A system the ship can reach with its current fuel
@@ -73,6 +76,7 @@ impl GameState {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         }
     }
 
@@ -221,6 +225,7 @@ impl GameState {
         // Update location
         self.commander.location = destination.to_string();
 
+        self.world_clock += 1;
         self.job_board.clear();
         self.settle_jobs();
 
@@ -301,6 +306,7 @@ impl GameState {
             &mut self.ship,
             &self.system_manager,
             &mut self.trade_log,
+            self.world_clock,
         )
     }
 
@@ -360,6 +366,7 @@ impl GameState {
             &mut self.ship,
             &self.system_manager,
             &mut self.trade_log,
+            self.world_clock,
         )
     }
 
@@ -369,6 +376,7 @@ impl GameState {
             &self.system_manager,
             &self.commander.location,
             self.commander.standing(),
+            self.world_clock,
         );
     }
 
@@ -436,6 +444,7 @@ impl GameState {
         ) {
             Ok(success) => {
                 if success {
+                    self.world_clock += 1;
                     self.job_board.clear();
                     self.settle_jobs();
                 }
@@ -694,6 +703,7 @@ mod tests {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         assert_eq!(game_state.commander().name(), "Test Commander");
@@ -719,6 +729,7 @@ mod tests {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         assert!(game_state.is_running());
@@ -744,6 +755,7 @@ mod tests {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         assert!(!game_state.is_running());
@@ -764,6 +776,7 @@ mod tests {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
         let mut value = serde_json::to_value(&state).unwrap();
         value.as_object_mut().unwrap().remove("trade_log");
@@ -787,6 +800,7 @@ mod tests {
             trade_log: TradeLog::new(),
             job_board: JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
         state.trade_log.record_buy(
             crate::data::commodities::CommodityType::Food,
