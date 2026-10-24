@@ -133,14 +133,14 @@ src/
 │   └── save_load.rs     # Save/load game state
 ├── data/                # Static and persisted data
 │   ├── systems.rs       # Star systems and galaxy
-│   ├── commodities.rs   # Commodity definitions
+│   ├── commodities.rs   # Commodities and markets, loaded from data/commodities.json
 │   ├── ships.rs         # Ship types, loaded from data/ships.json
 │   └── save_load.rs     # Save file I/O
 └── utils/
     ├── mod.rs
     ├── display.rs       # Terminal output and formatting
     └── input.rs         # Input processing and validation
-data/                    # Game data as JSON, embedded at build time (ships.json, equipment.json)
+data/                    # Game data as JSON, embedded at build time (ships.json, equipment.json, commodities.json)
 galaxies/                # Star system data (galaxy1.json)
 features/                # Feature specs (see AGENTS.md)
 tests/                   # Integration / BDD-style tests

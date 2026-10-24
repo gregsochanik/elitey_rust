@@ -352,18 +352,7 @@ impl TradingHandler {
 
     /// Parse commodity name to CommodityType
     fn parse_commodity(&self, name: &str) -> Option<CommodityType> {
-        let name_lower = name.to_lowercase();
-        match name_lower.as_str() {
-            "food" => Some(CommodityType::Food),
-            "textiles" => Some(CommodityType::Textiles),
-            "machinery" => Some(CommodityType::Machinery),
-            "computers" => Some(CommodityType::Computers),
-            "minerals" => Some(CommodityType::Minerals),
-            "alloys" => Some(CommodityType::Alloys),
-            "luxury" => Some(CommodityType::Luxury),
-            "narcotics" => Some(CommodityType::Narcotics),
-            _ => None,
-        }
+        CommodityType::from_string(name)
     }
 
     /// Execute a buy transaction
