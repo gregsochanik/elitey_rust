@@ -41,6 +41,7 @@ pub fn generate_board(
         .iter()
         .filter(|system| system.name != origin.name && origin.distance_to(system) <= MAX_JOB_RANGE)
         .collect();
+    destinations.sort_by(|a, b| a.name.cmp(&b.name));
     destinations.shuffle(rng);
 
     let size = rng
@@ -138,6 +139,52 @@ mod tests {
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
             }
         }
+    }
+
+    #[test]
+    fn sparse_systems_offer_what_is_in_range() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+
+        for origin in &systems {
+            let in_range = systems
+                .iter()
+                .filter(|other| {
+                    other.name != origin.name && origin.distance_to(other) <= MAX_JOB_RANGE
+                })
+                .count();
+            let board = generate_board(origin, &systems, &mut StdRng::seed_from_u64(5));
+            assert!(
+                board.len() <= in_range.min(MAX_BOARD_SIZE),
+                "{}",
+                origin.name
+            );
+            assert!(
+                board.len() >= in_range.min(MIN_BOARD_SIZE),
+                "{}",
+                origin.name
+            );
+        }
+    }
+
+    #[test]
+    fn the_same_seed_gives_the_same_board_across_galaxy_instances() {
+        let first = galaxy();
+        let second = galaxy();
+        let origin_a = first.get_system("LAVE").unwrap();
+        let origin_b = second.get_system("LAVE").unwrap();
+
+        let a = generate_board(
+            origin_a,
+            &first.get_all_systems(),
+            &mut StdRng::seed_from_u64(7),
+        );
+        let b = generate_board(
+            origin_b,
+            &second.get_all_systems(),
+            &mut StdRng::seed_from_u64(7),
+        );
+        assert_eq!(a, b);
     }
 
     #[test]

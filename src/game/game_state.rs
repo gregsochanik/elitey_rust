@@ -214,6 +214,8 @@ impl GameState {
         // Update location
         self.commander.location = destination.to_string();
 
+        self.job_board.clear();
+
         Ok(())
     }
 

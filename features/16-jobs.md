@@ -12,7 +12,7 @@ Playing the game showed the loop has no goals beyond a 500cr ship, money rather 
 ## Version 1 Scope
 
 ### The board
-- `jobs` lists the jobs offered at the current system (3 to 5)
+- `jobs` lists the jobs offered at the current system: 3 to 5, or every system in range when fewer than 3 are (SORI has only 2)
 - Each shows a number, the destination, the reward, and the deadline in jumps
 - The board is stable while the player stays in a system and is re-rolled on arrival elsewhere, like the market
 - The board is generated from a seed, so tests can fix it
