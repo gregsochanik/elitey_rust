@@ -7,6 +7,7 @@ use colored::*;
 use std::collections::HashMap;
 
 const ILLEGAL_TRADE_REPUTATION: i32 = -2;
+const MARKET_REFRESH_JUMPS: u32 = 10;
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -15,9 +16,6 @@ pub struct TradingHandler {
     /// Each system's market, kept between visits
     #[serde(default)]
     markets: HashMap<String, SystemMarket>,
-    /// Where the player last traded, to notice an arrival elsewhere
-    #[serde(default)]
-    market_location: String,
 }
 
 /// What a system's market remembers: its price roll, when it was rolled and what was bought
@@ -34,14 +32,17 @@ impl TradingHandler {
         Self {
             trading_system: TradingSystem::new(),
             markets: HashMap::new(),
-            market_location: String::new(),
         }
     }
 
-    /// Prices stay fixed while the player stays in a system and re-roll on arrival elsewhere
+    /// A system's prices and stock stay fixed for a number of jumps, whoever arrives or leaves,
+    /// and re-roll the next time they are looked at after that
     fn market_for(&mut self, location: &str, economy: &EconomyType, clock: u32) -> MarketPrices {
-        if self.market_location != location || !self.markets.contains_key(location) {
-            self.market_location = location.to_string();
+        let stale = self
+            .markets
+            .get(location)
+            .is_none_or(|state| clock.saturating_sub(state.rolled_at) >= MARKET_REFRESH_JUMPS);
+        if stale {
             self.markets.insert(
                 location.to_string(),
                 SystemMarket {
@@ -61,6 +62,18 @@ impl TradingHandler {
             }
         }
         market
+    }
+
+    /// The market at `location` as the player sees it, or `None` for an unknown system
+    pub fn market_view(
+        &mut self,
+        system_manager: &SystemManager,
+        location: &str,
+        standing: Standing,
+        clock: u32,
+    ) -> Option<MarketPrices> {
+        let system = system_manager.get_system(location)?;
+        Some(self.priced_market(location, &system.economy, standing, clock))
     }
 
     /// The market as the player sees it: stable prices adjusted for their standing
@@ -485,19 +498,24 @@ mod tests {
     }
 
     #[test]
-    fn prices_are_stable_within_a_system_and_reroll_on_arrival() {
+    fn prices_are_stable_across_arrivals_within_a_period_and_reroll_after_it() {
         let mut handler = TradingHandler::new();
         let economy = EconomyType::RichIndustrial;
 
         let first = handler.market_for("LAVE", &economy, 0);
-        let second = handler.market_for("LAVE", &economy, 0);
-        assert_eq!(first.buy_prices, second.buy_prices);
-        assert_eq!(first.availability, second.availability);
-
-        let seed_at_lave = handler.markets["LAVE"].seed;
+        let seed = handler.markets["LAVE"].seed;
         handler.market_for("DISO", &economy, 1);
-        handler.market_for("LAVE", &economy, 2);
-        assert_ne!(handler.markets["LAVE"].seed, seed_at_lave);
+        let back = handler.market_for("LAVE", &economy, 2);
+        assert_eq!(first.buy_prices, back.buy_prices);
+        assert_eq!(first.availability, back.availability);
+        assert_eq!(handler.markets["LAVE"].seed, seed);
+
+        handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS - 1);
+        assert_eq!(handler.markets["LAVE"].seed, seed);
+
+        handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
+        assert_ne!(handler.markets["LAVE"].seed, seed);
+        assert_eq!(handler.markets["LAVE"].rolled_at, MARKET_REFRESH_JUMPS);
     }
 
     #[test]
@@ -580,7 +598,7 @@ mod tests {
     }
 
     #[test]
-    fn buying_reduces_stock_until_the_player_leaves() {
+    fn buying_reduces_stock_until_the_market_refreshes() {
         let mut handler = TradingHandler::new();
         let economy = EconomyType::RichIndustrial;
         let mut commander = Commander::new("Test".to_string());
@@ -610,7 +628,10 @@ mod tests {
 
         assert_eq!(handler.markets["LAVE"].purchased.len(), 1);
         handler.market_for("DISO", &economy, 1);
-        handler.market_for("LAVE", &economy, 2);
+        let back = handler.market_for("LAVE", &economy, 2);
+        assert_eq!(back.get_availability(&CommodityType::Food), Some(stock - 1));
+
+        handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
         assert!(handler.markets["LAVE"].purchased.is_empty());
     }
 
@@ -622,7 +643,6 @@ mod tests {
         let mut log = TradeLog::new();
         commander.add_credits(1_000);
 
-        handler.market_location = "LAVE".to_string();
         let mut stock = market(10, 8, 6);
         assert!(handler.execute_buy(
             CommodityType::Food,

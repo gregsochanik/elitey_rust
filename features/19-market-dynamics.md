@@ -4,7 +4,7 @@
 Markets today re-roll every time the player arrives, and the player sees prices before committing. So a trader can carry cargo and hop between two systems until someone pays well, with almost no risk. In a simulation of that on Leesti and Riedquat (2.8 light years), a patient trader netted about 84 credits per jump at 500cr and 151 at 2,000cr, with 2% of trips losing money, beating courier jobs (53) and bounties (69). This feature makes markets remember and react to the player, so one route stops being a free loop.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; per-system market state and the world clock are done.
+In progress. Slices are tracked as GitHub issues; per-system market state, the world clock and clock-based refresh are done.
 
 ## Version 1 Scope
 
@@ -55,7 +55,7 @@ Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capit
 
 ## Acceptance Criteria
 - [ ] Arriving at a system does not change its prices; only the world clock does
-- [ ] A system's undisturbed prices and stock are identical on repeat visits within a 10-jump period and re-roll after it; arriving never resets either
+- [x] A system's undisturbed prices and stock are identical on repeat visits within a 10-jump period and re-roll after it; arriving never resets either
 - [ ] A pushed commodity's marker appears after trading and clears after 16 jumps
 - [ ] Selling 20 tons visibly lowers the sell price at that system, and later visits show the lowered price recovering by 10% of the gap per jump
 - [ ] Buying raises the buy price and lowers stock in the same way
@@ -64,7 +64,7 @@ Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capit
 - [x] The world clock and market state persist; old saves still load
 
 ## Testing (write first)
-- [ ] Prices and stock at a system are stable across arrivals within a period (when nothing is traded) and change across periods, with a fixed seed
+- [x] Prices and stock at a system are stable across arrivals within a period (when nothing is traded) and change across periods, with a fixed seed
 - [ ] Marker appears after buying and selling and clears after 16 jumps
 - [ ] Impact: price after selling N tons, the −40% and +40% caps, recovery per jump
 - [ ] Stock depletion and recovery
