@@ -183,7 +183,7 @@ pub fn show_status(game_state: &GameState) {
         ship.fuel_current(),
         ship.fuel_capacity()
     );
-    println!("Hull: {}%", ship.hull_percentage());
+    println!("Hull: {}", ship.hull_display());
 
     // Add status indicators
     if ship.is_damaged() {
