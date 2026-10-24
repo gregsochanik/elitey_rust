@@ -66,13 +66,13 @@ fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
         stock - 2
     );
 
-    for _ in 0..4 {
+    for _ in 0..9 {
         game.ship.refuel();
         game.travel_to_system("DISO").unwrap();
         game.travel_to_system("LAVE").unwrap();
     }
     let refreshed = game.market_prices().unwrap();
-    assert_eq!(game.world_clock, 10);
+    assert_eq!(game.world_clock, 20);
     assert_ne!(refreshed.buy_prices, before.buy_prices);
 }
 

@@ -4,7 +4,7 @@
 Markets today re-roll every time the player arrives, and the player sees prices before committing. So a trader can carry cargo and hop between two systems until someone pays well, with almost no risk. In a simulation of that on Leesti and Riedquat (2.8 light years), a patient trader netted about 84 credits per jump at 500cr and 151 at 2,000cr, with 2% of trips losing money, beating courier jobs (53) and bounties (69). This feature makes markets remember and react to the player, so one route stops being a free loop.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; per-system market state, the world clock, clock-based refresh and price impact with recovery are done.
+In progress. Slices are tracked as GitHub issues; market state, the world clock, refresh, price impact and the balance pass are done; the display marker remains.
 
 ## Version 1 Scope
 
@@ -16,7 +16,7 @@ Feature 03 re-rolls fluctuation and refreshes stock on arrival elsewhere. From t
 - The game counts jumps (a world clock). Markets change with that clock, not with arrivals
 
 ### Prices change by the clock
-- A system's fluctuation (the ±30% around its economy's tendency) is fixed for a period of **10 jumps**, then re-rolled the next time it is looked at. Hopping between two systems does not re-roll anything
+- A system's fluctuation (the ±30% around its economy's tendency) is fixed for a period of **20 jumps**, then re-rolled the next time it is looked at. Hopping between two systems does not re-roll anything
 - Within a period, a system's undisturbed prices are the same on every visit, so a route can be learned and repeated. Prices the player has moved by trading stay moved and recover with the clock
 
 ### The player moves prices
@@ -40,27 +40,34 @@ Feature 03 re-rolls fluctuation and refreshes stock on arrival elsewhere. From t
 - Changes to the fluctuation range or the spread (Feature 03)
 
 ## Balance
-Targets, set by simulation of an informed trader repeating one route with a full hold:
-Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capital levels of 100, 500 and 2,000 credits, and market seeds 0 to 299. The clock advances with every jump, so "rests" means the player makes other jumps while the route recovers.
+Simulated a trader working two systems (Leesti and Riedquat, 2.8 light years) with perfect knowledge of the other end's prices, buying whatever pays best each trip and selling at the far end, over 40 jumps, 40 games per capital level, using the real trading code. Cobra Mk III, 20-ton hold, fuel at 2cr per light year.
 
-- The first trip pays about what it does today
-- By the fifth trip the margin on that route has fallen to about the level of a courier job, and recovers while the player trades elsewhere
-- A patient trader hopping between two systems earns no more than a bounty (about 70 per jump at 500cr)
-- The informed single-trip numbers in Feature 03 stay valid for first visits
+| Refresh period | Net per jump at 100 / 500 / 2,000cr | Trips 1–4, per trip | Trips 31–40, per trip |
+|---|---|---|---|
+| 10 jumps | about 99 / 122 / 122 | 62–245 | about 130 |
+| 20 jumps (chosen) | about 60 / 66 / 71 | 69–251 | about 25 |
+| 30 jumps | about 59 / 69 / 74 | 67–257 | about 120 (refreshed) |
+
+- **The impact and recovery rates barely matter.** Raising impact from 1.5% to 5% per ton and slowing recovery to 2% per jump moved the 10-jump result from about 122 to 111, because a trader who rotates through the eight commodities leaves each one time to recover. The refresh period is the lever that works.
+- **Chosen:** 20 jumps, impact 1.5% per ton, recovery 10% per jump. A route earns well for the first trips (about 190 to 250 per trip), then collapses to about 25 per trip until the market refreshes, averaging about 60 to 71 net per jump, level with the best bounty (about 69) and above the best courier job (about 53).
+- The informed single-trip numbers in Feature 03 stay valid for first visits.
+- **Caveat.** A real player has many systems to choose from and will move on when a route is spent, so this measures the safe two-system loop, not trading in general.
+
+`tests/market_sim.rs` keeps this: a worked route nets at most 80 and at least 40 per jump at each capital level, and later trips pay at most half what the first trips do.
 
 ## Open Questions
-- **Period length.** 10 jumps is a guess. Too short and hopping still works; too long and a bad market is stuck for a long time.
+- **Period length.** 20 jumps, set by simulation (see Balance). A longer period starves a single route for longer; a bad market stays bad for the whole period, though the player can trade elsewhere.
 - **Impact size.** 1.5% per ton makes a 20-ton sale move a price by 30%. That may be too harsh for small holds or too soft for 100-ton ships. It may need to scale with the system's population.
 - **Supply jobs.** Once markets move, a shortage can drive jobs. That is a later feature.
 
 ## Acceptance Criteria
 - [ ] Arriving at a system does not change its prices; only the world clock does
-- [x] A system's undisturbed prices and stock are identical on repeat visits within a 10-jump period and re-roll after it; arriving never resets either
+- [x] A system's undisturbed prices and stock are identical on repeat visits within a 20-jump period and re-roll after it; arriving never resets either
 - [ ] A pushed commodity's marker appears after trading and clears after 16 jumps
 - [x] Selling 20 tons visibly lowers the sell price at that system, and later visits show the lowered price recovering by 10% of the gap per jump
 - [x] Buying raises the buy price and lowers stock in the same way
-- [ ] A simulation of repeated trips on one route shows the margin falling as in Balance
-- [ ] The patient-trader strategy no longer beats bounties
+- [x] A simulation of repeated trips on one route shows the margin falling as in Balance
+- [x] The patient-trader strategy no longer beats bounties
 - [x] The world clock and market state persist; old saves still load
 
 ## Testing (write first)
@@ -70,7 +77,7 @@ Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capit
 - [x] Stock depletion and recovery
 - [x] Standing modifier applied after impact, and `market`, `buy` and `sell` agree
 - [x] Old-save compatibility
-- [ ] Simulation: repeated-route income by trip number, and the patient-trader strategy
+- [x] Simulation: repeated-route income by trip number, and the patient-trader strategy
 
 ## Dependencies
 - Feature 03: Trading ✅ (prices, stock)
