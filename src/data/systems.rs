@@ -25,7 +25,6 @@ pub enum EconomyType {
 
 impl EconomyType {
     /// Get a human-readable name for the economy type
-    #[allow(dead_code)]
     pub fn display_name(&self) -> &'static str {
         match self {
             EconomyType::RichIndustrial => "Rich Industrial",
@@ -68,7 +67,6 @@ impl GovernmentType {
     }
 
     /// Get a human-readable name for the government type
-    #[allow(dead_code)]
     pub fn display_name(&self) -> &'static str {
         match self {
             GovernmentType::Anarchy => "Anarchy",
@@ -166,37 +164,31 @@ impl StarSystem {
     }
 
     /// Get the economy type
-    #[allow(dead_code)]
     pub fn economy(&self) -> &EconomyType {
         &self.economy
     }
 
     /// Get the government type
-    #[allow(dead_code)]
     pub fn government(&self) -> &GovernmentType {
         &self.government
     }
 
     /// Get technology level
-    #[allow(dead_code)]
     pub fn tech_level(&self) -> u8 {
         self.tech_level
     }
 
     /// Get economic turnover
-    #[allow(dead_code)]
     pub fn turnover(&self) -> u32 {
         self.turnover
     }
 
     /// Get population
-    #[allow(dead_code)]
     pub fn population(&self) -> &str {
         &self.population
     }
 
     /// Get system description
-    #[allow(dead_code)]
     pub fn description(&self) -> &str {
         &self.description
     }
@@ -286,7 +278,6 @@ impl SystemManager {
     }
 
     /// Calculate travel time in seconds (simplified)
-    #[allow(dead_code)]
     pub fn calculate_travel_time(&self, from: &str, to: &str) -> Option<u64> {
         self.calculate_distance(from, to)
             .map(|distance| (distance * 10.0) as u64)
