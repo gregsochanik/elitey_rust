@@ -77,7 +77,7 @@ Fuel costs about 6.8 per trip, so a Criminal still nets a small profit and is ne
 - [x] Clamping at both ends
 - [x] Price modifier applied to buy and to sell with the rule above; `market`, `buy` and `sell` agree on the same price
 - [x] Narcotics penalty on buy and on sell; other goods unaffected
-- [ ] Old saves without a reputation score load as 0 (Neutral); standing and price modifier are derived from the score after loading, never stored
+- [x] Old saves without a reputation score load as 0 (Neutral); standing and price modifier are derived from the score after loading, never stored
 - [x] Simulation: informed trader earnings by standing
 
 ## Dependencies
