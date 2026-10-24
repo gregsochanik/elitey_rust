@@ -42,14 +42,21 @@ fn main() -> Result<()> {
 
         // Get user input
         let input = input::get_input()?;
+        let end_of_input = input.is_empty();
         let command_parts: Vec<&str> = input.split_whitespace().collect();
 
         // Process command
-        if command_parts.is_empty() {
+        if command_parts.is_empty() && !end_of_input {
             continue;
         }
 
-        match command_parts[0].to_lowercase().as_str() {
+        let command = if end_of_input {
+            "quit".to_string()
+        } else {
+            command_parts[0].to_lowercase()
+        };
+
+        match command.as_str() {
             "help" => {
                 display::show_help();
             }
