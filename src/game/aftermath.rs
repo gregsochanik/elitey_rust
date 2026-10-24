@@ -245,4 +245,15 @@ mod tests {
         assert_eq!(ship.cargo_used(), 4);
         assert_eq!(ship.hull_percentage, 65);
     }
+
+    #[test]
+    fn defeat_also_strips_contract_cargo() {
+        let (mut commander, mut ship) = setup(100, &[(CommodityType::Food, 3)]);
+        assert!(ship.cargo_hold.reserve(8));
+
+        settle(Outcome::Defeat, 0, &mut commander, &mut ship, &mut rng());
+
+        assert_eq!(ship.cargo_used(), 0);
+        assert_eq!(ship.cargo_hold.reserved, 0);
+    }
 }

@@ -1,3 +1,4 @@
+use crate::data::commodities::CommodityType;
 use crate::data::systems::{GovernmentType, StarSystem};
 use crate::game::aftermath::settle_with_reward;
 use crate::game::combat::Outcome;
@@ -20,6 +21,9 @@ const REWARD_PER_FUEL: f64 = 7.0;
 const BOUNTY_BASE_REWARD: f64 = 80.0;
 const BOUNTY_REWARD_PER_FUEL: f64 = 10.0;
 const BOUNTY_SHARE: f64 = 0.3;
+const FREIGHT_SHARE: f64 = 0.3;
+const MIN_FREIGHT_TONS: u32 = 5;
+const FREIGHT_TONS_PER_BONUS: f64 = 20.0;
 
 /// What a job asks of the player
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -29,6 +33,8 @@ pub enum JobKind {
     Courier,
     /// Hunt a pirate raider at another system
     Bounty,
+    /// Haul client cargo to another system for a premium that grows with the load
+    Freight,
 }
 
 /// Who a kind of job is posted for; the lawful, criminal and gateway kinds arrive with their jobs
@@ -91,13 +97,23 @@ impl JobKind {
     pub fn track(&self) -> Track {
         match self {
             JobKind::Courier | JobKind::Bounty => Track::Ordinary,
+            JobKind::Freight => Track::Lawful,
         }
     }
+}
 
-    pub fn describe(&self, destination: &str) -> String {
-        match self {
-            JobKind::Courier => format!("Courier to {}", destination),
-            JobKind::Bounty => format!("Bounty: pirate raider near {}", destination),
+impl Job {
+    pub fn describe(&self) -> String {
+        match (self.kind, &self.commodity) {
+            (JobKind::Courier, _) => format!("Courier to {}", self.destination),
+            (JobKind::Bounty, _) => format!("Bounty: pirate raider near {}", self.destination),
+            (JobKind::Freight, Some(commodity)) => format!(
+                "Freight: {} tons of {} to {}",
+                self.tons,
+                commodity.name(),
+                self.destination
+            ),
+            (JobKind::Freight, None) => format!("Freight to {}", self.destination),
         }
     }
 }
@@ -107,6 +123,12 @@ impl JobKind {
 pub struct Job {
     #[serde(default)]
     pub kind: JobKind,
+    /// Freight only: tons of client cargo to carry
+    #[serde(default)]
+    pub tons: u32,
+    /// Freight only: what the cargo is
+    #[serde(default)]
+    pub commodity: Option<CommodityType>,
     pub destination: String,
     pub distance: f64,
     pub fuel_cost: u32,
@@ -125,6 +147,7 @@ pub struct ActiveJob {
 pub fn accept(
     board: &mut JobBoard,
     active: &mut Vec<ActiveJob>,
+    ship: &mut Ship,
     location: &str,
     number: usize,
 ) -> Result<Job, String> {
@@ -140,6 +163,14 @@ pub fn accept(
     if number == 0 || number > board.jobs.len() {
         return Err(format!("There is no job {} on the board.", number));
     }
+    let wanted = &board.jobs[number - 1];
+    if wanted.kind == JobKind::Freight && !ship.cargo_hold.reserve(wanted.tons) {
+        return Err(format!(
+            "No room: the freight is {} tons and you have {} free.",
+            wanted.tons,
+            ship.cargo_available()
+        ));
+    }
     let job = board.jobs.remove(number - 1);
     active.push(ActiveJob {
         jumps_left: job.deadline_jumps,
@@ -152,12 +183,14 @@ pub fn accept(
 pub fn abandon(
     active: &mut Vec<ActiveJob>,
     commander: &mut Commander,
+    ship: &mut Ship,
     number: usize,
 ) -> Result<Job, String> {
     if number == 0 || number > active.len() {
         return Err(format!("You have no job {}.", number));
     }
     let abandoned = active.remove(number - 1);
+    release_freight(&abandoned.job, ship);
     let change = commander.change_reputation(ABANDON_REPUTATION);
     if let Some(standing) = change.new_standing {
         crate::utils::display::show_info(&format!("Your standing is now {}.", standing.name()));
@@ -175,6 +208,13 @@ fn reputation_messages(
     }
 }
 
+/// Give the hold room back when a freight job ends, however it ends
+fn release_freight(job: &Job, ship: &mut Ship) {
+    if job.kind == JobKind::Freight {
+        ship.cargo_hold.release(job.tons);
+    }
+}
+
 /// What arriving at a system did to the player's jobs
 #[derive(Debug, Default)]
 pub struct Arrival {
@@ -189,6 +229,7 @@ pub struct Arrival {
 pub fn settle_arrival(
     active: &mut Vec<ActiveJob>,
     commander: &mut Commander,
+    ship: &mut Ship,
     arrived_at: &str,
 ) -> Arrival {
     let mut arrival = Arrival::default();
@@ -199,17 +240,36 @@ pub fn settle_arrival(
         let here = entry.job.destination.eq_ignore_ascii_case(arrived_at);
         if here && entry.job.kind == JobKind::Bounty {
             arrival.bounties.push(entry);
-        } else if here {
-            commander.add_credits(entry.job.reward);
+        } else if here
+            && entry.job.kind == JobKind::Freight
+            && ship.cargo_hold.reserved < entry.job.tons
+        {
+            ship.cargo_hold.release(entry.job.tons);
             arrival.messages.push(format!(
-                "Delivered the parcel to {}: +{}cr.",
-                entry.job.destination, entry.job.reward
+                "The freight for {} was lost on the way and the contract is void.",
+                entry.job.destination
+            ));
+            reputation_messages(
+                &mut arrival.messages,
+                commander.change_reputation(FAILURE_REPUTATION),
+            );
+        } else if here {
+            release_freight(&entry.job, ship);
+            commander.add_credits(entry.job.reward);
+            let what = match entry.job.kind {
+                JobKind::Freight => format!("{} tons of freight", entry.job.tons),
+                _ => "the parcel".to_string(),
+            };
+            arrival.messages.push(format!(
+                "Delivered {} to {}: +{}cr.",
+                what, entry.job.destination, entry.job.reward
             ));
             reputation_messages(
                 &mut arrival.messages,
                 commander.change_reputation(DELIVERY_REPUTATION),
             );
         } else if entry.jumps_left == 0 {
+            release_freight(&entry.job, ship);
             arrival.messages.push(format!(
                 "The job to {} ran out of time and was cancelled.",
                 entry.job.destination
@@ -283,6 +343,12 @@ pub fn courier_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
 
+/// Courier pay for the same distance, scaled up by the size of the load
+pub fn freight_reward(fuel_cost: u32, tons: u32, variance: f64) -> u32 {
+    let load_bonus = 1.0 + f64::from(tons) / FREIGHT_TONS_PER_BONUS;
+    ((BASE_REWARD + REWARD_PER_FUEL * f64::from(fuel_cost)) * load_bonus * variance).round() as u32
+}
+
 pub fn bounty_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BOUNTY_BASE_REWARD + BOUNTY_REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
@@ -293,9 +359,10 @@ pub fn generate_board_for(
     systems: &[&StarSystem],
     rng: &mut impl Rng,
     standing: Standing,
+    hold: u32,
 ) -> Vec<Job> {
     let access = JobAccess::for_standing_at(standing, &origin.government);
-    generate_board_with(origin, systems, rng, BOUNTY_SHARE, access)
+    generate_board_with(origin, systems, rng, BOUNTY_SHARE, access, hold)
 }
 
 fn generate_board_with(
@@ -304,6 +371,7 @@ fn generate_board_with(
     rng: &mut impl Rng,
     bounty_share: f64,
     access: JobAccess,
+    hold: u32,
 ) -> Vec<Job> {
     let mut destinations: Vec<&&StarSystem> = systems
         .iter()
@@ -321,20 +389,38 @@ fn generate_board_with(
         .map(|destination| {
             let distance = origin.distance_to(destination);
             let fuel_cost = fuel_for_distance(distance);
-            let kind = if rng.gen_bool(bounty_share) && access.allows(JobKind::Bounty.track()) {
+            let roll = rng.gen::<f64>();
+            let kind = if roll < bounty_share && access.allows(JobKind::Bounty.track()) {
                 JobKind::Bounty
+            } else if roll >= 1.0 - FREIGHT_SHARE && access.allows(JobKind::Freight.track()) {
+                JobKind::Freight
             } else {
                 JobKind::Courier
             };
             let variance = rng.gen_range(0.9..=1.1);
+            let (tons, commodity) = if kind == JobKind::Freight {
+                let legal: Vec<CommodityType> = CommodityType::all()
+                    .into_iter()
+                    .filter(|commodity| !commodity.is_illegal())
+                    .collect();
+                (
+                    rng.gen_range(MIN_FREIGHT_TONS..=hold.max(MIN_FREIGHT_TONS)),
+                    legal.choose(rng).cloned(),
+                )
+            } else {
+                (0, None)
+            };
             Job {
                 kind,
+                tons,
+                commodity,
                 destination: destination.name.clone(),
                 distance,
                 fuel_cost,
                 reward: match kind {
                     JobKind::Courier => courier_reward(fuel_cost, variance),
                     JobKind::Bounty => bounty_reward(fuel_cost, variance),
+                    JobKind::Freight => freight_reward(fuel_cost, tons, variance),
                 },
                 deadline_jumps: rng.gen_range(2..=4),
             }
@@ -354,9 +440,10 @@ impl JobBoard {
         systems: &[&StarSystem],
         rng: &mut impl Rng,
         standing: Standing,
+        hold: u32,
     ) -> &[Job] {
         if self.location != origin.name {
-            self.jobs = generate_board_for(origin, systems, rng, standing);
+            self.jobs = generate_board_for(origin, systems, rng, standing, hold);
             self.location = origin.name.clone();
         }
         &self.jobs
@@ -380,6 +467,38 @@ mod tests {
     use crate::data::systems::SystemManager;
     use rand::rngs::StdRng;
     use rand::SeedableRng;
+
+    const HOLD: u32 = 20;
+
+    fn board_for(
+        origin: &StarSystem,
+        systems: &[&StarSystem],
+        rng: &mut impl Rng,
+        standing: Standing,
+    ) -> Vec<Job> {
+        generate_board_for(origin, systems, rng, standing, HOLD)
+    }
+
+    fn settle(active: &mut Vec<ActiveJob>, commander: &mut Commander, arrived_at: &str) -> Arrival {
+        settle_arrival(active, commander, &mut Ship::new_cobra_mk3(), arrived_at)
+    }
+
+    fn accept_on_a_fresh_ship(
+        board: &mut JobBoard,
+        active: &mut Vec<ActiveJob>,
+        location: &str,
+        number: usize,
+    ) -> Result<Job, String> {
+        accept(board, active, &mut Ship::new_cobra_mk3(), location, number)
+    }
+
+    fn abandon_on_a_fresh_ship(
+        active: &mut Vec<ActiveJob>,
+        commander: &mut Commander,
+        number: usize,
+    ) -> Result<Job, String> {
+        abandon(active, commander, &mut Ship::new_cobra_mk3(), number)
+    }
 
     fn galaxy() -> SystemManager {
         SystemManager::new().expect("galaxy data")
@@ -414,6 +533,7 @@ mod tests {
                 &mut StdRng::seed_from_u64(seed),
                 0.3,
                 JobAccess::for_standing_at(Standing::Neutral, &origin.government),
+                HOLD,
             );
             for job in &board {
                 total += 1;
@@ -444,7 +564,7 @@ mod tests {
         bounty.job.kind = JobKind::Bounty;
         let mut active = vec![bounty, active_job("DISO", 40, 2)];
 
-        let arrival = settle_arrival(&mut active, &mut commander, "DISO");
+        let arrival = settle(&mut active, &mut commander, "DISO");
 
         assert_eq!(arrival.bounties.len(), 1);
         assert_eq!(commander.credits(), 140);
@@ -458,7 +578,7 @@ mod tests {
         bounty.job.kind = JobKind::Bounty;
         let mut active = vec![bounty];
 
-        let arrival = settle_arrival(&mut active, &mut commander, "LEESTI");
+        let arrival = settle(&mut active, &mut commander, "LEESTI");
 
         assert!(arrival.bounties.is_empty());
         assert!(active.is_empty());
@@ -561,7 +681,7 @@ mod tests {
         let origin = galaxy.get_system("LAVE").unwrap();
 
         for seed in 0..200u64 {
-            let board = generate_board_for(
+            let board = board_for(
                 origin,
                 &systems,
                 &mut StdRng::seed_from_u64(seed),
@@ -587,6 +707,9 @@ mod tests {
                 let base = match job.kind {
                     JobKind::Courier => 20.0 + 7.0 * f64::from(job.fuel_cost),
                     JobKind::Bounty => 80.0 + 10.0 * f64::from(job.fuel_cost),
+                    JobKind::Freight => {
+                        (20.0 + 7.0 * f64::from(job.fuel_cost)) * (1.0 + f64::from(job.tons) / 20.0)
+                    }
                 };
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
@@ -606,7 +729,7 @@ mod tests {
                     other.name != origin.name && origin.distance_to(other) <= MAX_JOB_RANGE
                 })
                 .count();
-            let board = generate_board_for(
+            let board = board_for(
                 origin,
                 &systems,
                 &mut StdRng::seed_from_u64(5),
@@ -632,13 +755,13 @@ mod tests {
         let origin_a = first.get_system("LAVE").unwrap();
         let origin_b = second.get_system("LAVE").unwrap();
 
-        let a = generate_board_for(
+        let a = board_for(
             origin_a,
             &first.get_all_systems(),
             &mut StdRng::seed_from_u64(7),
             Standing::Neutral,
         );
-        let b = generate_board_for(
+        let b = board_for(
             origin_b,
             &second.get_all_systems(),
             &mut StdRng::seed_from_u64(7),
@@ -653,13 +776,13 @@ mod tests {
         let systems = galaxy.get_all_systems();
         let origin = galaxy.get_system("LAVE").unwrap();
 
-        let a = generate_board_for(
+        let a = board_for(
             origin,
             &systems,
             &mut StdRng::seed_from_u64(7),
             Standing::Neutral,
         );
-        let b = generate_board_for(
+        let b = board_for(
             origin,
             &systems,
             &mut StdRng::seed_from_u64(7),
@@ -678,6 +801,7 @@ mod tests {
             &systems,
             &mut StdRng::seed_from_u64(2),
             Standing::Neutral,
+            HOLD,
         );
         (board, Vec::new())
     }
@@ -688,7 +812,7 @@ mod tests {
         let before = board.jobs.len();
         let second = board.jobs[1].clone();
 
-        let job = accept(&mut board, &mut active, "LAVE", 2).unwrap();
+        let job = accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 2).unwrap();
 
         assert_eq!(job, second);
         assert_eq!(board.jobs.len(), before - 1);
@@ -701,11 +825,11 @@ mod tests {
     fn a_fourth_active_job_is_refused() {
         let (mut board, mut active) = board_with_jobs();
         for _ in 0..3 {
-            accept(&mut board, &mut active, "LAVE", 1).unwrap();
+            accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
         }
         let remaining = board.jobs.len();
 
-        assert!(accept(&mut board, &mut active, "LAVE", 1).is_err());
+        assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).is_err());
         assert_eq!(active.len(), 3);
         assert_eq!(board.jobs.len(), remaining);
     }
@@ -714,6 +838,8 @@ mod tests {
         ActiveJob {
             job: Job {
                 kind: JobKind::Courier,
+                tons: 0,
+                commodity: None,
                 destination: destination.to_string(),
                 distance: 2.3,
                 fuel_cost: 3,
@@ -729,7 +855,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 3)];
 
-        let messages = settle_arrival(&mut active, &mut commander, "DISO").messages;
+        let messages = settle(&mut active, &mut commander, "DISO").messages;
 
         assert!(active.is_empty());
         assert_eq!(commander.credits(), 150);
@@ -742,7 +868,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 1)];
 
-        settle_arrival(&mut active, &mut commander, "diso");
+        settle(&mut active, &mut commander, "diso");
 
         assert!(active.is_empty());
         assert_eq!(commander.credits(), 150);
@@ -753,7 +879,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 1)];
 
-        let messages = settle_arrival(&mut active, &mut commander, "LEESTI").messages;
+        let messages = settle(&mut active, &mut commander, "LEESTI").messages;
 
         assert!(active.is_empty());
         assert_eq!(commander.credits(), 100);
@@ -766,7 +892,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 3)];
 
-        settle_arrival(&mut active, &mut commander, "LEESTI");
+        settle(&mut active, &mut commander, "LEESTI");
 
         assert_eq!(active[0].jumps_left, 2);
         assert_eq!(commander.reputation, 0);
@@ -781,7 +907,7 @@ mod tests {
             active_job("LEESTI", 70, 3),
         ];
 
-        settle_arrival(&mut active, &mut commander, "DISO");
+        settle(&mut active, &mut commander, "DISO");
 
         assert_eq!(commander.credits(), 210);
         assert_eq!(commander.reputation, 4);
@@ -792,25 +918,25 @@ mod tests {
     #[test]
     fn bad_numbers_and_unseen_boards_are_refused() {
         let (mut board, mut active) = board_with_jobs();
-        assert!(accept(&mut board, &mut active, "LAVE", 0).is_err());
-        assert!(accept(&mut board, &mut active, "LAVE", 99).is_err());
-        assert!(accept(&mut board, &mut active, "DISO", 1).is_err());
+        assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 0).is_err());
+        assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 99).is_err());
+        assert!(accept_on_a_fresh_ship(&mut board, &mut active, "DISO", 1).is_err());
         assert!(active.is_empty());
     }
 
     #[test]
     fn abandoning_removes_the_job_and_costs_reputation() {
         let (mut board, mut active) = board_with_jobs();
-        accept(&mut board, &mut active, "LAVE", 1).unwrap();
-        accept(&mut board, &mut active, "LAVE", 1).unwrap();
+        accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
+        accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
         let kept = active[1].clone();
         let mut commander = Commander::new("Test".to_string());
 
-        abandon(&mut active, &mut commander, 1).unwrap();
+        abandon_on_a_fresh_ship(&mut active, &mut commander, 1).unwrap();
 
         assert_eq!(active, vec![kept]);
         assert_eq!(commander.reputation, -3);
-        assert!(abandon(&mut active, &mut commander, 5).is_err());
+        assert!(abandon_on_a_fresh_ship(&mut active, &mut commander, 5).is_err());
         assert_eq!(commander.reputation, -3);
     }
 
@@ -823,16 +949,16 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(1);
 
         let first = board
-            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
             .to_vec();
         let again = board
-            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
             .to_vec();
         assert_eq!(first, again);
 
         board.clear();
         let rerolled = board
-            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
             .to_vec();
         assert_ne!(first, rerolled);
     }
@@ -912,10 +1038,211 @@ mod tests {
         let systems = galaxy.get_all_systems();
         for origin in &systems {
             for standing in [Standing::Criminal, Standing::Neutral, Standing::Respected] {
-                let board =
-                    generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(3), standing);
+                let board = board_for(origin, &systems, &mut StdRng::seed_from_u64(3), standing);
                 assert!(!board.is_empty(), "{} for {:?}", origin.name, standing);
             }
         }
+    }
+
+    fn lawful_origin(galaxy: &SystemManager) -> &StarSystem {
+        galaxy
+            .get_all_systems()
+            .into_iter()
+            .find(|system| system.government.is_lawful())
+            .expect("a lawful system")
+    }
+
+    fn freight(destination: &str, tons: u32, reward: u32, jumps_left: u32) -> ActiveJob {
+        ActiveJob {
+            job: Job {
+                kind: JobKind::Freight,
+                tons,
+                commodity: Some(CommodityType::Machinery),
+                destination: destination.to_string(),
+                distance: 2.3,
+                fuel_cost: 3,
+                reward,
+                deadline_jumps: 3,
+            },
+            jumps_left,
+        }
+    }
+
+    #[test]
+    fn freight_pay_grows_with_the_load() {
+        assert_eq!(freight_reward(3, 0, 1.0), 41);
+        assert_eq!(freight_reward(3, 20, 1.0), 82);
+        assert_eq!(freight_reward(3, 60, 1.0), 164);
+        assert_eq!(freight_reward(3, 10, 1.1), 68);
+    }
+
+    #[test]
+    fn freight_is_only_offered_to_good_standing_at_lawful_systems() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let origin = lawful_origin(&galaxy);
+
+        let freight_seen = |standing| {
+            (0..100u64).any(|seed| {
+                generate_board_for(
+                    origin,
+                    &systems,
+                    &mut StdRng::seed_from_u64(seed),
+                    standing,
+                    20,
+                )
+                .iter()
+                .any(|job| job.kind == JobKind::Freight)
+            })
+        };
+        assert!(freight_seen(Standing::Trusted));
+        assert!(freight_seen(Standing::Respected));
+        assert!(!freight_seen(Standing::Neutral));
+        assert!(!freight_seen(Standing::Disreputable));
+        assert!(!freight_seen(Standing::Criminal));
+    }
+
+    #[test]
+    fn freight_loads_are_legal_and_fit_the_hold() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        let origin = lawful_origin(&galaxy);
+
+        for (hold, seeds) in [(20u32, 200u64), (60, 200)] {
+            for seed in 0..seeds {
+                for job in generate_board_for(
+                    origin,
+                    &systems,
+                    &mut StdRng::seed_from_u64(seed),
+                    Standing::Trusted,
+                    hold,
+                )
+                .iter()
+                .filter(|job| job.kind == JobKind::Freight)
+                {
+                    assert!(
+                        (MIN_FREIGHT_TONS..=hold).contains(&job.tons),
+                        "{}",
+                        job.tons
+                    );
+                    assert!(!job.commodity.as_ref().unwrap().is_illegal());
+                }
+            }
+        }
+    }
+
+    fn board_with_freight(tons: u32) -> (JobBoard, Vec<ActiveJob>, String) {
+        let (mut board, active) = board_with_jobs();
+        board.jobs[0] = freight("DISO", tons, 100, 3).job;
+        let location = board.location.clone();
+        (board, active, location)
+    }
+
+    #[test]
+    fn accepting_freight_reserves_hold_room_and_a_full_hold_refuses_it() {
+        let (mut board, mut active, location) = board_with_freight(15);
+        let mut ship = Ship::new_cobra_mk3();
+
+        accept(&mut board, &mut active, &mut ship, &location, 1).unwrap();
+        assert_eq!(ship.cargo_hold.reserved, 15);
+        assert_eq!(ship.cargo_available(), 5);
+
+        let (mut board, mut active, location) = board_with_freight(15);
+        let mut ship = Ship::new_cobra_mk3();
+        ship.add_cargo(CommodityType::Food, 10);
+        let before = board.jobs.len();
+        assert!(accept(&mut board, &mut active, &mut ship, &location, 1).is_err());
+        assert!(active.is_empty());
+        assert_eq!(board.jobs.len(), before);
+        assert_eq!(ship.cargo_hold.reserved, 0);
+    }
+
+    #[test]
+    fn delivering_freight_pays_and_frees_the_hold() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        assert!(ship.cargo_hold.reserve(12));
+        let mut active = vec![freight("DISO", 12, 90, 2)];
+
+        let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 190);
+        assert_eq!(commander.reputation, 2);
+        assert_eq!(ship.cargo_hold.reserved, 0);
+        assert!(arrival
+            .messages
+            .iter()
+            .any(|m| m.contains("12 tons of freight")));
+    }
+
+    #[test]
+    fn freight_that_runs_out_of_time_or_is_abandoned_frees_the_hold_and_costs_reputation() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        assert!(ship.cargo_hold.reserve(12));
+        let mut active = vec![freight("DISO", 12, 90, 1)];
+        settle_arrival(&mut active, &mut commander, &mut ship, "LEESTI");
+        assert!(active.is_empty());
+        assert_eq!(ship.cargo_hold.reserved, 0);
+        assert_eq!(commander.reputation, -3);
+
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        assert!(ship.cargo_hold.reserve(12));
+        let mut active = vec![freight("DISO", 12, 90, 3)];
+        abandon(&mut active, &mut commander, &mut ship, 1).unwrap();
+        assert_eq!(ship.cargo_hold.reserved, 0);
+        assert_eq!(commander.reputation, -3);
+    }
+
+    #[test]
+    fn freight_lost_on_the_way_voids_the_contract() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        assert!(ship.cargo_hold.reserve(12));
+        let mut active = vec![freight("DISO", 12, 90, 2)];
+
+        crate::game::events::apply_cargo_loss(&mut ship, &crate::game::events::CargoLoss::Tons(20));
+        assert_eq!(ship.cargo_hold.reserved, 0);
+
+        let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+        assert!(active.is_empty());
+        assert_eq!(commander.credits(), 100);
+        assert_eq!(commander.reputation, -3);
+        assert!(arrival
+            .messages
+            .iter()
+            .any(|m| m.contains("lost on the way")));
+    }
+
+    #[test]
+    fn cargo_loss_takes_goods_first_then_contract_cargo() {
+        let mut ship = Ship::new_cobra_mk3();
+        ship.add_cargo(CommodityType::Food, 4);
+        assert!(ship.cargo_hold.reserve(10));
+
+        crate::game::events::apply_cargo_loss(&mut ship, &crate::game::events::CargoLoss::Tons(7));
+
+        assert_eq!(ship.cargo_hold.goods_weight(), 0);
+        assert_eq!(ship.cargo_hold.reserved, 7);
+    }
+
+    #[test]
+    fn jobs_saved_without_freight_fields_load_with_none() {
+        let json = r#"{"kind":"Courier","destination":"DISO","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
+        let job: Job = serde_json::from_str(json).unwrap();
+        assert_eq!(job.tons, 0);
+        assert_eq!(job.commodity, None);
+    }
+
+    #[test]
+    fn jobs_describe_themselves_by_kind() {
+        let entry = freight("DISO", 12, 90, 2);
+        assert_eq!(
+            entry.job.describe(),
+            "Freight: 12 tons of Machinery to DISO"
+        );
+        assert_eq!(active_job("DISO", 41, 2).job.describe(), "Courier to DISO");
     }
 }

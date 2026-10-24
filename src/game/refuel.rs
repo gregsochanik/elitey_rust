@@ -5,7 +5,7 @@ pub const CREDITS_PER_UNIT: u32 = 2;
 const RESCUE_REPUTATION: i32 = -2;
 
 fn is_stranded(commander: &Commander, ship: &Ship, nearest_jump_cost: u32) -> bool {
-    ship.cargo_used() == 0
+    ship.cargo_hold().goods_weight() == 0
         && ship.fuel_current + commander.credits() / CREDITS_PER_UNIT < nearest_jump_cost
 }
 
@@ -199,5 +199,13 @@ mod tests {
             assert_eq!(ship.fuel_current, 1);
             assert_eq!(commander.credits(), 100);
         }
+    }
+
+    #[test]
+    fn contract_cargo_does_not_stop_a_rescue_because_it_cannot_be_sold() {
+        let (mut commander, mut ship) = low_on_fuel(1, 1);
+        assert!(ship.cargo_hold.reserve(10));
+        assert!(handle(&[], &mut commander, &mut ship, 3));
+        assert_eq!(ship.fuel_current, 3);
     }
 }

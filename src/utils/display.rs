@@ -245,7 +245,7 @@ pub fn show_missions(active: &[ActiveJob]) {
         println!(
             "{}. {} - Reward: {}cr - {} left",
             index + 1,
-            entry.job.kind.describe(&entry.job.destination).yellow(),
+            entry.job.describe().yellow(),
             entry.job.reward.to_string().green(),
             jumps(entry.jumps_left)
         );
@@ -263,7 +263,7 @@ pub fn show_jobs(location: &str, jobs: &[Job]) {
         println!(
             "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
             index + 1,
-            job.kind.describe(&job.destination).yellow(),
+            job.describe().yellow(),
             job.distance,
             job.fuel_cost,
             job.reward.to_string().green(),
