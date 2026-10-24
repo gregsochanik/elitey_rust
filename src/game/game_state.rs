@@ -484,7 +484,13 @@ impl GameState {
         let systems = self.travel_handler.get_available_systems();
         Some(
             self.job_board
-                .jobs_at(origin, &systems, rng, self.commander.standing())
+                .jobs_at(
+                    origin,
+                    &systems,
+                    rng,
+                    self.commander.standing(),
+                    self.ship.cargo_capacity(),
+                )
                 .to_vec(),
         )
     }
@@ -492,7 +498,12 @@ impl GameState {
     /// Deliver, fight or fail active jobs after arriving at the commander's location
     pub fn settle_jobs(&mut self) {
         let arrived_at = self.commander.location.clone();
-        let arrival = jobs::settle_arrival(&mut self.active_jobs, &mut self.commander, &arrived_at);
+        let arrival = jobs::settle_arrival(
+            &mut self.active_jobs,
+            &mut self.commander,
+            &mut self.ship,
+            &arrived_at,
+        );
         for message in &arrival.messages {
             println!("{}", message);
         }
@@ -534,6 +545,7 @@ impl GameState {
         jobs::accept(
             &mut self.job_board,
             &mut self.active_jobs,
+            &mut self.ship,
             &self.commander.location,
             number,
         )
@@ -541,7 +553,12 @@ impl GameState {
 
     /// Drop active job `number`, losing reputation
     pub fn abandon_job(&mut self, number: usize) -> Result<Job, String> {
-        jobs::abandon(&mut self.active_jobs, &mut self.commander, number)
+        jobs::abandon(
+            &mut self.active_jobs,
+            &mut self.commander,
+            &mut self.ship,
+            number,
+        )
     }
 
     /// Handle accept command
@@ -552,7 +569,7 @@ impl GameState {
         match self.accept_job(number) {
             Ok(job) => show_success(&format!(
                 "Accepted: {} for {}cr within {} jumps.",
-                job.kind.describe(&job.destination),
+                job.describe(),
                 job.reward,
                 job.deadline_jumps
             )),
@@ -570,7 +587,7 @@ impl GameState {
                 "{}",
                 format!(
                     "Abandoned: {}. Reputation {:+}.",
-                    job.kind.describe(&job.destination),
+                    job.describe(),
                     jobs::ABANDON_REPUTATION
                 )
                 .yellow()

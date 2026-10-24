@@ -163,6 +163,9 @@ impl CargoItem {
 pub struct CargoHold {
     items: HashMap<CommodityType, u32>,
     pub capacity: u32,
+    /// Tons held for contracts: they take up room but are not goods and cannot be sold
+    #[serde(default)]
+    pub reserved: u32,
 }
 
 impl CargoHold {
@@ -170,12 +173,34 @@ impl CargoHold {
         Self {
             items: HashMap::new(),
             capacity,
+            reserved: 0,
         }
     }
 
-    /// Get current cargo weight
-    pub fn current_weight(&self) -> u32 {
+    /// Weight of the goods that can be sold
+    pub fn goods_weight(&self) -> u32 {
         self.items.values().sum()
+    }
+
+    /// Get current cargo weight, goods and contract cargo together
+    pub fn current_weight(&self) -> u32 {
+        self.goods_weight() + self.reserved
+    }
+
+    /// Hold room for contract cargo; false, changing nothing, if it does not fit
+    pub fn reserve(&mut self, tons: u32) -> bool {
+        if !self.can_add(tons) {
+            return false;
+        }
+        self.reserved += tons;
+        true
+    }
+
+    /// Give up to `tons` of contract cargo back and return how much was released
+    pub fn release(&mut self, tons: u32) -> u32 {
+        let released = tons.min(self.reserved);
+        self.reserved -= released;
+        released
     }
 
     /// Get remaining capacity

@@ -134,6 +134,7 @@ fn best_courier_net_per_jump(seeds: u64) -> f64 {
                 &all,
                 &mut StdRng::seed_from_u64(seed),
                 Standing::Neutral,
+                20,
             );
             let best = board
                 .iter()
@@ -248,6 +249,7 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
                 &all,
                 &mut StdRng::seed_from_u64(seed),
                 Standing::Neutral,
+                20,
             );
             let best = board
                 .iter()

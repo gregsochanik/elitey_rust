@@ -160,6 +160,7 @@ pub(crate) fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(Commod
                 remaining -= amount;
                 taken.push((item.commodity, amount));
             }
+            ship.cargo_hold.release(remaining);
             taken
         }
     }

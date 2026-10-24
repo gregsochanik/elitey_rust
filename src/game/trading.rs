@@ -576,8 +576,14 @@ impl TradingHandler {
         println!("\nCargo Hold ({}/{})", current_weight, capacity);
         println!("{}", "=".repeat(20));
 
+        if cargo_hold.reserved > 0 {
+            println!(
+                "Contract cargo: {} tons (not for sale)",
+                cargo_hold.reserved
+            );
+        }
         if cargo_hold.is_empty() {
-            println!("Cargo hold is empty");
+            println!("No goods in the hold");
         } else {
             let mut total_value = 0;
 
