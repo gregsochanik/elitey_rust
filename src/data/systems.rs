@@ -62,6 +62,11 @@ pub enum GovernmentType {
 }
 
 impl GovernmentType {
+    /// Whether the law is enforced here; Anarchy and Feudal systems are the lawless ones
+    pub fn is_lawful(&self) -> bool {
+        !matches!(self, GovernmentType::Anarchy | GovernmentType::Feudal)
+    }
+
     /// Get a human-readable name for the government type
     #[allow(dead_code)]
     pub fn display_name(&self) -> &'static str {

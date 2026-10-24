@@ -30,7 +30,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 13 | UI improvements | Spec only | – |
 | 16 | Jobs (v1: board, courier jobs, deadlines) | Done (v1) | 02, 05, 10, 14 |
 | 17 | Bounty jobs (v1: pirate hunt jobs using combat) | Done (v1) | 08, 12, 16 |
-| 18 | Contract tiers and criminal contracts (v1: freight, smuggling, standing-gated boards) | Spec only | 06, 08, 10, 14, 16, 17 |
+| 18 | Contract tiers and criminal contracts (v1: freight, smuggling, standing-gated boards) | In progress | 06, 08, 10, 14, 16, 17 |
 | 19 | Market dynamics (v1: market memory, price impact, recovery) | Done (v1) | 03, 05, 10, 16 |
 
 ## Roadmap
