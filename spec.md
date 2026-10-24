@@ -22,7 +22,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 06 | Dynamic events | Done (gaps in spec) | 02 |
 | 07 | Equipment (v1: slots, power, buy/sell, cargo racks) | Done (v1) | 04 |
 | 08 | Combat (v1: one pirate fight using equipment) | Done (v1) | 06, 07 |
-| 10 | Reputation (v1: standing, illegal-trade penalty, price modifier) | Spec only (v1 sliced) | 03, 06, 08 |
+| 10 | Reputation (v1: standing, illegal-trade penalty, price modifier) | In progress (v1 sliced) | 03, 06, 08 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
 | 12 | Ship repair (v1: `repair` for credits) | Done (v1) | 08 |
 | 14 | Refuelling (v1: `refuel` for credits) | Done (v1) | 02 |
