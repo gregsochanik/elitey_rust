@@ -1,9 +1,11 @@
 use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
 use crate::data::systems::{EconomyType, StarSystem, SystemManager};
 use crate::game::{Commander, Ship, TradeLog};
-use crate::utils::display::{show_error, show_success};
+use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
 use std::collections::HashMap;
+
+const ILLEGAL_TRADE_REPUTATION: i32 = -2;
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -256,7 +258,27 @@ impl TradingHandler {
             commodity.name(),
             total_cost
         ));
+        Self::penalise_illegal_trade(&commodity, commander);
         true
+    }
+
+    fn penalise_illegal_trade(commodity: &CommodityType, commander: &mut Commander) {
+        if !commodity.is_illegal() {
+            return;
+        }
+        let change = commander.change_reputation(ILLEGAL_TRADE_REPUTATION);
+        println!(
+            "{}",
+            format!(
+                "Trading {} is illegal. Reputation {:+}.",
+                commodity.name(),
+                change.applied
+            )
+            .yellow()
+        );
+        if let Some(standing) = change.new_standing {
+            show_info(&format!("Your standing is now {}.", standing.name()));
+        }
     }
 
     /// Execute a sell transaction
@@ -307,6 +329,7 @@ impl TradingHandler {
             commodity.name(),
             total_revenue
         ));
+        Self::penalise_illegal_trade(&commodity, commander);
         true
     }
 

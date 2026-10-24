@@ -53,7 +53,6 @@ impl CommodityType {
     }
 
     /// Check if this commodity is illegal
-    #[allow(dead_code)]
     pub fn is_illegal(&self) -> bool {
         matches!(self, CommodityType::Narcotics)
     }
