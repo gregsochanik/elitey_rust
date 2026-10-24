@@ -4,7 +4,7 @@
 Reputation is one score for how the galaxy sees the commander. It already exists (events and combat change it, `status` shows it) but does nothing. Version 1 gives it names and two real effects: how illegal trade hurts it, and better or worse prices. Factions, per-system standing and bounties come later.
 
 ## Status
-Spec only. Slices are tracked as GitHub issues.
+In progress. Slices are tracked as GitHub issues; standing and clamping are done.
 
 ## Version 1 Scope
 
@@ -52,8 +52,8 @@ A 4% bonus is about the size of the buy/sell spread (2–6%), so a Respected tra
 - **Recovery.** With no decay, a Criminal commander can only recover through events and combat victories. Is that enough?
 
 ## Acceptance Criteria
-- [ ] The score never leaves −100 to 100
-- [ ] `status` shows the standing next to the score, and standing changes are announced
+- [x] The score never leaves −100 to 100
+- [x] `status` shows the standing next to the score, and standing changes are announced
 - [ ] Trading Narcotics lowers reputation by 2 per transaction and says so
 - [ ] A Respected commander pays less and sells for more than a Neutral one; a Criminal pays more and sells for less
 - [ ] `market` shows the prices the player will actually get
@@ -61,8 +61,8 @@ A 4% bonus is about the size of the buy/sell spread (2–6%), so a Respected tra
 - [ ] A simulation keeps the price effect in a sensible range
 
 ## Testing (write first)
-- [ ] Standing for every boundary score (−100, −30, −29, −10, −9, 9, 10, 29, 30, 100)
-- [ ] Clamping at both ends
+- [x] Standing for every boundary score (−100, −30, −29, −10, −9, 9, 10, 29, 30, 100)
+- [x] Clamping at both ends
 - [ ] Price modifier applied to buy and to sell with the rule above; `market`, `buy` and `sell` agree on the same price
 - [ ] Narcotics penalty on buy and on sell; other goods unaffected
 - [ ] Old saves without a reputation score load as 0 (Neutral); standing and price modifier are derived from the score after loading, never stored

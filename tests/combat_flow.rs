@@ -87,3 +87,34 @@ fn repair_restores_hull_lost_in_a_fight() {
     assert_eq!(game.ship.hull_percentage, 100);
     assert_eq!(game.commander.credits, credits_before - lost * 2);
 }
+
+#[test]
+fn a_run_of_victories_raises_standing_and_announces_it() {
+    use elitey_rust::game::commander::Standing;
+
+    let mut game = new_game(100);
+    let mut announced = Vec::new();
+    for _ in 0..2 {
+        let mut commander = game.commander.clone();
+        let mut ship = game.ship.clone();
+        let messages = settle(
+            Outcome::Victory,
+            100,
+            &mut commander,
+            &mut ship,
+            &mut StdRng::seed_from_u64(1),
+        );
+        announced.extend(messages);
+        game.commander = commander;
+        game.ship = ship;
+    }
+
+    assert_eq!(game.commander.standing(), Standing::Trusted);
+    assert_eq!(
+        announced
+            .iter()
+            .filter(|m| m.contains("Your standing is now Trusted"))
+            .count(),
+        1
+    );
+}

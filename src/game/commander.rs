@@ -1,8 +1,42 @@
 use serde::{Deserialize, Serialize};
 
-/// Represents the player commander with all their data
 pub const STARTING_CREDITS: u32 = 100;
+pub const MIN_REPUTATION: i32 = -100;
+pub const MAX_REPUTATION: i32 = 100;
 
+/// How the galaxy sees the commander, derived from the reputation score
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Standing {
+    Criminal,
+    Disreputable,
+    Neutral,
+    Trusted,
+    Respected,
+}
+
+impl Standing {
+    pub fn from_score(score: i32) -> Self {
+        match score {
+            i32::MIN..=-30 => Standing::Criminal,
+            -29..=-10 => Standing::Disreputable,
+            -9..=9 => Standing::Neutral,
+            10..=29 => Standing::Trusted,
+            _ => Standing::Respected,
+        }
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            Standing::Criminal => "Criminal",
+            Standing::Disreputable => "Disreputable",
+            Standing::Neutral => "Neutral",
+            Standing::Trusted => "Trusted",
+            Standing::Respected => "Respected",
+        }
+    }
+}
+
+/// Represents the player commander with all their data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Commander {
     /// Commander's name
@@ -11,13 +45,25 @@ pub struct Commander {
     pub credits: u32,
     /// Current location (system name)
     pub location: String,
-    /// Standing earned through events; can be negative
+    /// Reputation score, kept between MIN_REPUTATION and MAX_REPUTATION
     #[serde(default)]
     pub reputation: i32,
 }
 
 #[allow(dead_code)]
 impl Commander {
+    pub fn standing(&self) -> Standing {
+        Standing::from_score(self.reputation)
+    }
+
+    /// Change reputation within its limits; returns the new standing if it changed
+    pub fn change_reputation(&mut self, delta: i32) -> Option<Standing> {
+        let before = self.standing();
+        self.reputation = (self.reputation + delta).clamp(MIN_REPUTATION, MAX_REPUTATION);
+        let after = self.standing();
+        (after != before).then_some(after)
+    }
+
     /// Create a new commander with starting conditions
     pub fn new(name: String) -> Self {
         Self {
@@ -118,6 +164,43 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         commander.set_location("Leesti".to_string());
         assert_eq!(commander.location(), "Leesti");
+    }
+
+    #[test]
+    fn standing_boundaries() {
+        let cases = [
+            (-100, Standing::Criminal),
+            (-30, Standing::Criminal),
+            (-29, Standing::Disreputable),
+            (-10, Standing::Disreputable),
+            (-9, Standing::Neutral),
+            (9, Standing::Neutral),
+            (10, Standing::Trusted),
+            (29, Standing::Trusted),
+            (30, Standing::Respected),
+            (100, Standing::Respected),
+        ];
+        for (score, expected) in cases {
+            assert_eq!(Standing::from_score(score), expected, "score {}", score);
+        }
+    }
+
+    #[test]
+    fn reputation_clamps_at_both_ends() {
+        let mut commander = Commander::new("Test".to_string());
+        commander.change_reputation(500);
+        assert_eq!(commander.reputation, 100);
+        commander.change_reputation(-500);
+        assert_eq!(commander.reputation, -100);
+    }
+
+    #[test]
+    fn change_reputation_reports_only_standing_changes() {
+        let mut commander = Commander::new("Test".to_string());
+        assert_eq!(commander.change_reputation(5), None);
+        assert_eq!(commander.change_reputation(5), Some(Standing::Trusted));
+        assert_eq!(commander.change_reputation(5), None);
+        assert_eq!(commander.change_reputation(-15), Some(Standing::Neutral));
     }
 
     #[test]

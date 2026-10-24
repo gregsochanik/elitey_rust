@@ -24,7 +24,7 @@ pub fn settle(
         Outcome::Victory => {
             let reward = rng.gen_range(200..=400);
             commander.add_credits(reward);
-            commander.reputation += 5;
+            let standing = commander.change_reputation(5);
             messages.push(format!("You claim {} credits from the wreck.", reward));
 
             let commodities = TradingSystem::new().get_commodities().to_vec();
@@ -41,6 +41,9 @@ pub fn settle(
                 )),
             }
             messages.push("Reputation +5.".to_string());
+            if let Some(standing) = standing {
+                messages.push(format!("Your standing is now {}.", standing.name()));
+            }
         }
         Outcome::Defeat => {
             let held = ship.cargo_hold.current_weight();
@@ -50,7 +53,7 @@ pub fn settle(
             }
             let lost = commander.credits() / 2;
             commander.remove_credits(lost);
-            commander.reputation -= 5;
+            let standing = commander.change_reputation(-5);
             ship.hull_percentage = ship.ship_type.max_hull() * DEFEAT_HULL_PERCENT / 100;
             messages.push(format!(
                 "They take {} credits and leave you adrift with {} hull.",
@@ -58,6 +61,9 @@ pub fn settle(
                 ship.hull_display()
             ));
             messages.push("Reputation -5.".to_string());
+            if let Some(standing) = standing {
+                messages.push(format!("Your standing is now {}.", standing.name()));
+            }
         }
         Outcome::Surrendered => {
             let taken = apply_cargo_loss(ship, &CargoLoss::Tons(SURRENDER_CARGO_TONS));
