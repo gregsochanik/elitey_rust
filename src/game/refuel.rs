@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn upgraded_ships_hold_more() {
         let (mut commander, mut ship) = low_on_fuel(1000, 0);
-        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.ship_type = crate::data::ships::ShipType::from_string("python").unwrap();
         assert!(handle(&[], &mut commander, &mut ship, 3));
         assert_eq!(ship.fuel_current, 12);
         assert_eq!(commander.credits(), 976);

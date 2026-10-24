@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn defeat_leaves_ten_percent_of_an_upgraded_ships_hull() {
         let (mut commander, mut ship) = setup(100, &[]);
-        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.ship_type = crate::data::ships::ShipType::from_string("python").unwrap();
         ship.hull_percentage = 150;
 
         let messages = settle(Outcome::Defeat, 0, &mut commander, &mut ship, &mut rng());

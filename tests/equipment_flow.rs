@@ -36,8 +36,8 @@ fn changing_ship_sells_equipment_and_resizes_the_hold() {
     assert!(game.handle_upgrade_purchase_command(&args("buy cobra4")));
 
     let cost = elitey_rust::data::ships::ShipUpgradeManager::new().calculate_upgrade_cost(
-        &elitey_rust::data::ships::ShipType::CobraMkIII,
-        &elitey_rust::data::ships::ShipType::CobraMkIV,
+        &elitey_rust::data::ships::ShipType::starting(),
+        &elitey_rust::data::ships::ShipType::from_string("cobra4").unwrap(),
     );
     assert_eq!(game.commander.credits(), before - cost + 75);
     assert_eq!(game.ship.cargo_capacity(), 35);
@@ -61,7 +61,7 @@ fn upgrade_accepts_the_ship_name_in_every_written_form() {
         );
         assert_eq!(
             game.ship.ship_type,
-            elitey_rust::data::ships::ShipType::CobraMkIV,
+            elitey_rust::data::ships::ShipType::from_string("cobra4").unwrap(),
             "{}",
             command
         );

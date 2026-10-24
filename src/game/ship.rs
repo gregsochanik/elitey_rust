@@ -23,11 +23,12 @@ pub struct Ship {
 impl Ship {
     /// Create a new Cobra Mk III (starting ship as per spec)
     pub fn new_cobra_mk3() -> Self {
+        let ship_type = ShipType::starting();
         Self {
-            ship_type: ShipType::CobraMkIII,
-            cargo_hold: CargoHold::new(20), // Starting cargo capacity as per spec
-            fuel_current: 7,                // Full fuel tank (matches capacity)
-            hull_percentage: 100,           // Full hull integrity
+            cargo_hold: CargoHold::new(ship_type.cargo_capacity()),
+            fuel_current: ship_type.fuel_capacity(),
+            hull_percentage: ship_type.max_hull(),
+            ship_type,
             equipment: Loadout::starting(),
         }
     }
@@ -111,7 +112,7 @@ impl Ship {
         self.equipment = Loadout::starting();
 
         // Update ship type
-        self.ship_type = new_ship_type.clone();
+        self.ship_type = new_ship_type;
 
         // Update hull to new ship's max hull
         self.hull_percentage = new_ship_type.max_hull();
@@ -281,7 +282,7 @@ mod tests {
         let mut ship = Ship::new_cobra_mk3();
         ship.take_damage(2);
         assert_eq!(ship.hull_display(), "98/100");
-        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.ship_type = crate::data::ships::ShipType::from_string("python").unwrap();
         ship.hull_percentage = 150;
         assert_eq!(ship.hull_display(), "150/150");
     }

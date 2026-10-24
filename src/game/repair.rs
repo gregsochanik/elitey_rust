@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn upgraded_ships_repair_up_to_their_own_maximum() {
         let (mut commander, mut ship) = damaged(1000, 100);
-        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.ship_type = crate::data::ships::ShipType::from_string("python").unwrap();
         assert!(handle(&[], &mut commander, &mut ship));
         assert_eq!(ship.hull_percentage(), 150);
         assert_eq!(commander.credits(), 900);
