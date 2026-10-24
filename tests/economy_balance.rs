@@ -164,3 +164,22 @@ fn courier_jobs_beat_trading_when_poor_and_fall_behind_as_capital_grows() {
         trading_net_per_trip(500)
     );
 }
+
+#[test]
+fn random_pirate_fights_add_less_than_trading_at_starting_capital() {
+    use elitey_rust::game::aftermath::VICTORY_REWARD;
+
+    // Measured share of jumps that meet a pirate attack, over every system
+    const PIRATE_ATTACKS_PER_JUMP: f64 = 0.031;
+    // A starting-loadout win costs about 28 hull to repair at 2cr per point
+    const REPAIR_PER_FIGHT: f64 = 56.0;
+
+    let average_payout = f64::from(*VICTORY_REWARD.start() + *VICTORY_REWARD.end()) / 2.0;
+    let per_jump = PIRATE_ATTACKS_PER_JUMP * (average_payout - REPAIR_PER_FIGHT);
+
+    assert!(
+        per_jump <= trading_net_per_trip(100),
+        "pirates {per_jump:.1} per jump vs trading {:.1}",
+        trading_net_per_trip(100)
+    );
+}
