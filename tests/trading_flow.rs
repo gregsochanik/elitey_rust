@@ -89,3 +89,53 @@ fn legal_goods_and_failed_trades_leave_reputation_alone() {
 
     assert_eq!(game.commander.reputation, 0);
 }
+
+fn latest_unit_price(game: &elitey_rust::game::GameState) -> u32 {
+    game.trade_log.recent(1)[0].unit_price
+}
+
+#[test]
+fn good_standing_pays_less_and_earns_more_on_the_same_market() {
+    use elitey_rust::game::commander::Standing;
+
+    let mut game = new_game(5000);
+    assert!(game.handle_buy_command(&args("food 1")));
+    let neutral_buy = latest_unit_price(&game);
+    assert!(game.handle_sell_command(&args("food 1")));
+    let neutral_sell = latest_unit_price(&game);
+
+    game.commander.reputation = 30;
+    assert!(game.handle_buy_command(&args("food 1")));
+    assert_eq!(
+        latest_unit_price(&game),
+        Standing::Respected.buy_price(neutral_buy)
+    );
+    assert!(game.handle_sell_command(&args("food 1")));
+    assert_eq!(
+        latest_unit_price(&game),
+        Standing::Respected.sell_price(neutral_sell)
+    );
+}
+
+#[test]
+fn bad_standing_pays_more_and_earns_less_on_the_same_market() {
+    use elitey_rust::game::commander::Standing;
+
+    let mut game = new_game(5000);
+    assert!(game.handle_buy_command(&args("food 1")));
+    let neutral_buy = latest_unit_price(&game);
+    assert!(game.handle_sell_command(&args("food 1")));
+    let neutral_sell = latest_unit_price(&game);
+
+    game.commander.reputation = -30;
+    assert!(game.handle_buy_command(&args("food 1")));
+    assert_eq!(
+        latest_unit_price(&game),
+        Standing::Criminal.buy_price(neutral_buy)
+    );
+    assert!(game.handle_sell_command(&args("food 1")));
+    assert_eq!(
+        latest_unit_price(&game),
+        Standing::Criminal.sell_price(neutral_sell)
+    );
+}

@@ -25,6 +25,31 @@ impl Standing {
         }
     }
 
+    /// Percentage points a trade moves in the player's favour (negative when against)
+    pub fn price_favour_percent(&self) -> i64 {
+        match self {
+            Standing::Criminal => -4,
+            Standing::Disreputable => -2,
+            Standing::Neutral => 0,
+            Standing::Trusted => 2,
+            Standing::Respected => 4,
+        }
+    }
+
+    /// Price the player pays: cheaper with good standing
+    pub fn buy_price(&self, price: u32) -> u32 {
+        Self::scale(price, 100 - self.price_favour_percent())
+    }
+
+    /// Price the player receives: higher with good standing
+    pub fn sell_price(&self, price: u32) -> u32 {
+        Self::scale(price, 100 + self.price_favour_percent())
+    }
+
+    fn scale(price: u32, percent: i64) -> u32 {
+        (((i64::from(price) * percent + 50) / 100).max(1)) as u32
+    }
+
     pub fn name(&self) -> &'static str {
         match self {
             Standing::Criminal => "Criminal",
@@ -200,6 +225,28 @@ mod tests {
         for (score, expected) in cases {
             assert_eq!(Standing::from_score(score), expected, "score {}", score);
         }
+    }
+
+    #[test]
+    fn good_standing_buys_cheaper_and_sells_higher() {
+        assert_eq!(Standing::Neutral.buy_price(100), 100);
+        assert_eq!(Standing::Neutral.sell_price(100), 100);
+        assert_eq!(Standing::Respected.buy_price(100), 96);
+        assert_eq!(Standing::Respected.sell_price(100), 104);
+        assert_eq!(Standing::Trusted.buy_price(100), 98);
+        assert_eq!(Standing::Trusted.sell_price(100), 102);
+        assert_eq!(Standing::Disreputable.buy_price(100), 102);
+        assert_eq!(Standing::Disreputable.sell_price(100), 98);
+        assert_eq!(Standing::Criminal.buy_price(100), 104);
+        assert_eq!(Standing::Criminal.sell_price(100), 96);
+    }
+
+    #[test]
+    fn price_adjustment_rounds_half_up_and_never_reaches_zero() {
+        assert_eq!(Standing::Respected.sell_price(13), 14); // 13.52
+        assert_eq!(Standing::Trusted.sell_price(25), 26); // 25.5
+        assert_eq!(Standing::Trusted.buy_price(25), 25); // 24.5
+        assert_eq!(Standing::Respected.buy_price(1), 1);
     }
 
     #[test]
