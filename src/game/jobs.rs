@@ -1,6 +1,7 @@
-use crate::data::systems::StarSystem;
+use crate::data::systems::{GovernmentType, StarSystem};
 use crate::game::aftermath::settle_with_reward;
 use crate::game::combat::Outcome;
+use crate::game::commander::Standing;
 use crate::game::travel::fuel_for_distance;
 use crate::game::{Commander, Ship};
 use rand::seq::SliceRandom;
@@ -30,7 +31,69 @@ pub enum JobKind {
     Bounty,
 }
 
+/// Who a kind of job is posted for; the lawful, criminal and gateway kinds arrive with their jobs
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Track {
+    /// On every board
+    Ordinary,
+    /// Posted by lawful systems for Trusted and Respected commanders
+    Lawful,
+    /// Posted by lawless systems for Disreputable and Criminal commanders
+    Criminal,
+    /// Posted by lawless systems for Neutral commanders starting down the criminal path
+    Gateway,
+}
+
+/// Which tracks of job a commander is offered at a system
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct JobAccess {
+    pub lawful: bool,
+    pub criminal: bool,
+    pub gateway: bool,
+}
+
+impl JobAccess {
+    pub fn for_standing_at(standing: Standing, government: &GovernmentType) -> Self {
+        let lawful_post = government.is_lawful();
+        let none = JobAccess {
+            lawful: false,
+            criminal: false,
+            gateway: false,
+        };
+        match standing {
+            Standing::Respected | Standing::Trusted => JobAccess {
+                lawful: lawful_post,
+                ..none
+            },
+            Standing::Neutral => JobAccess {
+                gateway: !lawful_post,
+                ..none
+            },
+            Standing::Disreputable | Standing::Criminal => JobAccess {
+                criminal: !lawful_post,
+                ..none
+            },
+        }
+    }
+
+    pub fn allows(&self, track: Track) -> bool {
+        match track {
+            Track::Ordinary => true,
+            Track::Lawful => self.lawful,
+            Track::Criminal => self.criminal,
+            Track::Gateway => self.gateway,
+        }
+    }
+}
+
 impl JobKind {
+    pub fn track(&self) -> Track {
+        match self {
+            JobKind::Courier | JobKind::Bounty => Track::Ordinary,
+        }
+    }
+
     pub fn describe(&self, destination: &str) -> String {
         match self {
             JobKind::Courier => format!("Courier to {}", destination),
@@ -224,13 +287,15 @@ pub fn bounty_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BOUNTY_BASE_REWARD + BOUNTY_REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
 
-/// Roll a fresh board of jobs from `origin` to systems within range
-pub fn generate_board(
+/// Roll a fresh board of jobs, offering the kinds this standing may see at this system
+pub fn generate_board_for(
     origin: &StarSystem,
     systems: &[&StarSystem],
     rng: &mut impl Rng,
+    standing: Standing,
 ) -> Vec<Job> {
-    generate_board_with(origin, systems, rng, BOUNTY_SHARE)
+    let access = JobAccess::for_standing_at(standing, &origin.government);
+    generate_board_with(origin, systems, rng, BOUNTY_SHARE, access)
 }
 
 fn generate_board_with(
@@ -238,6 +303,7 @@ fn generate_board_with(
     systems: &[&StarSystem],
     rng: &mut impl Rng,
     bounty_share: f64,
+    access: JobAccess,
 ) -> Vec<Job> {
     let mut destinations: Vec<&&StarSystem> = systems
         .iter()
@@ -255,7 +321,7 @@ fn generate_board_with(
         .map(|destination| {
             let distance = origin.distance_to(destination);
             let fuel_cost = fuel_for_distance(distance);
-            let kind = if rng.gen_bool(bounty_share) {
+            let kind = if rng.gen_bool(bounty_share) && access.allows(JobKind::Bounty.track()) {
                 JobKind::Bounty
             } else {
                 JobKind::Courier
@@ -287,9 +353,10 @@ impl JobBoard {
         origin: &StarSystem,
         systems: &[&StarSystem],
         rng: &mut impl Rng,
+        standing: Standing,
     ) -> &[Job] {
         if self.location != origin.name {
-            self.jobs = generate_board(origin, systems, rng);
+            self.jobs = generate_board_for(origin, systems, rng, standing);
             self.location = origin.name.clone();
         }
         &self.jobs
@@ -341,8 +408,13 @@ mod tests {
 
         let (mut bounties, mut total) = (0, 0);
         for seed in 0..500u64 {
-            let board =
-                generate_board_with(origin, &systems, &mut StdRng::seed_from_u64(seed), 0.3);
+            let board = generate_board_with(
+                origin,
+                &systems,
+                &mut StdRng::seed_from_u64(seed),
+                0.3,
+                JobAccess::for_standing_at(Standing::Neutral, &origin.government),
+            );
             for job in &board {
                 total += 1;
                 if job.kind == JobKind::Bounty {
@@ -489,7 +561,12 @@ mod tests {
         let origin = galaxy.get_system("LAVE").unwrap();
 
         for seed in 0..200u64 {
-            let board = generate_board(origin, &systems, &mut StdRng::seed_from_u64(seed));
+            let board = generate_board_for(
+                origin,
+                &systems,
+                &mut StdRng::seed_from_u64(seed),
+                Standing::Neutral,
+            );
             assert!(
                 (3..=5).contains(&board.len()),
                 "seed {} gave {}",
@@ -529,7 +606,12 @@ mod tests {
                     other.name != origin.name && origin.distance_to(other) <= MAX_JOB_RANGE
                 })
                 .count();
-            let board = generate_board(origin, &systems, &mut StdRng::seed_from_u64(5));
+            let board = generate_board_for(
+                origin,
+                &systems,
+                &mut StdRng::seed_from_u64(5),
+                Standing::Neutral,
+            );
             assert!(
                 board.len() <= in_range.min(MAX_BOARD_SIZE),
                 "{}",
@@ -550,15 +632,17 @@ mod tests {
         let origin_a = first.get_system("LAVE").unwrap();
         let origin_b = second.get_system("LAVE").unwrap();
 
-        let a = generate_board(
+        let a = generate_board_for(
             origin_a,
             &first.get_all_systems(),
             &mut StdRng::seed_from_u64(7),
+            Standing::Neutral,
         );
-        let b = generate_board(
+        let b = generate_board_for(
             origin_b,
             &second.get_all_systems(),
             &mut StdRng::seed_from_u64(7),
+            Standing::Neutral,
         );
         assert_eq!(a, b);
     }
@@ -569,8 +653,18 @@ mod tests {
         let systems = galaxy.get_all_systems();
         let origin = galaxy.get_system("LAVE").unwrap();
 
-        let a = generate_board(origin, &systems, &mut StdRng::seed_from_u64(7));
-        let b = generate_board(origin, &systems, &mut StdRng::seed_from_u64(7));
+        let a = generate_board_for(
+            origin,
+            &systems,
+            &mut StdRng::seed_from_u64(7),
+            Standing::Neutral,
+        );
+        let b = generate_board_for(
+            origin,
+            &systems,
+            &mut StdRng::seed_from_u64(7),
+            Standing::Neutral,
+        );
         assert_eq!(a, b);
     }
 
@@ -579,7 +673,12 @@ mod tests {
         let systems = galaxy.get_all_systems();
         let lave = galaxy.get_system("LAVE").unwrap();
         let mut board = JobBoard::new();
-        board.jobs_at(lave, &systems, &mut StdRng::seed_from_u64(2));
+        board.jobs_at(
+            lave,
+            &systems,
+            &mut StdRng::seed_from_u64(2),
+            Standing::Neutral,
+        );
         (board, Vec::new())
     }
 
@@ -723,12 +822,100 @@ mod tests {
         let mut board = JobBoard::new();
         let mut rng = StdRng::seed_from_u64(1);
 
-        let first = board.jobs_at(lave, &systems, &mut rng).to_vec();
-        let again = board.jobs_at(lave, &systems, &mut rng).to_vec();
+        let first = board
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .to_vec();
+        let again = board
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .to_vec();
         assert_eq!(first, again);
 
         board.clear();
-        let rerolled = board.jobs_at(lave, &systems, &mut rng).to_vec();
+        let rerolled = board
+            .jobs_at(lave, &systems, &mut rng, Standing::Neutral)
+            .to_vec();
         assert_ne!(first, rerolled);
+    }
+
+    fn governments() -> [GovernmentType; 8] {
+        [
+            GovernmentType::Anarchy,
+            GovernmentType::Feudal,
+            GovernmentType::MultiGovernment,
+            GovernmentType::Dictatorship,
+            GovernmentType::Communist,
+            GovernmentType::Confederacy,
+            GovernmentType::Democracy,
+            GovernmentType::CorporateState,
+        ]
+    }
+
+    #[test]
+    fn only_anarchy_and_feudal_systems_are_lawless() {
+        for government in governments() {
+            let lawless = matches!(government, GovernmentType::Anarchy | GovernmentType::Feudal);
+            assert_eq!(government.is_lawful(), !lawless, "{:?}", government);
+        }
+    }
+
+    #[test]
+    fn lawful_contracts_need_a_good_standing_and_a_lawful_system() {
+        for government in governments() {
+            for standing in [Standing::Trusted, Standing::Respected] {
+                let access = JobAccess::for_standing_at(standing, &government);
+                assert_eq!(access.lawful, government.is_lawful(), "{:?}", government);
+                assert!(!access.criminal && !access.gateway);
+            }
+        }
+    }
+
+    #[test]
+    fn criminal_contracts_need_a_bad_standing_and_a_lawless_system() {
+        for government in governments() {
+            for standing in [Standing::Disreputable, Standing::Criminal] {
+                let access = JobAccess::for_standing_at(standing, &government);
+                assert_eq!(access.criminal, !government.is_lawful(), "{:?}", government);
+                assert!(!access.lawful && !access.gateway);
+            }
+        }
+    }
+
+    #[test]
+    fn neutral_commanders_see_only_the_gateway_and_only_in_lawless_systems() {
+        for government in governments() {
+            let access = JobAccess::for_standing_at(Standing::Neutral, &government);
+            assert_eq!(access.gateway, !government.is_lawful(), "{:?}", government);
+            assert!(!access.lawful && !access.criminal);
+        }
+    }
+
+    #[test]
+    fn ordinary_jobs_are_open_to_everyone() {
+        for government in governments() {
+            for standing in [
+                Standing::Criminal,
+                Standing::Disreputable,
+                Standing::Neutral,
+                Standing::Trusted,
+                Standing::Respected,
+            ] {
+                let access = JobAccess::for_standing_at(standing, &government);
+                assert!(access.allows(JobKind::Courier.track()));
+                assert!(access.allows(JobKind::Bounty.track()));
+            }
+        }
+    }
+
+    #[test]
+    fn every_standing_still_gets_a_board_at_every_system() {
+        let galaxy = galaxy();
+        let systems = galaxy.get_all_systems();
+        for origin in &systems {
+            for standing in [Standing::Criminal, Standing::Neutral, Standing::Respected] {
+                let board =
+                    generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(3), standing);
+                assert!(!board.is_empty(), "{} for {:?}", origin.name, standing);
+            }
+        }
     }
 }

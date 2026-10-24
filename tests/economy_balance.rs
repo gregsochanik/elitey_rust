@@ -118,7 +118,7 @@ fn better_standing_earns_more_but_a_criminal_can_still_trade() {
 }
 
 fn best_courier_net_per_jump(seeds: u64) -> f64 {
-    use elitey_rust::game::jobs::generate_board;
+    use elitey_rust::game::jobs::generate_board_for;
     use rand::rngs::StdRng;
     use rand::SeedableRng;
 
@@ -129,7 +129,12 @@ fn best_courier_net_per_jump(seeds: u64) -> f64 {
     for seed in 0..seeds {
         for (from, _) in TRIPS {
             let origin = systems.get_system(from).unwrap();
-            let board = generate_board(origin, &all, &mut StdRng::seed_from_u64(seed));
+            let board = generate_board_for(
+                origin,
+                &all,
+                &mut StdRng::seed_from_u64(seed),
+                Standing::Neutral,
+            );
             let best = board
                 .iter()
                 .filter(|job| job.kind == elitey_rust::game::jobs::JobKind::Courier)
@@ -226,7 +231,7 @@ fn starting_loadout_fights() -> FightStats {
 }
 
 fn best_bounty_net_per_jump(seeds: u64) -> f64 {
-    use elitey_rust::game::jobs::{generate_board, JobKind};
+    use elitey_rust::game::jobs::{generate_board_for, JobKind};
     use rand::rngs::StdRng;
     use rand::SeedableRng;
 
@@ -238,7 +243,12 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
     for seed in 0..seeds {
         for (from, _) in TRIPS {
             let origin = systems.get_system(from).unwrap();
-            let board = generate_board(origin, &all, &mut StdRng::seed_from_u64(seed));
+            let board = generate_board_for(
+                origin,
+                &all,
+                &mut StdRng::seed_from_u64(seed),
+                Standing::Neutral,
+            );
             let best = board
                 .iter()
                 .filter(|job| job.kind == JobKind::Bounty)

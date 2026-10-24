@@ -6,7 +6,7 @@ Jobs (Feature 16) and bounties (Feature 17) pay a flat amount whatever the playe
 The reputation score is one axis. Its two ends are two paths: a lawful commander gets lawful contracts, an infamous one gets criminal contracts, and a commander in the middle gets only the ordinary board.
 
 ## Status
-Spec only. Slices are tracked as GitHub issues.
+In progress. Slices are tracked as GitHub issues; the access rules (who may see which track of job) are done, and each kind joins the board with its own issue.
 
 ## Version 1 Scope
 

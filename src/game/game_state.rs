@@ -482,7 +482,11 @@ impl GameState {
             .travel_handler
             .get_system_info(&self.commander.location)?;
         let systems = self.travel_handler.get_available_systems();
-        Some(self.job_board.jobs_at(origin, &systems, rng).to_vec())
+        Some(
+            self.job_board
+                .jobs_at(origin, &systems, rng, self.commander.standing())
+                .to_vec(),
+        )
     }
 
     /// Deliver, fight or fail active jobs after arriving at the commander's location
