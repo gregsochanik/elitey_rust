@@ -34,11 +34,10 @@ pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bo
     commander.remove_credits(points * CREDITS_PER_POINT);
     ship.repair_hull(points);
     show_success(&format!(
-        "Repaired {} hull points for {} credits. Hull: {}/{}",
+        "Repaired {} hull points for {} credits. Hull: {}",
         points,
         points * CREDITS_PER_POINT,
-        ship.hull_percentage(),
-        ship.ship_type.max_hull()
+        ship.hull_display()
     ));
     true
 }
