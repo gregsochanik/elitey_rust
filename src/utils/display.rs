@@ -304,6 +304,7 @@ mod tests {
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         // This test just ensures the function doesn't panic
@@ -331,6 +332,7 @@ mod tests {
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         // This test just ensures the function doesn't panic
@@ -358,6 +360,7 @@ mod tests {
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
             active_jobs: Vec::new(),
+            world_clock: 0,
         };
 
         // This test just ensures the function doesn't panic
