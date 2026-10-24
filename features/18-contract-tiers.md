@@ -6,7 +6,7 @@ Jobs (Feature 16) and bounties (Feature 17) pay a flat amount whatever the playe
 The reputation score is one axis. Its two ends are two paths: a lawful commander gets lawful contracts, an infamous one gets criminal contracts, and a commander in the middle gets only the ordinary board.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; the access rules, freight, smuggling, the gateway job and standing-driven event odds are done; the balance pass remains.
+Done (v1). Slices were tracked as GitHub issues: access rules, freight, smuggling, the gateway job, standing-driven event odds and the balance pass.
 
 ## Version 1 Scope
 
@@ -31,7 +31,7 @@ In progress. Slices are tracked as GitHub issues; the access rules, freight, smu
 ### Smuggling (criminal, Disreputable and below)
 - The client supplies 5 to 10 tons of Narcotics to deliver to a lawful system within range
 - The cargo occupies the hold, so acceptance needs that much free room; a full ship cannot accept the job
-- **Reward:** about 3 times the courier reward for the same distance, plus a per-ton premium (exact numbers set by the balance pass)
+- **Reward:** 2.5 times the courier reward for the same distance, plus 5 credits per ton
 - **Inspection on arrival:** smuggling has its own inspection roll when the player arrives at the destination; it does not use the random Government Inspection event, so the player faces at most one smuggling inspection per arrival, which covers every smuggling job for that system. The chance depends on the government (Communist and Dictatorship highest, Corporate State and Democracy next, the rest lowest)
 - **Order on arrival:** travel events, then courier and freight deliveries, then the smuggling inspection, then bounty fights
 - When inspected the player chooses:
@@ -82,9 +82,11 @@ In progress. Slices are tracked as GitHub issues; the access rules, freight, smu
 
 ## Balance
 Contracts must pay well enough to be worth choosing over the patient trader (net about 84 per jump at 500cr, 151 at 2,000cr) and must carry real risk. Targets, set by simulation:
-- Freight nets about 1.5 times a courier job at a 20-ton hold and scales with hold size
+- Freight nets about 1.5 times a courier job at a 20-ton hold and scales with hold size (reward is the courier reward times 1 + tons/30)
 - Smuggling nets clearly more than freight when it succeeds and loses money when it fails; the break-even inspection chance should sit near the top of the government range
 - A Criminal commander can still earn at least as much as a Neutral one by taking criminal contracts (so the path is a choice, not a penalty)
+
+Measured (best job on the board, net of fuel, 200 seeds): courier about 49 per jump; freight about 73 at a 20-ton hold, 113 at 60 and 156 at 100; smuggling about 174 clean, 143 when every inspection is bribed. Handing over at every inspection beats freight at a 25% inspection chance and loses to it by 60%, so the break-even sits near 49%. `tests/economy_balance.rs` holds these as assertions.
 
 ## Open Questions
 - **One score or two.** v1 uses one axis. A commander who wants to be a respected trader with a dark side cannot be. A separate infamy score could allow it later.
@@ -102,7 +104,7 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 - [x] Standing changes the odds of patrol and inspection events as specified
 - [ ] Rescue, repair and refuel work for every standing
 - [ ] Old saves load: jobs without the new kinds keep working
-- [ ] A simulation sets the rewards and inspection odds within the balance targets
+- [x] A simulation sets the rewards and inspection odds within the balance targets
 
 ## Testing (write first)
 - [ ] Board generation per standing and government: which kinds can and cannot appear, with a fixed seed
@@ -113,7 +115,7 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 - [x] Contract cargo cannot be sold
 - [x] Event weights by standing
 - [ ] Old-save compatibility
-- [ ] Simulation: net income per jump for freight and smuggling against courier and trading
+- [x] Simulation: net income per jump for freight and smuggling against courier and trading
 
 ## Dependencies
 - Feature 06: Dynamic Events ✅ (inspection, patrols, event weights)

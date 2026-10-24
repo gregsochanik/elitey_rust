@@ -606,9 +606,9 @@ fn freight(destination: &str, tons: u32, reward: u32, jumps_left: u32) -> Active
 #[test]
 fn freight_pay_grows_with_the_load() {
     assert_eq!(freight_reward(3, 0, 1.0), 41);
-    assert_eq!(freight_reward(3, 20, 1.0), 82);
-    assert_eq!(freight_reward(3, 60, 1.0), 164);
-    assert_eq!(freight_reward(3, 10, 1.1), 68);
+    assert_eq!(freight_reward(3, 20, 1.0), 68);
+    assert_eq!(freight_reward(3, 60, 1.0), 123);
+    assert_eq!(freight_reward(3, 10, 1.1), 60);
 }
 
 #[test]
@@ -790,10 +790,10 @@ fn lawless_origin(galaxy: &SystemManager) -> &StarSystem {
 }
 
 #[test]
-fn smuggling_pays_about_three_times_a_courier_job_plus_a_premium_per_ton() {
-    assert_eq!(smuggling_reward(3, 0, 1.0), 123);
-    assert_eq!(smuggling_reward(3, 10, 1.0), 183);
-    assert_eq!(smuggling_reward(3, 5, 1.1), 168);
+fn smuggling_pays_two_and_a_half_times_a_courier_job_plus_a_premium_per_ton() {
+    assert_eq!(smuggling_reward(3, 0, 1.0), 103);
+    assert_eq!(smuggling_reward(3, 10, 1.0), 153);
+    assert_eq!(smuggling_reward(3, 5, 1.1), 140);
 }
 
 #[test]

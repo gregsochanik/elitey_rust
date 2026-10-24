@@ -1,7 +1,11 @@
 use elitey_rust::data::commodities::TradingSystem;
 use elitey_rust::data::systems::SystemManager;
 use elitey_rust::game::commander::{Standing, STARTING_CREDITS};
+use elitey_rust::game::jobs::{generate_board_for, Job, JobKind};
 use elitey_rust::game::refuel::CREDITS_PER_UNIT;
+use elitey_rust::game::smuggling::inspection_chance;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 const TRIPS: [(&str, &str); 5] = [
     ("LAVE", "DISO"),
@@ -287,5 +291,149 @@ fn bounties_pay_more_than_courier_jobs_without_running_away() {
     assert!(
         bounty <= 2.0 * courier,
         "bounty {bounty:.1} vs courier {courier:.1}"
+    );
+}
+
+const BOARD_SEEDS: u64 = 200;
+
+fn fuel_net(reward: u32, fuel: u32) -> f64 {
+    f64::from(reward) - f64::from(fuel * CREDITS_PER_UNIT)
+}
+
+fn best_net(board: &[Job], kind: JobKind) -> Option<f64> {
+    board
+        .iter()
+        .filter(|job| job.kind == kind)
+        .map(|job| fuel_net(job.reward, job.fuel_cost))
+        .max_by(f64::total_cmp)
+}
+
+fn mean_best_net(standing: Standing, lawful: bool, hold: u32, kind: JobKind) -> f64 {
+    let systems = SystemManager::new().unwrap();
+    let all = systems.get_all_systems();
+    let mut nets = Vec::new();
+    for seed in 0..BOARD_SEEDS {
+        for origin in all
+            .iter()
+            .filter(|system| system.government.is_lawful() == lawful)
+            .take(30)
+        {
+            let board = generate_board_for(
+                origin,
+                &all,
+                &mut StdRng::seed_from_u64(seed),
+                standing,
+                hold,
+            );
+            nets.extend(best_net(&board, kind));
+        }
+    }
+    nets.iter().sum::<f64>() / nets.len() as f64
+}
+
+#[test]
+fn freight_nets_one_and_a_half_times_courier_at_a_twenty_ton_hold() {
+    let courier = mean_best_net(Standing::Trusted, true, 20, JobKind::Courier);
+    let freight = mean_best_net(Standing::Trusted, true, 20, JobKind::Freight);
+    let ratio = freight / courier;
+    assert!(
+        (1.3..=1.7).contains(&ratio),
+        "freight {freight:.1} vs courier {courier:.1}"
+    );
+}
+
+#[test]
+fn freight_income_grows_with_hold_size() {
+    let small = mean_best_net(Standing::Trusted, true, 20, JobKind::Freight);
+    let medium = mean_best_net(Standing::Trusted, true, 60, JobKind::Freight);
+    let large = mean_best_net(Standing::Trusted, true, 100, JobKind::Freight);
+    assert!(
+        small < medium && medium < large,
+        "{small:.1} {medium:.1} {large:.1}"
+    );
+}
+
+struct SmugglingRuns {
+    reward: f64,
+    fuel_cost: f64,
+    inspection_chance: f64,
+}
+
+fn smuggling_runs(standing: Standing) -> SmugglingRuns {
+    let systems = SystemManager::new().unwrap();
+    let all = systems.get_all_systems();
+    let (mut reward, mut fuel_cost, mut chance, mut count) = (0.0, 0.0, 0.0, 0.0);
+    for seed in 0..BOARD_SEEDS {
+        for origin in all
+            .iter()
+            .filter(|system| !system.government.is_lawful())
+            .take(20)
+        {
+            let board =
+                generate_board_for(origin, &all, &mut StdRng::seed_from_u64(seed), standing, 20);
+            if let Some(job) = board
+                .iter()
+                .filter(|job| job.kind == JobKind::Smuggling)
+                .max_by_key(|job| job.reward)
+            {
+                let destination = systems.get_system(&job.destination).unwrap();
+                reward += f64::from(job.reward);
+                fuel_cost += f64::from(job.fuel_cost * CREDITS_PER_UNIT);
+                chance += inspection_chance(&destination.government);
+                count += 1.0;
+            }
+        }
+    }
+    SmugglingRuns {
+        reward: reward / count,
+        fuel_cost: fuel_cost / count,
+        inspection_chance: chance / count,
+    }
+}
+
+#[test]
+fn a_clean_smuggling_run_pays_clearly_more_than_freight() {
+    let runs = smuggling_runs(Standing::Criminal);
+    let freight = mean_best_net(Standing::Trusted, true, 20, JobKind::Freight);
+    let clean = runs.reward - runs.fuel_cost;
+    assert!(
+        clean >= 2.0 * freight,
+        "clean {clean:.1} vs freight {freight:.1}"
+    );
+}
+
+#[test]
+fn bribing_every_inspection_still_beats_freight() {
+    let runs = smuggling_runs(Standing::Criminal);
+    let freight = mean_best_net(Standing::Trusted, true, 20, JobKind::Freight);
+    let bribed = runs.reward - runs.fuel_cost - runs.inspection_chance * 0.4 * runs.reward;
+    assert!(
+        bribed > freight,
+        "bribed {bribed:.1} vs freight {freight:.1}"
+    );
+}
+
+#[test]
+fn handing_over_every_inspection_loses_to_freight_at_the_top_of_the_inspection_range() {
+    let runs = smuggling_runs(Standing::Criminal);
+    let freight = mean_best_net(Standing::Trusted, true, 20, JobKind::Freight);
+    let net_at =
+        |chance: f64| (1.0 - chance) * runs.reward - runs.fuel_cost - chance * 0.25 * runs.reward;
+    assert!(
+        net_at(0.25) > freight,
+        "{:.1} vs {freight:.1}",
+        net_at(0.25)
+    );
+    assert!(net_at(0.6) < freight, "{:.1} vs {freight:.1}", net_at(0.6));
+}
+
+#[test]
+fn criminal_contracts_earn_a_criminal_commander_at_least_a_neutral_courier() {
+    let runs = smuggling_runs(Standing::Criminal);
+    let neutral_courier = mean_best_net(Standing::Neutral, false, 20, JobKind::Courier);
+    let bribed = runs.reward - runs.fuel_cost - runs.inspection_chance * 0.4 * runs.reward;
+    assert!(
+        bribed >= neutral_courier,
+        "{bribed:.1} vs {neutral_courier:.1}"
     );
 }
