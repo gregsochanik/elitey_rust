@@ -15,6 +15,11 @@ pub struct TravelHandler {
     system_manager: SystemManager,
 }
 
+/// Fuel a jump of this distance costs, in whole light years
+pub fn fuel_for_distance(distance: f64) -> u32 {
+    distance.ceil() as u32
+}
+
 impl TravelHandler {
     pub fn new(system_manager: SystemManager) -> Self {
         Self { system_manager }
@@ -45,7 +50,7 @@ impl TravelHandler {
 
         // Calculate distance and fuel cost
         let distance = current_system.distance_to(destination);
-        let fuel_cost = distance.ceil() as u32;
+        let fuel_cost = fuel_for_distance(distance);
 
         // Check if we have enough fuel
         if ship.fuel_current < fuel_cost {
@@ -122,7 +127,7 @@ impl TravelHandler {
 
     fn jump_fuel_cost(&self, origin: &str, destination: &StarSystem) -> Option<u32> {
         let origin_system = self.system_manager.get_system_case_insensitive(origin)?;
-        Some(destination.distance_to(origin_system).ceil() as u32)
+        Some(fuel_for_distance(destination.distance_to(origin_system)))
     }
 
     /// Process jump phase events
@@ -324,6 +329,13 @@ mod tests {
         }
         assert_eq!(ship.fuel_current, fuel);
         assert_eq!(commander.location, "LAVE");
+    }
+
+    #[test]
+    fn fuel_for_distance_rounds_up_to_whole_light_years() {
+        assert_eq!(fuel_for_distance(2.0), 2);
+        assert_eq!(fuel_for_distance(2.3), 3);
+        assert_eq!(fuel_for_distance(6.7), 7);
     }
 
     #[test]

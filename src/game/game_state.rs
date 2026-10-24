@@ -1,4 +1,5 @@
 use crate::data::systems::{StarSystem, SystemManager};
+use crate::game::travel::fuel_for_distance;
 use crate::utils::display::show_error;
 use crate::utils::input;
 use colored::*;
@@ -446,7 +447,12 @@ impl GameState {
             println!("{}", "Consider refueling or upgrading your ship.".yellow());
         } else {
             for (system, distance) in reachable_systems {
-                println!("{} - {:.1} light years", system.name.yellow(), distance);
+                println!(
+                    "{} - {:.1} light years, {} fuel",
+                    system.name.yellow(),
+                    distance,
+                    fuel_for_distance(distance)
+                );
             }
         }
         println!();
@@ -487,7 +493,7 @@ impl GameState {
         {
             let distance = current_system.distance_to(system);
             println!("Distance: {:.1} light years", distance);
-            println!("Fuel required: {} light years", distance.ceil() as u32);
+            println!("Fuel required: {} light years", fuel_for_distance(distance));
         }
         println!();
     }
