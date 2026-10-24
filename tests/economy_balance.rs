@@ -190,7 +190,12 @@ fn random_pirate_fights_add_less_than_trading_and_courier_jobs() {
     );
 }
 
-fn starting_loadout_average_hull_lost() -> f64 {
+struct FightStats {
+    win_rate: f64,
+    average_hull_lost: f64,
+}
+
+fn starting_loadout_fights() -> FightStats {
     use elitey_rust::game::combat::{Action, Combat, Combatant, Outcome};
     use elitey_rust::game::Ship;
     use rand::Rng;
@@ -198,20 +203,26 @@ fn starting_loadout_average_hull_lost() -> f64 {
 
     let ship = Ship::new_cobra_mk3();
     let fights = 1_000u64;
-    let mut lost = 0u64;
+    let (mut lost, mut wins) = (0u64, 0u64);
     for seed in 0..fights {
         let mut combat = Combat::new(Combatant::from_ship(&ship), Combatant::pirate_raider());
         let start = combat.player.hull;
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
         let mut roll = || rng.gen::<f64>();
         for _ in 0..500 {
-            if combat.resolve_round(Action::Attack, &mut roll) != Ok(Outcome::Ongoing) {
-                break;
+            match combat.resolve_round(Action::Attack, &mut roll) {
+                Ok(Outcome::Ongoing) => continue,
+                Ok(Outcome::Victory) => wins += 1,
+                _ => {}
             }
+            break;
         }
         lost += u64::from(start - combat.player.hull);
     }
-    lost as f64 / fights as f64
+    FightStats {
+        win_rate: wins as f64 / fights as f64,
+        average_hull_lost: lost as f64 / fights as f64,
+    }
 }
 
 fn best_bounty_net_per_jump(seeds: u64) -> f64 {
@@ -219,7 +230,8 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
     use rand::rngs::StdRng;
     use rand::SeedableRng;
 
-    let repair = starting_loadout_average_hull_lost() * 2.0;
+    let fights = starting_loadout_fights();
+    let repair = fights.average_hull_lost * 2.0;
     let systems = SystemManager::new().unwrap();
     let all = systems.get_all_systems();
     let (mut total, mut count) = (0.0, 0);
@@ -231,7 +243,7 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
                 .iter()
                 .filter(|job| job.kind == JobKind::Bounty)
                 .map(|job| {
-                    f64::from(job.reward)
+                    fights.win_rate * f64::from(job.reward)
                         - f64::from(job.fuel_cost) * f64::from(CREDITS_PER_UNIT)
                         - repair
                 })
@@ -243,6 +255,12 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
         }
     }
     total / f64::from(count)
+}
+
+#[test]
+fn the_starting_loadout_wins_every_bounty_fight() {
+    let fights = starting_loadout_fights();
+    assert!(fights.win_rate >= 0.99, "win rate {}", fights.win_rate);
 }
 
 #[test]

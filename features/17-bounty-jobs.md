@@ -16,7 +16,7 @@ Done (v1). Bounties are on boards, fought on arrival and balanced against courie
 
 ### Reward
 - `80 + 10 × fuel cost of the direct jump`, varied by ±10%, rounded to whole credits (about 110cr for a 3-fuel jump, 150cr for a 7-fuel jump)
-- Paid on victory **instead of** the random 200–400cr a pirate victory normally pays; the player still keeps the loot and the +5 reputation from combat
+- Paid on victory **instead of** the random 100–200cr a pirate victory normally pays; the player still keeps the loot and the +5 reputation from combat
 
 ### The fight
 - When the player arrives at the bounty's system with the job still in time, a fight with a pirate raider starts straight away, after any travel events on that jump
@@ -58,7 +58,7 @@ The first formula paid nearly twice a courier job for a fight the starting ship 
 **Separate issue, now done.** A random pirate victory pays 100–200cr (Feature 08), about the same as a bounty, so bounties give a guaranteed fight rather than more money.
 
 ## Open Questions
-- **Rewards.** Is replacing the 200–400cr payout with a smaller bounty a nerf players will resent? It keeps the economy sane, but it makes accepting a bounty pay less than fighting a random pirate.
+- **Rewards.** Does a bounty pay too little next to a random pirate victory (100–200cr plus loot)? A 3-fuel bounty pays about 110cr, so it is a guaranteed fight rather than more money; players may still expect more.
 - **Difficulty.** A single fixed raider means bounties get easy once the player has good equipment. Scaling the enemy by reward is the obvious later step.
 
 ## Acceptance Criteria
