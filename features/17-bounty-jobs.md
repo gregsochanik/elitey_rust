@@ -4,7 +4,7 @@
 A second job type for the board (Feature 16): hunt a pirate raider reported at another system. It is the first job that uses combat, so it pays more than a courier job and can cost the player their ship's health, their cargo and their credits.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; job kinds and rewards are in, bounties reach boards with the fight.
+In progress. Slices are tracked as GitHub issues; bounties are on boards and fought on arrival; the balance pass remains.
 
 ## Version 1 Scope
 
@@ -52,23 +52,23 @@ A bounty should pay clearly more than a courier job (about 55 net per jump at be
 - **Difficulty.** A single fixed raider means bounties get easy once the player has good equipment. Scaling the enemy by reward is the obvious later step.
 
 ## Acceptance Criteria
-- [ ] Boards contain a mix of courier and bounty jobs; bounties are shown with their kind
+- [x] Boards contain a mix of courier and bounty jobs; bounties are shown with their kind
 - [x] Old saves load their jobs as courier jobs
-- [ ] `accept`, `missions` and `abandon` work for bounty jobs
-- [ ] Arriving at a bounty's system in time starts a pirate fight after travel events
-- [ ] Victory pays the bounty reward (not the random payout), keeps loot and +5 reputation, and removes the job
-- [ ] A successful escape, surrender and defeat fail the job for −3 reputation and apply the combat consequences
-- [ ] Arriving late fails the job without a fight
+- [x] `accept`, `missions` and `abandon` work for bounty jobs
+- [x] Arriving at a bounty's system in time starts a pirate fight after travel events
+- [x] Victory pays the bounty reward (not the random payout), keeps loot and +5 reputation, and removes the job
+- [x] A successful escape, surrender and defeat fail the job for −3 reputation and apply the combat consequences
+- [x] Arriving late fails the job without a fight
 - [ ] A simulation shows bounties out-earn courier jobs after repair costs, with a stated loss rate
 
 ## Testing (write first)
 - [x] Board generation with a fixed seed: both kinds appear across many seeds, roughly 30% bounties
 - [x] Bounty reward formula at known fuel costs
 - [x] Old-save compatibility for jobs without a kind
-- [ ] Settling a finished fight for each outcome (victory, flee, surrender, defeat) with injected dice
-- [ ] Late arrival: job fails and no fight starts
-- [ ] A failed flee attempt leaves the fight and the job running; a successful escape fails the job
-- [ ] Two bounties for one system; escaping the first fails both
+- [x] Settling a finished fight for each outcome (victory, flee, surrender, defeat) with injected dice
+- [x] Late arrival: job fails and no fight starts
+- [x] A failed flee attempt leaves the fight and the job running; a successful escape fails the job
+- [x] Two bounties for one system; escaping the first fails both
 - [ ] Simulation over many seeded fights of net income per bounty
 
 ## Dependencies

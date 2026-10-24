@@ -11,6 +11,15 @@ fn game_with_board() -> elitey_rust::game::GameState {
     game
 }
 
+fn courier_index(game: &elitey_rust::game::GameState) -> usize {
+    use elitey_rust::game::jobs::JobKind;
+    game.job_board_jobs()
+        .iter()
+        .position(|job| job.kind == JobKind::Courier)
+        .expect("a courier job on the board")
+        + 1
+}
+
 #[test]
 fn accepting_jobs_fills_missions_up_to_three() {
     let mut game = game_with_board();
@@ -65,8 +74,9 @@ fn old_saves_without_active_jobs_load_with_none() {
 #[test]
 fn a_delivered_job_pays_out_through_the_game() {
     let mut game = game_with_board();
-    let job = game.job_board_jobs()[0].clone();
-    game.accept_job(1).unwrap();
+    let index = courier_index(&game);
+    let job = game.job_board_jobs()[index - 1].clone();
+    game.accept_job(index).unwrap();
     let credits = game.commander.credits();
 
     game.commander.location = job.destination.clone();
@@ -80,7 +90,7 @@ fn a_delivered_job_pays_out_through_the_game() {
 #[test]
 fn a_late_job_fails_through_the_game() {
     let mut game = game_with_board();
-    game.accept_job(1).unwrap();
+    game.accept_job(courier_index(&game)).unwrap();
     let destination = game.active_jobs[0].job.destination.clone();
     let deadline = game.active_jobs[0].job.deadline_jumps;
     let elsewhere = ["LAVE", "DISO", "LEESTI", "ZAONCE"]

@@ -5,11 +5,14 @@ use crate::utils::input;
 use colored::*;
 use std::io::Write;
 
+use super::combat::{Combat, Combatant, Outcome};
+use super::fight::run_fight;
 use super::jobs::{self, ActiveJob, Job};
 use super::{
     Commander, EventManager, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
 };
+use rand::Rng;
 
 /// Represents the complete game state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -454,11 +457,37 @@ impl GameState {
         Some(self.job_board.jobs_at(origin, &systems, rng).to_vec())
     }
 
-    /// Deliver or fail active jobs after arriving at the commander's location
+    /// Deliver, fight or fail active jobs after arriving at the commander's location
     pub fn settle_jobs(&mut self) {
         let arrived_at = self.commander.location.clone();
-        for message in jobs::settle_arrival(&mut self.active_jobs, &mut self.commander, &arrived_at)
-        {
+        let arrival = jobs::settle_arrival(&mut self.active_jobs, &mut self.commander, &arrived_at);
+        for message in &arrival.messages {
+            println!("{}", message);
+        }
+        if arrival.bounties.is_empty() {
+            return;
+        }
+
+        let mut dice = rand::thread_rng();
+        let mut fight = |ship: &Ship| -> std::io::Result<(Outcome, u32)> {
+            let mut combat = Combat::new(Combatant::from_ship(ship), Combatant::pirate_raider());
+            let mut roll = || dice.gen::<f64>();
+            let outcome = run_fight(
+                &mut combat,
+                &mut std::io::stdin().lock(),
+                &mut std::io::stdout(),
+                &mut roll,
+            )?;
+            Ok((outcome, combat.player.hull))
+        };
+        let messages = jobs::resolve_bounties(
+            arrival.bounties,
+            &mut self.commander,
+            &mut self.ship,
+            &mut fight,
+            &mut rand::thread_rng(),
+        );
+        for message in messages {
             println!("{}", message);
         }
     }

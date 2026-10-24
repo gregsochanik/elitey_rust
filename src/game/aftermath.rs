@@ -28,12 +28,24 @@ pub fn settle(
     ship: &mut Ship,
     rng: &mut impl Rng,
 ) -> Vec<String> {
+    settle_with_reward(outcome, player_hull, commander, ship, rng, None)
+}
+
+/// Like `settle`, but a victory pays `victory_reward` instead of the random payout
+pub fn settle_with_reward(
+    outcome: Outcome,
+    player_hull: u32,
+    commander: &mut Commander,
+    ship: &mut Ship,
+    rng: &mut impl Rng,
+    victory_reward: Option<u32>,
+) -> Vec<String> {
     ship.hull_percentage = player_hull.min(ship.ship_type.max_hull());
     let mut messages = Vec::new();
 
     match outcome {
         Outcome::Victory => {
-            let reward = rng.gen_range(VICTORY_REWARD);
+            let reward = victory_reward.unwrap_or_else(|| rng.gen_range(VICTORY_REWARD));
             commander.add_credits(reward);
             let reputation = commander.change_reputation(5);
             messages.push(format!("You claim {} credits from the wreck.", reward));
