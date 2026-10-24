@@ -151,7 +151,7 @@ The trading system foundation is now ready for implementing:
 - [x] Tighten the buy/sell spread (sell at 94–98% of buy, was 85–95%)
 - [x] Add a simulation test: across many seeds, the best commodity on a LAVE→DISO trip makes a profit in at least 90% of runs (measured 94%, was 80%)
 - [x] Re-check starting credits (100cr) and cargo capacity (20 tons) after the spread change
-- [x] Simulate round trips and record the typical profit per trip (see Fuel and the early game)
+- [x] Simulate one-way trips and record the typical profit per trip (see Fuel and the early game)
 
 ### Acceptance Criteria
 - [ ] A player choosing the best commodity usually profits on a short trip
@@ -179,13 +179,13 @@ A simulation test over four route pairs agrees: 62% for informed picks against 3
 
 Fuel (2cr per light year) and repair (2cr per point) are now real costs. With the old ±20% price swing an informed trader on 100cr made about 8cr gross per trip, and 5cr fuel made trading a net loss.
 
-| Price swing | Fuel/ly | Gross per trip (100cr) | Net per trip | Trips that lose money |
+| Price swing | Fuel/ly | Gross per one-way trip (100cr) | Net per trip | Trips that lose money |
 |---|---|---|---|---|
 | ±20% | 0 | 8 | 8 | 30% |
 | ±20% | 5 | 8 | −9 | 73% |
 | ±30% | 2 | 20 | 13 | 32% |
 | ±40% | 2 | 30 | 23 | 25% |
 
-Chosen: ±30% swing and 2cr per light year. About 13cr net per trip at the start, growing with capital, so a 500cr ship upgrade takes roughly 15–20 trips. Trips still lose money about a third of the time.
+Chosen: ±30% swing and 2cr per light year. About 13cr net per one-way trip at the start, growing with capital, so a 500cr ship upgrade takes roughly 15–20 trips (an estimate: each simulated trip starts from 100cr and a fresh market, not carried-over capital). Trips still lose money about a third of the time.
 
 `tests/economy_balance.rs` keeps this: an informed trader's gross profit is at least twice the fuel cost and at least 10% of the starting credits, and between 5% and 40% of trips still lose money.
