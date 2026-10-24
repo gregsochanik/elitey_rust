@@ -12,8 +12,8 @@ pub const FAILURE_REPUTATION: i32 = -3;
 const MIN_BOARD_SIZE: usize = 3;
 const MAX_BOARD_SIZE: usize = 5;
 const MAX_JOB_RANGE: f64 = 7.0;
-const BASE_REWARD: f64 = 25.0;
-const REWARD_PER_FUEL: f64 = 8.0;
+const BASE_REWARD: f64 = 20.0;
+const REWARD_PER_FUEL: f64 = 7.0;
 
 /// A courier job: carry a weightless parcel to another system within the deadline
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -214,10 +214,10 @@ mod tests {
 
     #[test]
     fn reward_follows_the_formula() {
-        assert_eq!(courier_reward(3, 1.0), 49);
-        assert_eq!(courier_reward(1, 1.0), 33);
-        assert_eq!(courier_reward(7, 0.9), 73);
-        assert_eq!(courier_reward(7, 1.1), 89);
+        assert_eq!(courier_reward(3, 1.0), 41);
+        assert_eq!(courier_reward(1, 1.0), 27);
+        assert_eq!(courier_reward(7, 0.9), 62);
+        assert_eq!(courier_reward(7, 1.1), 76);
     }
 
     #[test]
@@ -245,7 +245,7 @@ mod tests {
                 assert!(job.distance <= MAX_JOB_RANGE);
                 assert_eq!(job.fuel_cost, fuel_for_distance(job.distance));
                 assert!((2..=4).contains(&job.deadline_jumps));
-                let base = 25.0 + 8.0 * f64::from(job.fuel_cost);
+                let base = 20.0 + 7.0 * f64::from(job.fuel_cost);
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
             }

@@ -4,7 +4,7 @@
 Each system has a jobs board. The player can take paying jobs that give trips a purpose beyond buy-low-sell-high: deliver a parcel, haul a cargo, hunt a pirate. Version 1 is the smallest complete slice: **courier jobs only**, with a board, acceptance, deadlines and payment. Other job types come later and reuse the same board.
 
 ## Status
-In progress. Slices are tracked as GitHub issues; the board, courier generation, accept, missions, abandon, delivery and deadlines are done; the balance pass remains.
+Done (v1). Board, courier jobs, accept/missions/abandon, delivery, deadlines and the balance pass are implemented.
 
 ## Why
 Playing the game showed the loop has no goals beyond a 500cr ship, money rather than cargo space is the early limit, and a player with no credits has nothing to do. Jobs add short-term objectives, route planning against deadlines, and a way to earn without capital.
@@ -20,7 +20,7 @@ Playing the game showed the loop has no goals beyond a 500cr ship, money rather 
 
 ### Courier jobs
 - A sealed parcel with no weight: it does not use cargo space and cannot be sold
-- **Reward:** `25 + 8 × fuel cost of the direct jump`, varied by ±10%, rounded to whole credits (about 49cr for a 3-fuel jump)
+- **Reward:** `20 + 7 × fuel cost of the direct jump`, varied by ±10%, rounded to whole credits (about 41cr for a 3-fuel jump, 69cr for a 7-fuel jump)
 - **Deadline:** 2 to 4 jumps from accepting, counting every jump the player makes
 - Paid in full on delivery; there is no advance
 
@@ -60,7 +60,19 @@ Done in Feature 14: a player with an empty hold and too little fuel to reach any
 | Smuggling | Illegal goods from anarchies, with inspection risk | Events (06), reputation (10) |
 
 ## Balance
-A courier job should out-earn trading when the player is poor and fade as trading scales with capital. At the start an informed trader nets about 13cr per trip on 100cr, while a 3-fuel courier job pays about 49cr and costs about 6cr in fuel. At 500cr trading earns more per trip, so jobs stay useful for planning and rewards, not as the only income. Check this by simulation before tuning the formula.
+Compared net income per jump (reward minus fuel at 2cr per light year, picking the best job on the board) with an informed trader's net per one-way trip (Feature 03 method, 1,500 trips per capital level):
+
+| | Net per jump or trip |
+|---|---|
+| Best courier job | 55 |
+| Trading with 100cr | 12 |
+| Trading with 300cr | 55 |
+| Trading with 500cr | 96 |
+| Trading with 1000cr | 157 |
+
+Jobs pay about 4.5× trading at the starting 100cr, break even near 300cr, and fall behind beyond that. The first formula (`25 + 8 × fuel`) paid about 67 per jump, which would have paid for a 500cr ship in a handful of jobs, so it was lowered. Jobs carry no risk of loss, which is why they are allowed to out-earn trading early.
+
+`tests/economy_balance.rs` keeps this: the best job earns at least twice a 100cr trader and no more than a 500cr trader.
 
 ## Open Questions
 - **Parcel weight.** A weightless parcel is simplest. A 1-ton parcel would make full holds matter and interact with event cargo loss.
@@ -76,7 +88,7 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - [x] A job that runs out of jumps fails, is removed and costs 3 reputation
 - [x] `abandon <n>` removes the job and costs 3 reputation
 - [x] Jobs and the board persist across save and load; old saves still load
-- [ ] A simulation shows courier jobs out-earn trading at starting capital
+- [x] A simulation shows courier jobs out-earn trading at starting capital
 
 ## Testing (write first)
 - [x] Board generation from a fixed seed: count, reachable destinations, reward range, deadline range

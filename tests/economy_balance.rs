@@ -20,6 +20,10 @@ struct Totals {
 
 /// A trader who buys the affordable commodity furthest below its base price
 fn informed_trader_totals(seeds: u64, standing: Standing) -> Totals {
+    trader_totals(seeds, standing, STARTING_CREDITS)
+}
+
+fn trader_totals(seeds: u64, standing: Standing, capital: u32) -> Totals {
     let systems = SystemManager::new().unwrap();
     let trading = TradingSystem::new();
     let mut totals = Totals {
@@ -41,11 +45,11 @@ fn informed_trader_totals(seeds: u64, standing: Standing) -> Totals {
             let pick = trading
                 .get_commodities()
                 .iter()
-                .filter(|c| buy_price_of(c) <= STARTING_CREDITS)
+                .filter(|c| buy_price_of(c) <= capital)
                 .min_by_key(|c| c.percent_vs_base(buy_price_of(c)))
                 .unwrap();
             let buy_price = buy_price_of(pick);
-            let tons = (STARTING_CREDITS / buy_price)
+            let tons = (capital / buy_price)
                 .min(20)
                 .min(buy_market.availability[pick]);
             let gross = i64::from(tons) * (i64::from(sell_price_of(pick)) - i64::from(buy_price));
@@ -110,5 +114,53 @@ fn better_standing_earns_more_but_a_criminal_can_still_trade() {
     assert!(
         criminal > fuel,
         "criminal gross {criminal:.1}, fuel {fuel:.1}"
+    );
+}
+
+fn best_courier_net_per_jump(seeds: u64) -> f64 {
+    use elitey_rust::game::jobs::generate_board;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+
+    let systems = SystemManager::new().unwrap();
+    let all = systems.get_all_systems();
+    let mut total = 0i64;
+    let mut count = 0i64;
+    for seed in 0..seeds {
+        for (from, _) in TRIPS {
+            let origin = systems.get_system(from).unwrap();
+            let board = generate_board(origin, &all, &mut StdRng::seed_from_u64(seed));
+            let best = board
+                .iter()
+                .map(|job| {
+                    i64::from(job.reward) - i64::from(job.fuel_cost) * i64::from(CREDITS_PER_UNIT)
+                })
+                .max()
+                .unwrap();
+            total += best;
+            count += 1;
+        }
+    }
+    total as f64 / count as f64
+}
+
+fn trading_net_per_trip(capital: u32) -> f64 {
+    let totals = trader_totals(300, Standing::Neutral, capital);
+    (totals.gross - totals.fuel_cost) as f64 / totals.trips as f64
+}
+
+#[test]
+fn courier_jobs_beat_trading_when_poor_and_fall_behind_as_capital_grows() {
+    let courier = best_courier_net_per_jump(300);
+
+    assert!(
+        courier >= 2.0 * trading_net_per_trip(100),
+        "courier {courier:.1} vs trading {:.1} at 100cr",
+        trading_net_per_trip(100)
+    );
+    assert!(
+        courier <= trading_net_per_trip(500),
+        "courier {courier:.1} vs trading {:.1} at 500cr",
+        trading_net_per_trip(500)
     );
 }
