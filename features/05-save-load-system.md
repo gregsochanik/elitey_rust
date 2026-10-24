@@ -20,7 +20,7 @@ Implement a comprehensive save/load system that allows players to persist their 
 - [x] Save metadata (commander name, location, credits, timestamp)
 
 ### Load System Features
-- [x] Load existing commander on start: after the name is entered, an existing autosave for that commander is offered; autosaves are kept per commander (`autosave-<name>`)
+- [x] Load existing commander on start: after the name is entered, an existing autosave for that commander is offered (also with `--new`, which asks before replacing it); an unreadable save is reported, not replaced silently; autosaves are kept per commander (`autosave-<name>`)
 - [x] Save slot selection and validation
 - [x] Game state restoration with error handling
 - [x] Load confirmation prompts
@@ -120,7 +120,7 @@ Successfully implemented a comprehensive save/load system with the following com
 - `load <slot>` - Load game state from named slot with confirmation
 - `saves` - List all available save files with metadata
 - `delete <slot>` - Delete a save file with confirmation
-- Auto-save on quit (saves to "autosave" slot)
+- Auto-save on quit (saves to the commander's own `autosave-<name>-<hash>` slot; a legacy `autosave` slot is still found)
 
 ### Technical Implementation:
 - **JSON-based save format** for human-readable and debuggable save files

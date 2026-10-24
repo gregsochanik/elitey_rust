@@ -211,33 +211,38 @@ impl SaveLoadHandler {
 
     /// Slot the autosave for a commander is written to
     pub fn autosave_slot(commander_name: &str) -> String {
-        let slug: String = commander_name
+        let name = commander_name.to_ascii_lowercase();
+        let slug: String = name
             .chars()
-            .map(|c| {
-                if c.is_ascii_alphanumeric() {
-                    c.to_ascii_lowercase()
-                } else {
-                    '_'
-                }
-            })
+            .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
             .collect();
-        format!("autosave-{}", slug)
+        let hash = name.bytes().fold(0x811c_9dc5_u32, |hash, byte| {
+            (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193)
+        });
+        format!("autosave-{}-{:08x}", slug, hash)
     }
 
-    /// The autosave for this commander, if there is one
-    pub fn find_autosave(&self, commander_name: &str) -> Option<GameState> {
+    /// The autosave for this commander. `Ok(None)` means there is none;
+    /// an unreadable save is an error.
+    pub fn find_autosave(&self, commander_name: &str) -> Result<Option<GameState>, String> {
+        let slot = Self::autosave_slot(commander_name);
+        if self.save_manager.save_exists(&slot) {
+            let meta = self.save_manager.load_save_metadata(&slot)?;
+            if !meta.commander_name.eq_ignore_ascii_case(commander_name) {
+                return Ok(None);
+            }
+            return self.save_manager.load_game(&slot).map(Some);
+        }
+
         let legacy_matches = self
             .save_manager
             .load_save_metadata("autosave")
             .map(|meta| meta.commander_name.eq_ignore_ascii_case(commander_name))
             .unwrap_or(false);
-        let slot = Self::autosave_slot(commander_name);
-        if self.save_manager.save_exists(&slot) {
-            self.save_manager.load_game(&slot).ok()
-        } else if legacy_matches {
-            self.save_manager.load_game("autosave").ok()
+        if legacy_matches {
+            self.save_manager.load_game("autosave").map(Some)
         } else {
-            None
+            Ok(None)
         }
     }
 

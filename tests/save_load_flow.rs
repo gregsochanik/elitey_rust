@@ -35,6 +35,7 @@ fn a_played_game_survives_saving_to_disk_and_loading_back() {
 fn autosaves_are_kept_per_commander() {
     use elitey_rust::game::SaveLoadHandler;
 
+    common::isolate_home();
     let handler = SaveLoadHandler::new().unwrap();
     let mut first = new_game(111);
     first.commander.name = "Ada Lovelace".to_string();
@@ -48,13 +49,25 @@ fn autosaves_are_kept_per_commander() {
         handler
             .find_autosave("ada lovelace")
             .unwrap()
+            .unwrap()
             .commander
             .credits(),
         111
     );
     assert_eq!(
-        handler.find_autosave("Grace").unwrap().commander.credits(),
+        handler
+            .find_autosave("Grace")
+            .unwrap()
+            .unwrap()
+            .commander
+            .credits(),
         222
     );
-    assert!(handler.find_autosave("Nobody").is_none());
+    assert!(handler.find_autosave("Nobody").unwrap().is_none());
+
+    assert_ne!(
+        SaveLoadHandler::autosave_slot("Ada Lovelace"),
+        SaveLoadHandler::autosave_slot("Ada_Lovelace")
+    );
+    assert!(handler.find_autosave("Ada_Lovelace").unwrap().is_none());
 }

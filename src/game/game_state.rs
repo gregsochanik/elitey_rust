@@ -35,13 +35,9 @@ pub struct GameState {
 
 #[allow(dead_code)]
 impl GameState {
-    /// Create a new game with commander creation
+    /// Start a new game, asking before replacing an existing autosave
     pub fn new_game() -> Self {
-        println!("{}", "Welcome to Elite Rust!".green().bold());
-        println!("{}", "=====================".green());
-
-        let name = Self::get_commander_name();
-        Self::new_game_named(name)
+        Self::start(true)
     }
 
     fn new_game_named(name: String) -> Self {
@@ -61,25 +57,60 @@ impl GameState {
 
     /// Load existing game or create new one
     pub fn load_or_new() -> Self {
+        Self::start(false)
+    }
+
+    fn start(force_new: bool) -> Self {
         println!("{}", "Welcome to Elite Rust!".green().bold());
         println!("{}", "=====================".green());
 
         let name = Self::get_commander_name();
         let handler = SaveLoadHandler::new().expect("Failed to create save/load handler");
-        if let Some(saved) = handler.find_autosave(&name) {
-            print!(
-                "Found a save for {} at {} with {} credits. Continue it? (y/n; n starts over and replaces it when you quit): ",
-                saved.commander.name().green(),
-                saved.commander.location().cyan(),
-                saved.commander.credits().to_string().green()
-            );
-            std::io::stdout().flush().expect("Failed to flush stdout");
-            let answer = input::get_input().unwrap_or_default();
-            if matches!(answer.trim().to_lowercase().as_str(), "y" | "yes") {
-                return Self::from_save(saved);
+        match handler.find_autosave(&name) {
+            Ok(None) => Self::new_game_named(name),
+            Ok(Some(saved)) => {
+                let summary = format!(
+                    "Found a save for {} at {} with {} credits.",
+                    saved.commander.name().green(),
+                    saved.commander.location().cyan(),
+                    saved.commander.credits().to_string().green()
+                );
+                let keep = if force_new {
+                    !Self::ask_yes_no(&format!("{} Start over and replace it? (y/n): ", summary))
+                        .unwrap_or(false)
+                } else {
+                    Self::ask_yes_no(&format!("{} Continue it? (y/n): ", summary)).unwrap_or(true)
+                };
+                if keep {
+                    Self::from_save(saved)
+                } else {
+                    Self::new_game_named(name)
+                }
+            }
+            Err(e) => {
+                show_error(&format!("Could not read the save for {}: {}", name, e));
+                let replace =
+                    Self::ask_yes_no("Start a new game and replace it? (y/n): ").unwrap_or(false);
+                if !replace {
+                    std::process::exit(1);
+                }
+                Self::new_game_named(name)
             }
         }
-        Self::new_game_named(name)
+    }
+
+    /// Ask until the answer is yes or no; `None` when input has ended
+    fn ask_yes_no(prompt: &str) -> Option<bool> {
+        loop {
+            print!("{}", prompt);
+            std::io::stdout().flush().expect("Failed to flush stdout");
+            let answer = input::get_input().ok().filter(|line| !line.is_empty())?;
+            match answer.trim().to_lowercase().as_str() {
+                "y" | "yes" => return Some(true),
+                "n" | "no" => return Some(false),
+                _ => println!("Please answer y or n."),
+            }
+        }
     }
 
     /// Create game state from existing save
