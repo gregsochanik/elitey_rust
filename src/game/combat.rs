@@ -16,6 +16,7 @@ pub struct Weapon {
 pub struct Combatant {
     pub name: String,
     pub hull: u32,
+    pub max_hull: u32,
     pub shield: u32,
     pub max_shield: u32,
     pub recharge: u32,
@@ -42,6 +43,7 @@ impl Combatant {
         Self {
             name: "Your ship".to_string(),
             hull: ship.hull_percentage,
+            max_hull: ship.ship_type.max_hull(),
             shield: shield.protection,
             max_shield: shield.protection,
             recharge: shield.recharge,
@@ -53,6 +55,7 @@ impl Combatant {
         Self {
             name: "Pirate Raider".to_string(),
             hull: 60,
+            max_hull: 60,
             shield: 20,
             max_shield: 20,
             recharge: 3,
@@ -221,6 +224,7 @@ mod tests {
         Combatant {
             name: name.to_string(),
             hull,
+            max_hull: hull,
             shield,
             max_shield: shield,
             recharge,
