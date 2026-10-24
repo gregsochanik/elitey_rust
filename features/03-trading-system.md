@@ -20,7 +20,7 @@ Implement the core trading mechanics including commodities, market prices, buy/s
 ### Price System
 - [x] Base prices for each commodity
 - [x] Economy-based price modifiers
-- [x] ±20% random price fluctuation
+- [x] ±30% random price fluctuation
 - [x] Supply/demand effects on pricing
 - [x] Buy/sell price spread (typically 10-15%)
 
@@ -122,7 +122,7 @@ Feature 03: Trading System has been successfully implemented with all requiremen
 - **Commodities**: Food, Textiles, Machinery, Computers, Minerals, Alloys, Luxury, Narcotics
 - **Market Mechanics**: 
   - Economy-based price modifiers (agricultural systems prefer food/textiles, industrial prefer machinery/minerals)
-  - ±20% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere
+  - ±30% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere
   - Buy/sell price spreads (2-6%)
   - Supply/demand based availability; buying reduces stock for the rest of the visit, and stock refreshes on arrival elsewhere
 - **Trading Commands**: 
@@ -150,8 +150,8 @@ The trading system foundation is now ready for implementing:
 ### Tasks
 - [x] Tighten the buy/sell spread (sell at 94–98% of buy, was 85–95%)
 - [x] Add a simulation test: across many seeds, the best commodity on a LAVE→DISO trip makes a profit in at least 90% of runs (measured 94%, was 80%)
-- [ ] Re-check starting credits (100cr) and cargo capacity (20 tons) after the spread change
-- [ ] Play-test a few round trips and record the typical profit per trip
+- [x] Re-check starting credits (100cr) and cargo capacity (20 tons) after the spread change
+- [x] Simulate one-way trips and record the typical profit per trip (see Fuel and the early game)
 
 ### Acceptance Criteria
 - [ ] A player choosing the best commodity usually profits on a short trip
@@ -174,3 +174,18 @@ The spread change raised the hindsight measure (best commodity profits on a trip
 | Buy blind | 4 of 24 (17%) | −2.0cr |
 
 A simulation test over four route pairs agrees: 62% for informed picks against 39% for blind ones.
+
+## Fuel and the early game
+
+Fuel (2cr per light year) and repair (2cr per point) are now real costs. With the old ±20% price swing an informed trader on 100cr made about 8cr gross per trip, and 5cr fuel made trading a net loss.
+
+| Price swing | Fuel/ly | Gross per one-way trip (100cr) | Net per trip | Trips that lose money |
+|---|---|---|---|---|
+| ±20% | 0 | 8 | 8 | 30% |
+| ±20% | 5 | 8 | −9 | 73% |
+| ±30% | 2 | 20 | 13 | 32% |
+| ±40% | 2 | 30 | 23 | 25% |
+
+Chosen: ±30% swing and 2cr per light year. About 13cr net per one-way trip at the start, growing with capital, so a 500cr ship upgrade takes roughly 15–20 trips (an estimate: each simulated trip starts from 100cr and a fresh market, not carried-over capital). Trips still lose money about a third of the time.
+
+`tests/economy_balance.rs` keeps this: an informed trader's gross profit is at least twice the fuel cost and at least 10% of the starting credits, and between 5% and 40% of trips still lose money.

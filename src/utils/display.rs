@@ -82,7 +82,7 @@ pub fn show_help() {
         "repair [points]".yellow()
     );
     println!(
-        "{} - Refuel (5 credits per light year)",
+        "{} - Refuel (2 credits per light year)",
         "refuel [units]".yellow()
     );
     println!();

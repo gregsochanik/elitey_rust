@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents the player commander with all their data
+pub const STARTING_CREDITS: u32 = 100;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Commander {
     /// Commander's name
@@ -20,7 +22,7 @@ impl Commander {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            credits: 100,                 // Starting credits as per spec
+            credits: STARTING_CREDITS,
             location: "LAVE".to_string(), // Starting location as per spec
             reputation: 0,
         }
