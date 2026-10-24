@@ -30,7 +30,7 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] Fuel consumption based on distance
 - [x] Travel time calculation
 - [x] Cannot travel beyond fuel range
-- [x] Fuel refueling mechanics
+- [x] Fuel refueling mechanics (see Feature 14)
 
 ### System Information
 - [x] `systems` command to list available destinations
@@ -55,7 +55,7 @@ int distance(int x1, int y1, int x2, int y2)
 - [x] Implement fuel consumption logic
 - [x] Create travel validation (fuel check, distance check)
 - [x] Add travel time simulation
-- [x] Implement fuel refueling at stations
+- [x] Implement fuel refueling (Feature 14; any system, no stations yet)
 
 ### 3. Navigation Commands
 - [x] Implement `jump` command with validation

@@ -294,6 +294,11 @@ impl GameState {
         super::equipment::EquipmentHandler::handle(args, &mut self.commander, &mut self.ship)
     }
 
+    /// Handle refuel command
+    pub fn handle_refuel_command(&mut self, args: &[String]) -> bool {
+        super::refuel::handle(args, &mut self.commander, &mut self.ship)
+    }
+
     /// Handle repair command
     pub fn handle_repair_command(&mut self, args: &[String]) -> bool {
         super::repair::handle(args, &mut self.commander, &mut self.ship)
@@ -446,7 +451,7 @@ impl GameState {
 
         if reachable_systems.is_empty() {
             println!("{}", "No systems reachable with current fuel.".yellow());
-            println!("{}", "Consider refueling or upgrading your ship.".yellow());
+            println!("{}", "Use 'refuel' to top up the tank.".yellow());
         } else {
             for destination in reachable_systems {
                 println!(

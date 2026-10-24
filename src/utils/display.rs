@@ -75,11 +75,15 @@ pub fn show_help() {
         "equipment installed".yellow()
     );
     println!();
-    println!("{}", "Repair Commands:".cyan().bold());
-    println!("{}", "================".cyan());
+    println!("{}", "Repair and Refuel Commands:".cyan().bold());
+    println!("{}", "============================".cyan());
     println!(
         "{} - Repair hull damage (2 credits per point)",
         "repair [points]".yellow()
+    );
+    println!(
+        "{} - Refuel (5 credits per light year)",
+        "refuel [units]".yellow()
     );
     println!();
     println!("{}", "Save/Load Commands:".cyan().bold());
