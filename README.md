@@ -82,7 +82,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 
 ### Ships & Upgrades
 - `upgrade` - Show upgrade options
-- `upgrade buy <item>` - Buy an upgrade
+- `upgrade <ship>` - Buy a ship upgrade, e.g. `upgrade cobra4` or `upgrade Cobra Mk IV`
 - `ships` - List ships for sale
 
 ### Equipment

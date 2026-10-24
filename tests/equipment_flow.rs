@@ -42,3 +42,41 @@ fn changing_ship_sells_equipment_and_resizes_the_hold() {
     assert_eq!(game.commander.credits(), before - cost + 75);
     assert_eq!(game.ship.cargo_capacity(), 35);
 }
+
+#[test]
+fn upgrade_accepts_the_ship_name_in_every_written_form() {
+    for command in [
+        "cobra4",
+        "buy cobra4",
+        "Cobra Mk IV",
+        "\"Cobra Mk IV\"",
+        "cobra-mk-iv",
+        "COBRA MK 4",
+    ] {
+        let mut game = new_game(10_000);
+        assert!(
+            game.handle_upgrade_purchase_command(&args(command)),
+            "{}",
+            command
+        );
+        assert_eq!(
+            game.ship.ship_type,
+            elitey_rust::data::ships::ShipType::CobraMkIV,
+            "{}",
+            command
+        );
+    }
+}
+
+#[test]
+fn upgrade_with_no_ship_or_an_unknown_one_changes_nothing() {
+    for command in ["", "buy", "cobra9", "\"Elite Mk X\""] {
+        let mut game = new_game(10_000);
+        assert!(
+            !game.handle_upgrade_purchase_command(&args(command)),
+            "{}",
+            command
+        );
+        assert_eq!(game.commander.credits(), 10_000);
+    }
+}
