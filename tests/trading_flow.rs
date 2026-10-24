@@ -65,3 +65,27 @@ fn stock_runs_out_after_repeated_buying() {
 
     assert!(bought > 0);
 }
+
+#[test]
+fn trading_narcotics_costs_reputation_each_transaction() {
+    let mut game = new_game(2000);
+    let before = game.commander.reputation;
+
+    assert!(game.handle_buy_command(&args("narcotics 2")));
+    assert_eq!(game.commander.reputation, before - 2);
+
+    assert!(game.handle_sell_command(&args("narcotics 1")));
+    assert_eq!(game.commander.reputation, before - 4);
+}
+
+#[test]
+fn legal_goods_and_failed_trades_leave_reputation_alone() {
+    let mut game = new_game(2000);
+
+    assert!(game.handle_buy_command(&args("food 2")));
+    assert!(game.handle_sell_command(&args("food 1")));
+    assert!(!game.handle_buy_command(&args("narcotics 500")));
+    assert!(!game.handle_sell_command(&args("narcotics 1")));
+
+    assert_eq!(game.commander.reputation, 0);
+}
