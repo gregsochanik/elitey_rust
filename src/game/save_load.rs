@@ -215,6 +215,7 @@ impl SaveLoadHandler {
         let slug: String = name
             .chars()
             .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+            .take(40)
             .collect();
         let hash = name.bytes().fold(0x811c_9dc5_u32, |hash, byte| {
             (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193)
@@ -229,7 +230,10 @@ impl SaveLoadHandler {
         if self.save_manager.save_exists(&slot) {
             let meta = self.save_manager.load_save_metadata(&slot)?;
             if !meta.commander_name.eq_ignore_ascii_case(commander_name) {
-                return Ok(None);
+                return Err(format!(
+                    "slot '{}' belongs to commander {}",
+                    slot, meta.commander_name
+                ));
             }
             return self.save_manager.load_game(&slot).map(Some);
         }

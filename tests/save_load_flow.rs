@@ -70,4 +70,7 @@ fn autosaves_are_kept_per_commander() {
         SaveLoadHandler::autosave_slot("Ada_Lovelace")
     );
     assert!(handler.find_autosave("Ada_Lovelace").unwrap().is_none());
+
+    let long_name = "x".repeat(300);
+    assert!(SaveLoadHandler::autosave_slot(&long_name).len() < 100);
 }
