@@ -40,7 +40,8 @@ pub fn handle(
         },
     };
 
-    if is_stranded(commander, ship, nearest_jump_cost) {
+    let stranded = is_stranded(commander, ship, nearest_jump_cost);
+    if stranded && requested.is_none() {
         rescue(commander, ship, nearest_jump_cost);
         return true;
     }
@@ -57,6 +58,9 @@ pub fn handle(
             "Fuel costs {} credits per light year; you can't afford any.",
             CREDITS_PER_UNIT
         ));
+        if stranded {
+            show_info("You are stranded: run 'refuel' with no amount to call a rescue crew.");
+        }
         return false;
     }
 
@@ -143,6 +147,14 @@ mod tests {
         assert_eq!(ship.fuel_current, 3);
         assert_eq!(commander.credits(), 1);
         assert_eq!(commander.reputation, -2);
+    }
+
+    #[test]
+    fn an_explicit_amount_never_triggers_the_rescue() {
+        let (mut commander, mut ship) = low_on_fuel(1, 1);
+        assert!(!handle(&args("2"), &mut commander, &mut ship, 3));
+        assert_eq!(ship.fuel_current, 1);
+        assert_eq!(commander.reputation, 0);
     }
 
     #[test]
