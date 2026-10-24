@@ -47,7 +47,7 @@ impl Standing {
     }
 
     fn scale(price: u32, percent: i64) -> u32 {
-        (((i64::from(price) * percent + 50) / 100).max(1)) as u32
+        ((i64::from(price) * percent + 50) / 100).clamp(1, i64::from(u32::MAX)) as u32
     }
 
     pub fn name(&self) -> &'static str {
@@ -239,6 +239,12 @@ mod tests {
         assert_eq!(Standing::Disreputable.sell_price(100), 98);
         assert_eq!(Standing::Criminal.buy_price(100), 104);
         assert_eq!(Standing::Criminal.sell_price(100), 96);
+    }
+
+    #[test]
+    fn price_adjustment_saturates_instead_of_wrapping() {
+        assert_eq!(Standing::Respected.sell_price(u32::MAX), u32::MAX);
+        assert_eq!(Standing::Respected.sell_price(4_129_776_246), u32::MAX);
     }
 
     #[test]
