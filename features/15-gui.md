@@ -16,7 +16,7 @@ Spec only. Nothing is built.
 - Good news: `combat.rs` is already a pure state machine (`Combat`, `Action`, `Outcome`, injected `roll`); `fight.rs` is only the I/O driver. `data/*` and helpers like `reachable_destinations`, `calculate_travel_cost` and `fuel_for_distance` are already clean. Use these as the model for the rest.
 
 ## Target Architecture
-Three layers, each depending only on the one above it:
+Three crates. `elite-core` depends on no front end; `elite-cli` and `elite-gui` each depend directly on `elite-core`, never on each other:
 
 1. **Core (`elite-core`)**: rules, data and state. No printing, no stdin, no `colored`, no `crossterm`. Typed inputs, typed results, typed errors. Randomness is injected (as `combat` already does) so tests and replays are deterministic.
 2. **CLI (`elite-cli`)**: parses command lines, calls the core, formats results as text. All `colored` / `crossterm` code lives here, including what is now `utils/display.rs` and `utils/input.rs`.
@@ -29,7 +29,7 @@ Prefer one small command/outcome surface over many `handle_*` methods:
 - Each action returns `Result<Outcome, ActionError>` where the outcome carries what changed (receipt with unit price, total, credits after; fuel used; etc.) and `ActionError` is a `thiserror` enum (`NotEnoughCredits { needed, have }`, `NoCargoSpace`, `UnknownCommodity(String)`, ...). The CLI turns these into today's messages.
 - Read-only queries return view structs: `MarketView`, `CargoView`, `StatusView`, `SystemInfoView`, `Vec<Destination>`, `SavesView`, `TradeLogView`. No strings pre-formatted for a terminal.
 - **Travel is a step machine, not a blocking call.** `Jump` returns `JumpOutcome::Arrived` or `JumpOutcome::EventPending(PendingEvent)` where the event lists its choices; the caller then submits `ResolveEvent(choice)`, which may return `CombatStarted(Combat)` or a further outcome. The confirmation prompt becomes the caller's job (CLI asks y/n; GUI shows a dialog) before it submits `Jump`.
-- **Combat** keeps the existing `Combat` / `Action` / `Outcome` API. `fight.rs` moves to the CLI crate as the terminal driver.
+- **Combat** keeps the existing `Combat` / `Action` / `Outcome` API. `fight.rs` moves to the CLI crate as the terminal driver. When a fight ends, the caller submits the finished `Combat` and its `Outcome` back to the core (`SettleCombat`), which applies today's `settle` rules (credits, loot, reputation, the player's final hull) and returns the session to travel. The full-session test covers this hand-off.
 - **Save/load** takes explicit arguments and returns results (`save(slot, overwrite: bool)`, `load(slot)`, `list_saves()`, `delete(slot)`). Confirmation prompts move to the front ends. The save directory comes from a path passed in (or a trait), not hard-coded `dirs` calls scattered through logic, because iOS needs a different location.
 - New game takes a commander name as a parameter. The load-or-new prompt moves to the front ends.
 
@@ -42,12 +42,12 @@ Do this first and on its own.
 - [ ] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.
 - [ ] Make `main.rs` use the library (`use elitey_rust::...`), not duplicate `mod` declarations.
 - [ ] Inject randomness (travel events, market fluctuation, combat rolls) so core tests can be deterministic.
-- [ ] Existing `tests/*` still pass; update them to call the core API directly where that is simpler than driving the CLI.
+- [ ] Existing `tests/*` still pass. Rule and state tests may move to the core API, but keep representative CLI tests (command parsing, output formatting, prompts, error messages) so the "CLI unchanged" requirement is actually checked.
 
 ### Phase 2: Workspace split
 - [ ] Convert to a Cargo workspace: `elite-core`, `elite-cli` (binary, keeps the `elitey_rust` binary name or documents the rename), later `elite-gui`.
 - [ ] Update `Makefile`, CI (`.github/workflows/ci.yml`, `release.yml`) and README for the new layout.
-- [ ] `elite-core` must not depend on `colored`, `crossterm` or `clap`. Check this in CI (`cargo tree -p elite-core`).
+- [ ] `elite-core` must not depend on `colored`, `crossterm` or `clap`, including as dev or build dependencies. CI fails if `cargo tree -p elite-core -e normal,build,dev` mentions any of them.
 
 ### Phase 3: GUI shell (macOS)
 - [ ] Toolkit: **TBC**; see Toolkit options. Decide before starting this phase. Phases 1 and 2 do not depend on the choice.
@@ -93,6 +93,7 @@ The game is mostly menus, tables and dialogs, with a wireframe galaxy map later.
 - [ ] A full session (new game, trade, refuel, jump, fight, save, load) runs in a test through the core API alone
 - [ ] CLI behaviour is unchanged for existing flows; `tests/*` green
 - [ ] `cargo test`, `cargo clippy` and `cargo fmt` clean at the end of every phase
+- [ ] A committed save file written by the pre-refactor game loads in the core (add the fixture and its test before changing the save schema)
 - [ ] Phase 3: every command in the README command list is reachable from the GUI, and a save made in the GUI loads in the CLI and vice versa
 
 ## Implementation Notes
