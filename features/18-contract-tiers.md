@@ -30,13 +30,26 @@ Spec only. Slices are tracked as GitHub issues.
 
 ### Smuggling (criminal, Disreputable and below)
 - The client supplies 5 to 10 tons of Narcotics to deliver to a lawful system within range
+- The cargo occupies the hold, so acceptance needs that much free room; a full ship cannot accept the job
 - **Reward:** about 3 times the courier reward for the same distance, plus a per-ton premium (exact numbers set by the balance pass)
-- **Inspection on arrival:** each lawful government has an inspection chance (Communist and Dictatorship highest, Corporate State and Democracy next, the rest lowest). When inspected the player chooses:
-  - **Bribe:** pay 40% of the reward and the delivery succeeds
-  - **Run:** fight a patrol vessel (the same combat as a raider); win and the delivery succeeds, escape or defeat fail the job
-  - **Hand over the cargo:** the job fails
-- **Result:** delivery pays and costs 3 reputation (infamy grows). Failure costs the cargo, a fine of 25% of the reward (never more than the player's credits) and 5 reputation
-- Never inspected means the reward is paid in full
+- **Inspection on arrival:** smuggling has its own inspection roll when the player arrives at the destination; it does not use the random Government Inspection event, so the player faces at most one smuggling inspection per arrival, which covers every smuggling job for that system. The chance depends on the government (Communist and Dictatorship highest, Corporate State and Democracy next, the rest lowest)
+- **Order on arrival:** travel events, then courier and freight deliveries, then the smuggling inspection, then bounty fights
+- When inspected the player chooses:
+  - **Bribe:** pay 40% of the combined reward of the smuggling jobs for this system and the deliveries succeed. Bribe is offered only if the player has the credits
+  - **Run:** fight a patrol vessel (the same combat as a raider)
+  - **Hand over the cargo:** the jobs fail
+- Not inspected means every smuggling job here is paid in full
+
+| Outcome | Jobs | Cargo, credits, hull and reputation |
+|---|---|---|
+| Not inspected, or bribed | Paid (minus the bribe) | Reputation −3 per job (infamy grows) |
+| Run: victory | Paid in full | Reputation −3 per job and −5 for attacking the law; no combat payout or loot; the hull stays damaged |
+| Run: successful escape | Fail | Contraband lost; the failure fine and reputation below apply; nothing else is lost |
+| Run: surrender | Fail | Contraband lost; the failure fine and reputation below apply (the combat surrender losses are replaced by them) |
+| Run: defeat | Fail | The combat defeat rules apply (all cargo lost, half the credits, hull at 10%, −5 reputation); the failure fine and extra reputation do not stack on top |
+| Hand over the cargo | Fail | Contraband lost; the failure fine and reputation below apply |
+
+- **Failure fine:** 25% of the job's reward, never more than the player's credits, and 5 reputation per failed job (once for all jobs lost to the same inspection)
 
 ### Gateway for Neutral players
 - At Anarchy and Feudal systems, a Neutral commander is offered the occasional **black courier** job: a courier job whose parcel is contraband. It pays 1.5 times a courier job and costs 3 reputation on delivery
@@ -82,7 +95,8 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 - [ ] The kinds of job on a board depend on the commander's standing and the system's government, as in the table
 - [ ] Freight jobs need room in the hold, put the cargo in it, and pay more for bigger loads
 - [ ] Freight delivery and failure follow the job rules, losing the cargo on failure
-- [ ] Smuggling jobs run an inspection on arrival with the three choices and the stated results
+- [ ] Smuggling jobs run an inspection on arrival with the three choices and the stated results, in the stated order after other deliveries
+- [ ] Smuggling needs free hold room to accept, and Bribe is only offered to a player who can pay
 - [ ] Contract cargo cannot be sold at a market
 - [ ] Neutral commanders are offered black courier jobs at Anarchy and Feudal systems and no other criminal jobs
 - [ ] Standing changes the odds of patrol and inspection events as specified
@@ -93,7 +107,9 @@ Contracts must pay well enough to be worth choosing over the patient trader (net
 ## Testing (write first)
 - [ ] Board generation per standing and government: which kinds can and cannot appear, with a fixed seed
 - [ ] Freight: reward scales with tons, acceptance needs room, cargo is lost on failure
-- [ ] Smuggling: each inspection choice with injected randomness and dice; fine capped by credits
+- [ ] Smuggling: each inspection choice and each run outcome (victory, escape, surrender, defeat) with injected randomness and dice; fine capped by credits; penalties do not stack
+- [ ] Smuggling acceptance with a full hold; Bribe unavailable with too few credits
+- [ ] Arrival order with a courier job, a freight job, a smuggling job and a bounty for the same system
 - [ ] Contract cargo cannot be sold
 - [ ] Event weights by standing
 - [ ] Old-save compatibility

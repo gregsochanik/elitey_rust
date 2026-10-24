@@ -8,13 +8,16 @@ Spec only. Slices are tracked as GitHub issues.
 
 ## Version 1 Scope
 
+### Supersedes Feature 03
+Feature 03 re-rolls fluctuation and refreshes stock on arrival elsewhere. From this feature on those rules are replaced: neither prices nor stock reset on arrival, only the world clock changes them. Feature 03 carries a note to that effect.
+
 ### Markets have memory
 - Every system keeps its market between visits: base fluctuation, stock, and any price impact from the player
 - The game counts jumps (a world clock). Markets change with that clock, not with arrivals
 
 ### Prices change by the clock
 - A system's fluctuation (the ±30% around its economy's tendency) is fixed for a period of **10 jumps**, then re-rolled the next time it is looked at. Hopping between two systems does not re-roll anything
-- Within a period, prices at a system are the same on every visit, so a route can be learned and repeated
+- Within a period, a system's undisturbed prices are the same on every visit, so a route can be learned and repeated. Prices the player has moved by trading stay moved and recover with the clock
 
 ### The player moves prices
 - **Selling** lowers that commodity's sell price at the system: −1.5% per ton sold, down to −40%
@@ -25,7 +28,7 @@ Spec only. Slices are tracked as GitHub issues.
 
 ### Display
 - `market` shows the same prices the player will get
-- A commodity the player has pushed shows a marker (for example `▼ sold here`) until it has recovered most of the way
+- A commodity the player has pushed shows a marker: `▼ sold here` after selling, `▲ bought here` after buying. The marker clears once the remaining gap is under 20% of the original impact, which takes 16 jumps at the 10% recovery rate (0.9^16 ≈ 0.185)
 
 ### Saves
 - The world clock and each system's market state are saved. Old saves load with a clock of zero and untouched markets
@@ -38,8 +41,10 @@ Spec only. Slices are tracked as GitHub issues.
 
 ## Balance
 Targets, set by simulation of an informed trader repeating one route with a full hold:
+Simulation inputs: a Cobra Mk III with a 20-ton hold (Features 01 and 04), capital levels of 100, 500 and 2,000 credits, and market seeds 0 to 299. The clock advances with every jump, so "rests" means the player makes other jumps while the route recovers.
+
 - The first trip pays about what it does today
-- By the fifth trip the margin on that route has fallen to about the level of a courier job, and recovers if the player rests or changes route
+- By the fifth trip the margin on that route has fallen to about the level of a courier job, and recovers while the player trades elsewhere
 - A patient trader hopping between two systems earns no more than a bounty (about 70 per jump at 500cr)
 - The informed single-trip numbers in Feature 03 stay valid for first visits
 
@@ -50,7 +55,8 @@ Targets, set by simulation of an informed trader repeating one route with a full
 
 ## Acceptance Criteria
 - [ ] Arriving at a system does not change its prices; only the world clock does
-- [ ] Prices are identical on repeat visits within a 10-jump period and re-roll after it
+- [ ] A system's undisturbed prices and stock are identical on repeat visits within a 10-jump period and re-roll after it; arriving never resets either
+- [ ] A pushed commodity's marker appears after trading and clears after 16 jumps
 - [ ] Selling 20 tons visibly lowers the sell price at that system, and later visits show the lowered price recovering by 10% of the gap per jump
 - [ ] Buying raises the buy price and lowers stock in the same way
 - [ ] A simulation of repeated trips on one route shows the margin falling as in Balance
@@ -58,7 +64,8 @@ Targets, set by simulation of an informed trader repeating one route with a full
 - [ ] The world clock and market state persist; old saves still load
 
 ## Testing (write first)
-- [ ] Prices at a system are stable across arrivals within a period and change across periods, with a fixed seed
+- [ ] Prices and stock at a system are stable across arrivals within a period (when nothing is traded) and change across periods, with a fixed seed
+- [ ] Marker appears after buying and selling and clears after 16 jumps
 - [ ] Impact: price after selling N tons, the −40% and +40% caps, recovery per jump
 - [ ] Stock depletion and recovery
 - [ ] Standing modifier applied after impact, and `market`, `buy` and `sell` agree

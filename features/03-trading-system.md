@@ -122,9 +122,9 @@ Feature 03: Trading System has been successfully implemented with all requiremen
 - **Commodities**: Food, Textiles, Machinery, Computers, Minerals, Alloys, Luxury, Narcotics
 - **Market Mechanics**: 
   - Economy-based price modifiers (agricultural systems prefer food/textiles, industrial prefer machinery/minerals)
-  - ±30% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere
+  - ±30% random price fluctuations, fixed while the player stays in a system and re-rolled on arrival elsewhere (superseded by Feature 19: prices change with the world clock, not on arrival)
   - Buy/sell price spreads (2-6%)
-  - Supply/demand based availability; buying reduces stock for the rest of the visit, and stock refreshes on arrival elsewhere
+  - Supply/demand based availability; buying reduces stock for the rest of the visit, and stock refreshes on arrival elsewhere (superseded by Feature 19: stock recovers with the world clock)
 - **Trading Commands**: 
   - `market` - Shows current system's prices and availability
   - `buy <item> <quantity>` - Purchases commodities with validation
