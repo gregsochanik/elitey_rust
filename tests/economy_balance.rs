@@ -132,13 +132,15 @@ fn best_courier_net_per_jump(seeds: u64) -> f64 {
             let board = generate_board(origin, &all, &mut StdRng::seed_from_u64(seed));
             let best = board
                 .iter()
+                .filter(|job| job.kind == elitey_rust::game::jobs::JobKind::Courier)
                 .map(|job| {
                     i64::from(job.reward) - i64::from(job.fuel_cost) * i64::from(CREDITS_PER_UNIT)
                 })
-                .max()
-                .unwrap();
-            total += best;
-            count += 1;
+                .max();
+            if let Some(best) = best {
+                total += best;
+                count += 1;
+            }
         }
     }
     total as f64 / count as f64

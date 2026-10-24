@@ -1,6 +1,8 @@
 use crate::data::systems::StarSystem;
+use crate::game::aftermath::settle_with_reward;
+use crate::game::combat::Outcome;
 use crate::game::travel::fuel_for_distance;
-use crate::game::Commander;
+use crate::game::{Commander, Ship};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -16,7 +18,7 @@ const BASE_REWARD: f64 = 20.0;
 const REWARD_PER_FUEL: f64 = 7.0;
 const BOUNTY_BASE_REWARD: f64 = 100.0;
 const BOUNTY_REWARD_PER_FUEL: f64 = 12.0;
-const BOUNTY_SHARE: f64 = 0.0;
+const BOUNTY_SHARE: f64 = 0.3;
 
 /// What a job asks of the player
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -110,37 +112,47 @@ fn reputation_messages(
     }
 }
 
+/// What arriving at a system did to the player's jobs
+#[derive(Debug, Default)]
+pub struct Arrival {
+    pub messages: Vec<String>,
+    /// Bounties whose target is here and still in time; each now needs a fight
+    pub bounties: Vec<ActiveJob>,
+}
+
 /// Use up one deadline jump on every active job after the player arrives at `arrived_at`:
-/// jobs for this system are delivered and paid, jobs out of jumps fail
+/// courier jobs for this system are delivered and paid, bounties for it are handed back to be
+/// fought, and jobs out of jumps fail
 pub fn settle_arrival(
     active: &mut Vec<ActiveJob>,
     commander: &mut Commander,
     arrived_at: &str,
-) -> Vec<String> {
-    let mut messages = Vec::new();
+) -> Arrival {
+    let mut arrival = Arrival::default();
     let mut remaining = Vec::new();
 
     for mut entry in std::mem::take(active) {
         entry.jumps_left = entry.jumps_left.saturating_sub(1);
-        let delivers = entry.job.kind == JobKind::Courier
-            && entry.job.destination.eq_ignore_ascii_case(arrived_at);
-        if delivers {
+        let here = entry.job.destination.eq_ignore_ascii_case(arrived_at);
+        if here && entry.job.kind == JobKind::Bounty {
+            arrival.bounties.push(entry);
+        } else if here {
             commander.add_credits(entry.job.reward);
-            messages.push(format!(
+            arrival.messages.push(format!(
                 "Delivered the parcel to {}: +{}cr.",
                 entry.job.destination, entry.job.reward
             ));
             reputation_messages(
-                &mut messages,
+                &mut arrival.messages,
                 commander.change_reputation(DELIVERY_REPUTATION),
             );
         } else if entry.jumps_left == 0 {
-            messages.push(format!(
-                "The courier job to {} ran out of time and was cancelled.",
+            arrival.messages.push(format!(
+                "The job to {} ran out of time and was cancelled.",
                 entry.job.destination
             ));
             reputation_messages(
-                &mut messages,
+                &mut arrival.messages,
                 commander.change_reputation(FAILURE_REPUTATION),
             );
         } else {
@@ -149,6 +161,51 @@ pub fn settle_arrival(
     }
 
     *active = remaining;
+    arrival
+}
+
+/// Fight each bounty in turn. `fight` plays one fight and returns how it ended and the
+/// player's remaining hull. Anything but a victory ends the hunt and fails the rest.
+pub fn resolve_bounties(
+    bounties: Vec<ActiveJob>,
+    commander: &mut Commander,
+    ship: &mut Ship,
+    fight: &mut impl FnMut(&Ship) -> std::io::Result<(Outcome, u32)>,
+    rng: &mut impl Rng,
+) -> Vec<String> {
+    let mut messages = Vec::new();
+    let mut hunt_over = false;
+
+    for entry in bounties {
+        if !hunt_over {
+            match fight(ship) {
+                Ok((outcome, hull)) => {
+                    messages.extend(settle_with_reward(
+                        outcome,
+                        hull,
+                        commander,
+                        ship,
+                        rng,
+                        Some(entry.job.reward),
+                    ));
+                    if outcome == Outcome::Victory {
+                        messages.push(format!(
+                            "Bounty claimed near {}: {}cr.",
+                            entry.job.destination, entry.job.reward
+                        ));
+                        continue;
+                    }
+                }
+                Err(error) => messages.push(format!("The fight was interrupted: {}", error)),
+            }
+            hunt_over = true;
+        }
+        messages.push(format!("The bounty near {} failed.", entry.job.destination));
+        reputation_messages(
+            &mut messages,
+            commander.change_reputation(FAILURE_REPUTATION),
+        );
+    }
     messages
 }
 
@@ -309,16 +366,120 @@ mod tests {
     }
 
     #[test]
-    fn bounties_are_never_delivered_like_parcels() {
+    fn bounties_here_are_handed_back_to_be_fought_not_paid() {
         let mut commander = Commander::new("Test".to_string());
-        let mut bounty = active_job("DISO", 150, 3);
+        let mut bounty = active_job("DISO", 150, 1);
+        bounty.job.kind = JobKind::Bounty;
+        let mut active = vec![bounty, active_job("DISO", 40, 2)];
+
+        let arrival = settle_arrival(&mut active, &mut commander, "DISO");
+
+        assert_eq!(arrival.bounties.len(), 1);
+        assert_eq!(commander.credits(), 140);
+        assert!(active.is_empty());
+    }
+
+    #[test]
+    fn a_bounty_that_runs_out_of_time_elsewhere_fails_without_a_fight() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut bounty = active_job("DISO", 150, 1);
         bounty.job.kind = JobKind::Bounty;
         let mut active = vec![bounty];
 
-        settle_arrival(&mut active, &mut commander, "DISO");
+        let arrival = settle_arrival(&mut active, &mut commander, "LEESTI");
+
+        assert!(arrival.bounties.is_empty());
+        assert!(active.is_empty());
+        assert_eq!(commander.reputation, -3);
+    }
+
+    fn bounty(destination: &str, reward: u32) -> ActiveJob {
+        let mut entry = active_job(destination, reward, 1);
+        entry.job.kind = JobKind::Bounty;
+        entry
+    }
+
+    fn fights(
+        results: Vec<(Outcome, u32)>,
+    ) -> impl FnMut(&Ship) -> std::io::Result<(Outcome, u32)> {
+        let mut results = results.into_iter();
+        move |_| Ok(results.next().expect("unexpected extra fight"))
+    }
+
+    #[test]
+    fn winning_a_bounty_pays_the_bounty_instead_of_the_random_payout() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        let messages = resolve_bounties(
+            vec![bounty("DISO", 150)],
+            &mut commander,
+            &mut ship,
+            &mut fights(vec![(Outcome::Victory, 70)]),
+            &mut StdRng::seed_from_u64(1),
+        );
+
+        assert_eq!(commander.credits(), 250);
+        assert_eq!(commander.reputation, 5);
+        assert_eq!(ship.hull_percentage, 70);
+        assert!(messages.iter().any(|m| m.contains("Bounty claimed")));
+    }
+
+    #[test]
+    fn escaping_surrendering_or_losing_fails_the_bounty() {
+        for outcome in [Outcome::Escaped, Outcome::Surrendered, Outcome::Defeat] {
+            let mut commander = Commander::new("Test".to_string());
+            let mut ship = Ship::new_cobra_mk3();
+
+            resolve_bounties(
+                vec![bounty("DISO", 150)],
+                &mut commander,
+                &mut ship,
+                &mut fights(vec![(outcome, 40)]),
+                &mut StdRng::seed_from_u64(1),
+            );
+
+            assert!(commander.credits() <= 100, "{:?}", outcome);
+            let expected = match outcome {
+                Outcome::Defeat => -8,
+                _ => -3,
+            };
+            assert_eq!(commander.reputation, expected, "{:?}", outcome);
+        }
+    }
+
+    #[test]
+    fn escaping_the_first_of_two_bounties_fails_both() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        resolve_bounties(
+            vec![bounty("DISO", 150), bounty("DISO", 170)],
+            &mut commander,
+            &mut ship,
+            &mut fights(vec![(Outcome::Escaped, 60)]),
+            &mut StdRng::seed_from_u64(1),
+        );
 
         assert_eq!(commander.credits(), 100);
-        assert_eq!(active.len(), 1);
+        assert_eq!(commander.reputation, -6);
+    }
+
+    #[test]
+    fn winning_the_first_bounty_leads_to_a_second_fight() {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        resolve_bounties(
+            vec![bounty("DISO", 150), bounty("DISO", 170)],
+            &mut commander,
+            &mut ship,
+            &mut fights(vec![(Outcome::Victory, 80), (Outcome::Victory, 60)]),
+            &mut StdRng::seed_from_u64(1),
+        );
+
+        assert_eq!(commander.credits(), 420);
+        assert_eq!(ship.hull_percentage, 60);
     }
 
     #[test]
@@ -346,7 +507,10 @@ mod tests {
                 assert!(job.distance <= MAX_JOB_RANGE);
                 assert_eq!(job.fuel_cost, fuel_for_distance(job.distance));
                 assert!((2..=4).contains(&job.deadline_jumps));
-                let base = 20.0 + 7.0 * f64::from(job.fuel_cost);
+                let base = match job.kind {
+                    JobKind::Courier => 20.0 + 7.0 * f64::from(job.fuel_cost),
+                    JobKind::Bounty => 100.0 + 12.0 * f64::from(job.fuel_cost),
+                };
                 assert!(f64::from(job.reward) >= (base * 0.9).round());
                 assert!(f64::from(job.reward) <= (base * 1.1).round());
             }
@@ -466,7 +630,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 3)];
 
-        let messages = settle_arrival(&mut active, &mut commander, "DISO");
+        let messages = settle_arrival(&mut active, &mut commander, "DISO").messages;
 
         assert!(active.is_empty());
         assert_eq!(commander.credits(), 150);
@@ -490,7 +654,7 @@ mod tests {
         let mut commander = Commander::new("Test".to_string());
         let mut active = vec![active_job("DISO", 50, 1)];
 
-        let messages = settle_arrival(&mut active, &mut commander, "LEESTI");
+        let messages = settle_arrival(&mut active, &mut commander, "LEESTI").messages;
 
         assert!(active.is_empty());
         assert_eq!(commander.credits(), 100);
