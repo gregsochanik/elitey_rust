@@ -21,7 +21,7 @@ Out of scope: multiplayer, graphics, real-time combat.
 | 05 | Save/load | Done | 01 |
 | 06 | Dynamic events | Done (gaps in spec) | 02 |
 | 07 | Equipment (v1: slots, power, buy/sell, cargo racks) | Done (v1) | 04 |
-| 08 | Combat (v1: one pirate fight using equipment) | Spec only | 06, 07 |
+| 08 | Combat (v1: one pirate fight using equipment) | Done (v1, untuned) | 06, 07 |
 | 10 | Reputation | Spec only | 03, 06 |
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
 | 13 | UI improvements | Spec only | – |

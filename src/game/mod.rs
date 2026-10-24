@@ -1,3 +1,4 @@
+pub mod aftermath;
 pub mod combat;
 pub mod commander;
 pub mod equipment;

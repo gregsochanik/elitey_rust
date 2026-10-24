@@ -55,6 +55,7 @@ pub struct EventOutcome {
     pub hull_damage: i32,
     pub fuel_change: i32,
     pub reputation_change: i32,
+    pub starts_combat: bool,
     pub new_location: Option<String>, // For wormhole events
     pub message: String,
 }
@@ -129,7 +130,7 @@ fn economy_weight(event_type: &EventType, economy: &EconomyType) -> f64 {
 }
 
 /// Remove cargo from the hold and return what was taken
-fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(CommodityType, u32)> {
+pub(crate) fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(CommodityType, u32)> {
     match loss {
         CargoLoss::All(commodity) => {
             let held = ship.cargo_hold.get_quantity(commodity);
@@ -165,7 +166,7 @@ fn apply_cargo_loss(ship: &mut Ship, loss: &CargoLoss) -> Vec<(CommodityType, u3
 }
 
 /// Add as much of the gain as fits and return the tons added
-fn apply_cargo_gain(ship: &mut Ship, gain: &CargoGain) -> u32 {
+pub(crate) fn apply_cargo_gain(ship: &mut Ship, gain: &CargoGain) -> u32 {
     let tons = gain.tons.min(ship.cargo_hold.remaining_capacity());
     if tons > 0 {
         ship.cargo_hold.add_cargo(gain.commodity.clone(), tons);
@@ -371,6 +372,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: -2,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: Some("UNKNOWN".to_string()),
                         message: "The wormhole has transported you to an unknown location!"
                             .to_string(),
@@ -386,6 +388,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: -1,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: None,
                         message: "You safely avoid the wormhole and continue your journey."
                             .to_string(),
@@ -416,6 +419,7 @@ impl EventManager {
                         hull_damage: -5,
                         fuel_change: -1,
                         reputation_change: 10,
+                        starts_combat: false,
                         new_location: None,
                         message: "You discover valuable materials! +500 credits, +2 tons of Computers, +10 reputation"
                             .to_string(),
@@ -431,6 +435,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: None,
                         message: "You safely avoid the anomaly and continue your journey."
                             .to_string(),
@@ -457,6 +462,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: -2,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: None,
                         message: "Navigation corrected, but you used extra fuel.".to_string(),
                     },
@@ -471,6 +477,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: -3,
                         reputation_change: -5,
+                        starts_combat: false,
                         new_location: None,
                         message: "You arrive at your destination but used more fuel than expected."
                             .to_string(),
@@ -500,6 +507,7 @@ impl EventManager {
                         hull_damage: -2,
                         fuel_change: 0,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: None,
                         message: "You salvage valuable materials! +200 credits, +3 tons of Minerals, minor hull damage."
                             .to_string(),
@@ -515,6 +523,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 0,
+                        starts_combat: false,
                         new_location: None,
                         message: "You safely avoid the debris field.".to_string(),
                     },
@@ -540,6 +549,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 15,
+                        starts_combat: false,
                         new_location: None,
                         message: "The aliens are friendly! +300 credits, +15 reputation."
                             .to_string(),
@@ -555,6 +565,7 @@ impl EventManager {
                         hull_damage: -3,
                         fuel_change: -2,
                         reputation_change: -5,
+                        starts_combat: false,
                         new_location: None,
                         message: "You escape but take some damage and use extra fuel.".to_string(),
                     },
@@ -569,6 +580,7 @@ impl EventManager {
                         hull_damage: -8,
                         fuel_change: 0,
                         reputation_change: -10,
+                        starts_combat: false,
                         new_location: None,
                         message: "You win the battle! +400 credits, but significant hull damage."
                             .to_string(),
@@ -589,14 +601,15 @@ impl EventManager {
                     description: "Fight the pirates".to_string(),
                     outcome: EventOutcome {
                         description: "You engage in combat with the pirates".to_string(),
-                        credits_change: 600,
+                        credits_change: 0,
                         cargo_loss: None,
                         cargo_gain: None,
-                        hull_damage: -10,
+                        hull_damage: 0,
                         fuel_change: 0,
-                        reputation_change: 5,
+                        reputation_change: 0,
+                        starts_combat: true,
                         new_location: None,
-                        message: "You defeat the pirates! +600 credits, but heavy hull damage."
+                        message: "The pirates open fire!"
                             .to_string(),
                     },
                 },
@@ -610,6 +623,7 @@ impl EventManager {
                         hull_damage: -5,
                         fuel_change: -3,
                         reputation_change: -5,
+                        starts_combat: false,
                         new_location: None,
                         message: "You escape but lose up to 3 tons of cargo and take damage.".to_string(),
                     },
@@ -624,6 +638,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -10,
+                        starts_combat: false,
                         new_location: None,
                         message: "You surrender and lose up to 5 tons of cargo and 200 credits, but avoid damage."
                             .to_string(),
@@ -653,6 +668,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 20,
+                        starts_combat: false,
                         new_location: None,
                         message: "You rescue the crew! +400 credits, +2 tons of Luxury as thanks, +20 reputation.".to_string(),
                     },
@@ -667,6 +683,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -5,
+                        starts_combat: false,
                         new_location: None,
                         message: "You ignore the signal and continue your journey.".to_string(),
                     },
@@ -693,6 +710,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 10,
+                        starts_combat: false,
                         new_location: None,
                         message: "Inspection completed. -50 credits for fees, +10 reputation."
                             .to_string(),
@@ -708,6 +726,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -5,
+                        starts_combat: false,
                         new_location: None,
                         message: "Bribe successful. -100 credits, minor reputation loss."
                             .to_string(),
@@ -723,6 +742,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -15,
+                        starts_combat: false,
                         new_location: None,
                         message: "You resist but lose any illegal cargo and reputation."
                             .to_string(),
@@ -749,6 +769,7 @@ impl EventManager {
                         hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: 5,
+                        starts_combat: false,
                         new_location: None,
                         message: "Standard procedure completed. +5 reputation.".to_string(),
                     },
@@ -763,6 +784,7 @@ impl EventManager {
                         hull_damage: -3,
                         fuel_change: -2,
                         reputation_change: -10,
+                        starts_combat: false,
                         new_location: None,
                         message: "You evade but take damage and use extra fuel.".to_string(),
                     },
@@ -777,6 +799,7 @@ impl EventManager {
                         hull_damage: -15,
                         fuel_change: 0,
                         reputation_change: -20,
+                        starts_combat: false,
                         new_location: None,
                         message: "You defeat the patrol! +800 credits, but heavy damage and reputation loss.".to_string(),
                     },
@@ -1137,5 +1160,40 @@ mod tests {
                 .unwrap();
             assert_eq!(event.phase, EventPhase::Jump);
         }
+    }
+
+    #[test]
+    fn only_fighting_pirates_starts_combat() {
+        let manager = EventManager::new();
+        let mut starters = Vec::new();
+        for (event_type, event) in &manager.events {
+            for choice in &event.choices {
+                if choice.outcome.starts_combat {
+                    starters.push((event_type.clone(), choice.description.clone()));
+                }
+            }
+        }
+
+        assert_eq!(
+            starters,
+            vec![(EventType::PirateAttack, "Fight the pirates".to_string())]
+        );
+    }
+
+    #[test]
+    fn fighting_pirates_has_no_instant_effects() {
+        let manager = EventManager::new();
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = ship_with(&[]);
+        let event = manager.events.get(&EventType::PirateAttack).unwrap();
+
+        let outcome = manager
+            .process_event(event, &mut commander, &mut ship, 0)
+            .unwrap();
+
+        assert!(outcome.starts_combat);
+        assert_eq!(commander.credits, 100);
+        assert_eq!(commander.reputation, 0);
+        assert_eq!(ship.hull_percentage, 100);
     }
 }
