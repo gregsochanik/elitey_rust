@@ -164,12 +164,19 @@ fn surrendering_to_pirates_costs_cargo_and_credits() {
         .iter()
         .position(|c| c.description == "Surrender")
         .unwrap();
-    manager
+    let outcome = manager
         .process_event(event, &mut commander, &mut ship, surrender)
         .unwrap();
 
-    assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Computers), 3);
-    assert_eq!(commander.credits, 300);
+    let Some(CargoLoss::Tons(tons)) = outcome.cargo_loss else {
+        panic!("surrender loses cargo");
+    };
+    assert_eq!(
+        ship.cargo_hold.get_quantity(&CommodityType::Computers),
+        8 - tons
+    );
+    assert_eq!(commander.credits as i32, 500 + outcome.credits_change);
+    assert!(outcome.credits_change < 0);
 }
 
 #[test]
@@ -202,11 +209,12 @@ fn rescuing_the_crew_rewards_cargo() {
     let mut ship = ship_with(&[]);
 
     let event = manager.events.get(&EventType::RescueSignal).unwrap();
-    manager
+    let outcome = manager
         .process_event(event, &mut commander, &mut ship, 0)
         .unwrap();
 
-    assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Luxury), 2);
+    let gained = outcome.cargo_gain.unwrap().tons;
+    assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Luxury), gained);
 }
 
 fn system(government: GovernmentType, economy: EconomyType) -> StarSystem {
@@ -452,6 +460,122 @@ fn standing_leaves_every_other_event_alone() {
                 standing_weight(&event_type, standing, &GovernmentType::Democracy),
                 1.0
             );
+        }
+    }
+}
+
+fn outcome_of(manager: &EventManager, event_type: EventType, choice: usize) -> &EventOutcome {
+    &manager.events.get(&event_type).unwrap().choices[choice].outcome
+}
+
+fn rolled_credits(event_type: EventType, choice: usize, held: u32, seed: u64) -> i32 {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    roll_outcome(
+        outcome_of(&manager, event_type, choice),
+        held,
+        &mut StdRng::seed_from_u64(seed),
+    )
+    .credits_change
+}
+
+#[test]
+fn credit_gains_are_rolled_within_the_range() {
+    let rolls: Vec<i32> = (0..300)
+        .map(|seed| rolled_credits(EventType::AlienEncounter, 0, 10_000, seed))
+        .collect();
+    assert!(rolls.iter().all(|credits| (180..=420).contains(credits)));
+    assert!(rolls.iter().min() < Some(&220) && rolls.iter().max() > Some(&380));
+}
+
+#[test]
+fn fines_are_rolled_within_the_range() {
+    let rolls: Vec<i32> = (0..300)
+        .map(|seed| rolled_credits(EventType::GovernmentInspection, 1, 10_000, seed))
+        .collect();
+    assert!(rolls.iter().all(|credits| (-140..=-60).contains(credits)));
+    assert!(rolls.iter().min() != rolls.iter().max());
+}
+
+#[test]
+fn windfalls_are_capped_for_poor_commanders() {
+    for seed in 0..300 {
+        assert!(rolled_credits(EventType::HyperspaceAnomaly, 0, 100, seed) <= 250);
+    }
+    let rich_max = (0..300)
+        .map(|seed| rolled_credits(EventType::HyperspaceAnomaly, 0, 10_000, seed))
+        .max()
+        .unwrap();
+    assert!(rich_max > 600);
+}
+
+#[test]
+fn cargo_tons_are_rolled_within_one_of_the_base() {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    let outcome = outcome_of(&manager, EventType::SpaceDebris, 0);
+    let tons: Vec<u32> = (0..300)
+        .map(|seed| {
+            roll_outcome(outcome, 1000, &mut StdRng::seed_from_u64(seed))
+                .cargo_gain
+                .unwrap()
+                .tons
+        })
+        .collect();
+    assert!(tons.iter().all(|tons| (2..=4).contains(tons)));
+    assert!(tons.contains(&2) && tons.contains(&4));
+}
+
+#[test]
+fn the_message_shows_the_rolled_amounts() {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    let outcome = outcome_of(&manager, EventType::SpaceDebris, 0);
+    for seed in 0..50 {
+        let rolled = roll_outcome(outcome, 1000, &mut StdRng::seed_from_u64(seed));
+        assert!(rolled
+            .message
+            .contains(&format!("+{} credits", rolled.credits_change)));
+        assert!(rolled
+            .message
+            .contains(&format!("+{} tons", rolled.cargo_gain.unwrap().tons)));
+        assert!(!rolled.message.contains('{'));
+    }
+}
+
+#[test]
+fn processing_an_event_applies_the_rolled_credits() {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    let event = manager.events.get(&EventType::AlienEncounter).unwrap();
+    let mut commander = Commander::new("Test".to_string());
+    commander.credits = 1000;
+    let mut ship = Ship::new_cobra_mk3();
+    let outcome = manager
+        .process_event_with(
+            event,
+            &mut commander,
+            &mut ship,
+            0,
+            &mut StdRng::seed_from_u64(7),
+        )
+        .unwrap();
+    assert_eq!(commander.credits as i32, 1000 + outcome.credits_change);
+}
+
+#[test]
+fn every_outcome_message_placeholder_is_filled() {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    for event in manager.events.values() {
+        for choice in &event.choices {
+            let rolled = roll_outcome(&choice.outcome, 500, &mut StdRng::seed_from_u64(1));
+            assert!(!rolled.message.contains('{'), "{}", choice.outcome.message);
         }
     }
 }

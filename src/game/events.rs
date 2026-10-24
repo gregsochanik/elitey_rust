@@ -198,6 +198,53 @@ pub(crate) fn apply_cargo_gain(ship: &mut Ship, gain: &CargoGain) -> u32 {
     tons
 }
 
+const MIN_CREDITS_ROLL: f64 = 0.6;
+const MAX_CREDITS_ROLL: f64 = 1.4;
+const WINDFALL_BASE: i32 = 400;
+const WINDFALL_CAP_FLOOR: u32 = 200;
+
+/// Roll an outcome's credits and cargo tons within their ranges and fill in the message
+pub(crate) fn roll_outcome<R: Rng>(
+    outcome: &EventOutcome,
+    commander_credits: u32,
+    rng: &mut R,
+) -> EventOutcome {
+    let mut rolled = outcome.clone();
+
+    if outcome.credits_change != 0 {
+        let roll = rng.gen_range(MIN_CREDITS_ROLL..=MAX_CREDITS_ROLL);
+        let mut credits = (f64::from(outcome.credits_change) * roll).round() as i32;
+        if outcome.credits_change >= WINDFALL_BASE {
+            let cap = WINDFALL_CAP_FLOOR + commander_credits / 2;
+            credits = credits.min(cap as i32);
+        }
+        rolled.credits_change = credits;
+    }
+
+    let mut tons = 0;
+    if let Some(gain) = &mut rolled.cargo_gain {
+        gain.tons = roll_tons(gain.tons, rng);
+        tons = gain.tons;
+    }
+    if let Some(CargoLoss::Tons(base)) = &mut rolled.cargo_loss {
+        *base = roll_tons(*base, rng);
+        tons = *base;
+    }
+
+    rolled.message = outcome
+        .message
+        .replace(
+            "{credits}",
+            &rolled.credits_change.unsigned_abs().to_string(),
+        )
+        .replace("{tons}", &tons.to_string());
+    rolled
+}
+
+fn roll_tons<R: Rng>(base: u32, rng: &mut R) -> u32 {
+    rng.gen_range(base.saturating_sub(1).max(1)..=base + 1)
+}
+
 impl EventManager {
     pub fn new() -> Self {
         let mut events = HashMap::new();
@@ -331,12 +378,30 @@ impl EventManager {
         ship: &mut Ship,
         choice_index: usize,
     ) -> Result<EventOutcome, String> {
+        self.process_event_with(
+            event,
+            commander,
+            ship,
+            choice_index,
+            &mut rand::thread_rng(),
+        )
+    }
+
+    pub fn process_event_with<R: Rng>(
+        &self,
+        event: &Event,
+        commander: &mut Commander,
+        ship: &mut Ship,
+        choice_index: usize,
+        rng: &mut R,
+    ) -> Result<EventOutcome, String> {
         if choice_index >= event.choices.len() {
             return Err("Invalid choice index".to_string());
         }
 
         let choice = &event.choices[choice_index];
-        let outcome = &choice.outcome;
+        let rolled = roll_outcome(&choice.outcome, commander.credits, rng);
+        let outcome = &rolled;
 
         // Apply outcome effects
         commander.credits = (commander.credits as i32 + outcome.credits_change).max(0) as u32;
@@ -379,7 +444,7 @@ impl EventManager {
             commander.location = new_location.clone();
         }
 
-        Ok(outcome.clone())
+        Ok(rolled)
     }
 
     // Event creation methods
@@ -452,7 +517,7 @@ impl EventManager {
                         reputation_change: 10,
                         starts_combat: false,
                         new_location: None,
-                        message: "You discover valuable materials! +500 credits, +2 tons of Computers, +10 reputation"
+                        message: "You discover valuable materials! +{credits} credits, +{tons} tons of Computers, +10 reputation"
                             .to_string(),
                     },
                 },
@@ -540,7 +605,7 @@ impl EventManager {
                         reputation_change: 0,
                         starts_combat: false,
                         new_location: None,
-                        message: "You salvage valuable materials! +200 credits, +3 tons of Minerals, minor hull damage."
+                        message: "You salvage valuable materials! +{credits} credits, +{tons} tons of Minerals, minor hull damage."
                             .to_string(),
                     },
                 },
@@ -582,7 +647,7 @@ impl EventManager {
                         reputation_change: 15,
                         starts_combat: false,
                         new_location: None,
-                        message: "The aliens are friendly! +300 credits, +15 reputation."
+                        message: "The aliens are friendly! +{credits} credits, +15 reputation."
                             .to_string(),
                     },
                 },
@@ -613,8 +678,9 @@ impl EventManager {
                         reputation_change: -10,
                         starts_combat: false,
                         new_location: None,
-                        message: "You win the battle! +400 credits, but significant hull damage."
-                            .to_string(),
+                        message:
+                            "You win the battle! +{credits} credits, but significant hull damage."
+                                .to_string(),
                     },
                 },
             ],
@@ -656,7 +722,7 @@ impl EventManager {
                         reputation_change: -5,
                         starts_combat: false,
                         new_location: None,
-                        message: "You escape but lose up to 3 tons of cargo and take damage.".to_string(),
+                        message: "You escape but lose up to {tons} tons of cargo and take damage.".to_string(),
                     },
                 },
                 EventChoice {
@@ -671,7 +737,7 @@ impl EventManager {
                         reputation_change: -10,
                         starts_combat: false,
                         new_location: None,
-                        message: "You surrender and lose up to 5 tons of cargo and 200 credits, but avoid damage."
+                        message: "You surrender and lose up to {tons} tons of cargo and {credits} credits, but avoid damage."
                             .to_string(),
                     },
                 },
@@ -701,7 +767,7 @@ impl EventManager {
                         reputation_change: 20,
                         starts_combat: false,
                         new_location: None,
-                        message: "You rescue the crew! +400 credits, +2 tons of Luxury as thanks, +20 reputation.".to_string(),
+                        message: "You rescue the crew! +{credits} credits, +{tons} tons of Luxury as thanks, +20 reputation.".to_string(),
                     },
                 },
                 EventChoice {
@@ -743,8 +809,9 @@ impl EventManager {
                         reputation_change: 10,
                         starts_combat: false,
                         new_location: None,
-                        message: "Inspection completed. -50 credits for fees, +10 reputation."
-                            .to_string(),
+                        message:
+                            "Inspection completed. -{credits} credits for fees, +10 reputation."
+                                .to_string(),
                     },
                 },
                 EventChoice {
@@ -759,7 +826,7 @@ impl EventManager {
                         reputation_change: -5,
                         starts_combat: false,
                         new_location: None,
-                        message: "Bribe successful. -100 credits, minor reputation loss."
+                        message: "Bribe successful. -{credits} credits, minor reputation loss."
                             .to_string(),
                     },
                 },
@@ -832,7 +899,7 @@ impl EventManager {
                         reputation_change: -20,
                         starts_combat: false,
                         new_location: None,
-                        message: "You defeat the patrol! +800 credits, but heavy damage and reputation loss.".to_string(),
+                        message: "You defeat the patrol! +{credits} credits, but heavy damage and reputation loss.".to_string(),
                     },
                 },
             ],
