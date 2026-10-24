@@ -34,6 +34,7 @@ pub fn new_game(credits: u32) -> GameState {
         travel_handler: TravelHandler::new(system_manager),
         trade_log: TradeLog::new(),
         job_board: JobBoard::new(),
+        active_jobs: Vec::new(),
     }
 }
 

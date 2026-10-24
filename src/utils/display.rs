@@ -1,4 +1,4 @@
-use crate::game::jobs::Job;
+use crate::game::jobs::{ActiveJob, Job};
 use crate::game::trade_log::TradeKind;
 use crate::game::{GameState, TradeLog};
 use colored::*;
@@ -79,6 +79,12 @@ pub fn show_help() {
     println!("{}", "Job Commands:".cyan().bold());
     println!("{}", "=============".cyan());
     println!("{} - Show the jobs on offer here", "jobs".yellow());
+    println!("{} - Take a job from the board", "accept <number>".yellow());
+    println!("{} - List your active jobs", "missions".yellow());
+    println!(
+        "{} - Drop an active job (-3 reputation)",
+        "abandon <number>".yellow()
+    );
     println!();
     println!("{}", "Repair and Refuel Commands:".cyan().bold());
     println!("{}", "============================".cyan());
@@ -225,6 +231,24 @@ pub fn show_info(message: &str) {
     println!("{}", format!("Info: {}", message).blue());
 }
 
+pub fn show_missions(active: &[ActiveJob]) {
+    println!("\n{}", "Active Jobs".cyan().bold());
+    println!("{}", "===========".cyan());
+    if active.is_empty() {
+        println!("No active jobs. Use 'jobs' to see the board.");
+    }
+    for (index, entry) in active.iter().enumerate() {
+        println!(
+            "{}. Courier to {} - Reward: {}cr - {} jumps left",
+            index + 1,
+            entry.job.destination.yellow(),
+            entry.job.reward.to_string().green(),
+            entry.jumps_left
+        );
+    }
+    println!();
+}
+
 pub fn show_jobs(location: &str, jobs: &[Job]) {
     println!("\n{}", format!("Jobs at {}", location).cyan().bold());
     println!("{}", "=".repeat(location.len() + 8).cyan());
@@ -275,6 +299,7 @@ mod tests {
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         // This test just ensures the function doesn't panic
@@ -301,6 +326,7 @@ mod tests {
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         // This test just ensures the function doesn't panic
@@ -327,6 +353,7 @@ mod tests {
             travel_handler: crate::game::TravelHandler::new(system_manager_clone),
             trade_log: crate::game::TradeLog::new(),
             job_board: crate::game::JobBoard::new(),
+            active_jobs: Vec::new(),
         };
 
         // This test just ensures the function doesn't panic
