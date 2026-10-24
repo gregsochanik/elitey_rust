@@ -12,7 +12,7 @@ pub struct Ship {
     pub cargo_hold: CargoHold,
     /// Current fuel level in light years
     pub fuel_current: u32,
-    /// Hull integrity percentage (0-100)
+    /// Hull points, up to the ship type's maximum
     pub hull_percentage: u32,
     /// Installed equipment
     #[serde(default)]
@@ -172,6 +172,11 @@ impl Ship {
         self.fuel_current = self.fuel_capacity();
     }
 
+    /// Hull as current/maximum points, e.g. `98/120`
+    pub fn hull_display(&self) -> String {
+        format!("{}/{}", self.hull_percentage, self.ship_type.max_hull())
+    }
+
     /// Get hull percentage
     pub fn hull_percentage(&self) -> u32 {
         self.hull_percentage
@@ -269,6 +274,16 @@ mod tests {
         // Test refueling
         ship.refuel();
         assert_eq!(ship.fuel_current(), 7);
+    }
+
+    #[test]
+    fn hull_display_shows_points_against_the_ship_maximum() {
+        let mut ship = Ship::new_cobra_mk3();
+        ship.take_damage(2);
+        assert_eq!(ship.hull_display(), "98/100");
+        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.hull_percentage = 150;
+        assert_eq!(ship.hull_display(), "150/150");
     }
 
     #[test]

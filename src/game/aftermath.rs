@@ -53,8 +53,9 @@ pub fn settle(
             commander.reputation -= 5;
             ship.hull_percentage = DEFEAT_HULL_PERCENT.min(ship.ship_type.max_hull());
             messages.push(format!(
-                "They take {} credits and leave you adrift at {}% hull.",
-                lost, ship.hull_percentage
+                "They take {} credits and leave you adrift with {} hull.",
+                lost,
+                ship.hull_display()
             ));
             messages.push("Reputation -5.".to_string());
         }

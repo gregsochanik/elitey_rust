@@ -9,22 +9,22 @@ Implement the ship upgrade system allowing players to improve their vessel with 
 - [x] **Cobra Mk III** (Starting ship)
   - Cargo: 20 tons
   - Fuel: 7 light years
-  - Hull: 100%
+  - Hull: 100
   - Cost: 0 (starting ship)
 - [x] **Cobra Mk IV** (First upgrade)
   - Cargo: 35 tons
   - Fuel: 10 light years
-  - Hull: 120%
+  - Hull: 120
   - Cost: 500 credits
 - [x] **Python** (Mid-game ship)
   - Cargo: 60 tons
   - Fuel: 12 light years
-  - Hull: 150%
+  - Hull: 150
   - Cost: 2000 credits
 - [x] **Anaconda** (End-game ship)
   - Cargo: 100 tons
   - Fuel: 15 light years
-  - Hull: 200%
+  - Hull: 200
   - Cost: 5000 credits
 
 ### Upgrade Commands
@@ -75,13 +75,13 @@ Credits: 750
 Cobra Mk IV (500cr)
 - Cargo: 20 → 35 tons (+15)
 - Fuel: 7 → 10 light years (+3)
-- Hull: 100% → 120% (+20%)
+- Hull: 100 → 120 (+20)
 [upgrade] [cancel]
 
 Python (2000cr) - Insufficient credits
 - Cargo: 20 → 60 tons (+40)
 - Fuel: 7 → 12 light years (+5)
-- Hull: 100% → 150% (+50%)
+- Hull: 100 → 150 (+50)
 ```
 
 ## Acceptance Criteria
