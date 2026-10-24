@@ -490,8 +490,10 @@ impl GameState {
         };
         match self.accept_job(number) {
             Ok(job) => show_success(&format!(
-                "Accepted: courier to {} for {}cr within {} jumps.",
-                job.destination, job.reward, job.deadline_jumps
+                "Accepted: {} for {}cr within {} jumps.",
+                job.kind.describe(&job.destination),
+                job.reward,
+                job.deadline_jumps
             )),
             Err(e) => show_error(&e),
         }
@@ -506,8 +508,8 @@ impl GameState {
             Ok(job) => println!(
                 "{}",
                 format!(
-                    "Abandoned the courier job to {}. Reputation {:+}.",
-                    job.destination,
+                    "Abandoned: {}. Reputation {:+}.",
+                    job.kind.describe(&job.destination),
                     jobs::ABANDON_REPUTATION
                 )
                 .yellow()
