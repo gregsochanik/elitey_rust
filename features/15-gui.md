@@ -50,7 +50,7 @@ Do this first and on its own.
 - [ ] `elite-core` must not depend on `colored`, `crossterm` or `clap`. Check this in CI (`cargo tree -p elite-core`).
 
 ### Phase 3: GUI shell (macOS)
-- [ ] Engine: **macroquad + egui-macroquad** (proposed; chosen for a small footprint, macOS and iOS targets, and good fit for menu screens plus line drawing). Confirm before starting this phase; see Open Questions. Phases 1 and 2 do not depend on the choice.
+- [ ] Toolkit: **TBC**; see Toolkit options. Decide before starting this phase. Phases 1 and 2 do not depend on the choice.
 - [ ] Screens, all over the core API: Status, Market (buy/sell), Cargo, Galaxy map (reachable systems, fuel cost, jump), Equipment, Ship upgrades/Shipyard, Refuel/Repair, Trade log, Save/Load.
 - [ ] Travel events and combat as modal flows driven by `PendingEvent` and `Combat`.
 - [ ] Autosave on quit, as in the CLI.
@@ -67,9 +67,24 @@ Do this first and on its own.
 - Replacing the CLI.
 
 ## Open Questions
-- **GUI toolkit.** macroquad + egui is the proposal. The choice matters most for iOS: macroquad's iOS support is workable but thin, whereas a native SwiftUI front end over the core (via a C or UniFFI binding) gives a first-class macOS and iOS app at the cost of a second language. `eframe`/egui alone is simplest for macOS but weak on iOS. Decide before Phase 3, after Phase 1 shows how small the core API turns out to be.
+- **GUI toolkit.** TBC; see Toolkit options.
 - **When to start.** Phase 1 touches almost every file under `src/game/`, so it conflicts with any feature in flight. Land the remaining reputation issues (feature 10) first, then do Phase 1 as a series of small PRs, one area each.
 - **Reputation and UI-13 ordering.** Feature 13 (CLI presentation) should follow Phase 1, so its colour and table work lands in the CLI layer.
+
+## Toolkit options (TBC)
+The game is mostly menus, tables and dialogs, with a wireframe galaxy map later. Targets are macOS now and iOS later. Check each option's current iOS status before choosing; these tools move quickly.
+
+| Option | Language | Fit | Concerns |
+|---|---|---|---|
+| **SwiftUI + core via UniFFI** | Swift UI, Rust core | Best native feel and the most reliable macOS and iOS path; menus, tables and dialogs are what SwiftUI is good at; wireframes via Canvas or Metal | Second language; Apple-only; a binding layer to maintain |
+| **Godot + godot-rust (gdext)** | GDScript or Rust | Proper scene and UI tooling, 3D wireframes are easy, macOS and iOS export built in; the core loads as a native extension | A second toolchain and editor; extension plus iOS export takes care; less "just Rust" |
+| **Bevy** | Rust | Everything in one language and one repo; ECS suits a game; macOS works and iOS is possible | Pre-1.0 with breaking changes each release; large compile times; UI for menu-heavy screens is the weakest part (usually `bevy_egui`) |
+| **macroquad + egui** | Rust | Small, quick to start, simple menus and line drawing | Thin iOS support and a smaller ecosystem |
+| **eframe (egui)** | Rust | Simplest Rust-only path on macOS | Weak on iOS |
+| **Tauri v2 (web UI)** | Rust + HTML/JS | Core stays Rust, UI in web tech; macOS and iOS targets | Web UI stack; wireframe via canvas or WebGL |
+| **Slint** | Rust | Declarative native UI, good for menu screens | Mobile support is less mature |
+
+**Leaning:** SwiftUI over the core if the game stays Apple-only; Godot with gdext if a more game-like feel, 3D wireframes or other platforms matter; Bevy if staying all-Rust matters most and the churn is acceptable. Before committing, spike one screen (Market) in the top two once Phase 1 gives a usable core API.
 
 ## Acceptance Criteria
 - [ ] No `println!`, `print!`, `eprintln!`, `stdin`, `colored` or `crossterm` references under `elite-core` / `src/game` / `src/data`
