@@ -28,6 +28,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 14 | Refuelling (v1: `refuel` for credits) | Done (v1) | 02 |
 | 15 | GUI (core refactor, then macOS front end) | Spec only | 01–08, 10, 11, 12, 14 |
 | 13 | UI improvements | Spec only | – |
+| 16 | Jobs (v1: board, courier jobs, deadlines) | Spec only | 02, 05, 10, 14 |
 
 ## Roadmap
 
@@ -40,7 +41,6 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 ## Open decisions
 
 - **Numbering.** There is no feature 09 (it was merged into 07). Either reserve the number or renumber.
-- **Tests.** The README references a `tests/` directory that does not exist. Add BDD-style integration tests there as each feature lands.
 
 ## Definition of done (per feature)
 
