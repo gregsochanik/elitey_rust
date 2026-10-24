@@ -64,6 +64,14 @@ impl Combatant {
         }
     }
 
+    /// A law-enforcement ship, as tough as a raider
+    pub fn patrol_vessel() -> Self {
+        Self {
+            name: "Patrol Vessel".to_string(),
+            ..Self::pirate_raider()
+        }
+    }
+
     pub fn is_destroyed(&self) -> bool {
         self.hull == 0
     }

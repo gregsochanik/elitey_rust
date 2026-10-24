@@ -90,7 +90,7 @@ Feature specs and implementation details live in the [features/](features/) dire
 - `equipment buy <item>` - Buy and install (replaces the current item in single-slot categories)
 - `equipment sell <item>` - Sell installed equipment for half of what was paid
 - `equipment installed` - Show installed equipment, slots and power
-- `jobs` - Show the jobs on offer here (courier, bounty and, for Trusted commanders, freight)
+- `jobs` - Show the jobs on offer here (courier and bounty for everyone; freight for Trusted commanders at lawful systems; smuggling for Disreputable commanders at lawless ones)
 - `accept <number>` - Take a job from the board (up to 3 at once)
 - `missions` - List your active jobs
 - `abandon <number>` - Drop an active job (-3 reputation)

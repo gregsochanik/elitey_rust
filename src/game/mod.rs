@@ -10,6 +10,7 @@ pub mod refuel;
 pub mod repair;
 pub mod save_load;
 pub mod ship;
+pub mod smuggling;
 pub mod trade_log;
 pub mod trading;
 pub mod travel;
