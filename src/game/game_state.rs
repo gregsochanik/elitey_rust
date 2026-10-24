@@ -40,9 +40,11 @@ impl GameState {
         println!("{}", "Welcome to Elite Rust!".green().bold());
         println!("{}", "=====================".green());
 
-        // Get commander name
         let name = Self::get_commander_name();
+        Self::new_game_named(name)
+    }
 
+    fn new_game_named(name: String) -> Self {
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         Self {
             commander: Commander::new(name),
@@ -59,9 +61,25 @@ impl GameState {
 
     /// Load existing game or create new one
     pub fn load_or_new() -> Self {
-        // For now, always create new game
-        // TODO: Implement save/load system in Feature 05
-        Self::new_game()
+        println!("{}", "Welcome to Elite Rust!".green().bold());
+        println!("{}", "=====================".green());
+
+        let name = Self::get_commander_name();
+        let handler = SaveLoadHandler::new().expect("Failed to create save/load handler");
+        if let Some(saved) = handler.find_autosave(&name) {
+            print!(
+                "Found a save for {} at {} with {} credits. Continue it? (y/n; n starts over and replaces it when you quit): ",
+                saved.commander.name().green(),
+                saved.commander.location().cyan(),
+                saved.commander.credits().to_string().green()
+            );
+            std::io::stdout().flush().expect("Failed to flush stdout");
+            let answer = input::get_input().unwrap_or_default();
+            if matches!(answer.trim().to_lowercase().as_str(), "y" | "yes") {
+                return Self::from_save(saved);
+            }
+        }
+        Self::new_game_named(name)
     }
 
     /// Create game state from existing save

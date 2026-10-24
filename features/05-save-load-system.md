@@ -20,7 +20,7 @@ Implement a comprehensive save/load system that allows players to persist their 
 - [x] Save metadata (commander name, location, credits, timestamp)
 
 ### Load System Features
-- [x] Load existing commander on start
+- [x] Load existing commander on start: after the name is entered, an existing autosave for that commander is offered; autosaves are kept per commander (`autosave-<name>`)
 - [x] Save slot selection and validation
 - [x] Game state restoration with error handling
 - [x] Load confirmation prompts
