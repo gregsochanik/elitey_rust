@@ -1,5 +1,6 @@
 use crate::data::commodities::CommodityType;
 use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
+use crate::game::commander::Standing;
 use crate::game::{Commander, Ship};
 use crate::utils::display::show_info;
 use rand::Rng;
@@ -90,9 +91,31 @@ impl Default for EventManager {
 }
 
 /// How much more or less likely an event is at this destination (1.0 is normal)
-fn event_weight(event_type: &EventType, destination: &StarSystem) -> f64 {
+fn event_weight(event_type: &EventType, destination: &StarSystem, standing: Standing) -> f64 {
     government_weight(event_type, &destination.government)
         * economy_weight(event_type, &destination.economy)
+        * standing_weight(event_type, standing, &destination.government)
+}
+
+/// Law enforcement notices who you are: the infamous are stopped more in lawful systems and
+/// less in lawless ones, and the respected are stopped less
+fn standing_weight(event_type: &EventType, standing: Standing, government: &GovernmentType) -> f64 {
+    if !matches!(
+        event_type,
+        EventType::MilitaryPatrol | EventType::GovernmentInspection
+    ) {
+        return 1.0;
+    }
+    let lawful = government.is_lawful();
+    match standing {
+        Standing::Criminal if lawful => 2.0,
+        Standing::Criminal => 0.5,
+        Standing::Disreputable if lawful => 1.5,
+        Standing::Disreputable => 0.75,
+        Standing::Neutral => 1.0,
+        Standing::Trusted => 0.75,
+        Standing::Respected => 0.5,
+    }
 }
 
 fn government_weight(event_type: &EventType, government: &GovernmentType) -> f64 {
@@ -266,14 +289,16 @@ impl EventManager {
         &self,
         phase: &EventPhase,
         destination: &StarSystem,
+        standing: Standing,
     ) -> Option<&Event> {
-        self.pick_event(phase, destination, &mut rand::thread_rng())
+        self.pick_event(phase, destination, standing, &mut rand::thread_rng())
     }
 
     fn pick_event<R: Rng>(
         &self,
         phase: &EventPhase,
         destination: &StarSystem,
+        standing: Standing,
         rng: &mut R,
     ) -> Option<&Event> {
         let mut available_events = self.get_available_events(phase);
@@ -281,7 +306,7 @@ impl EventManager {
 
         let weights: Vec<f64> = available_events
             .iter()
-            .map(|event| event_weight(&event.event_type, destination))
+            .map(|event| event_weight(&event.event_type, destination, standing))
             .collect();
         let total: f64 = weights.iter().sum();
         if available_events.is_empty() || total <= 0.0 {
@@ -1044,6 +1069,15 @@ mod tests {
     }
 
     fn share_of(event_type: EventType, phase: EventPhase, destination: &StarSystem) -> f64 {
+        share_of_for(event_type, phase, destination, Standing::Neutral)
+    }
+
+    fn share_of_for(
+        event_type: EventType,
+        phase: EventPhase,
+        destination: &StarSystem,
+        standing: Standing,
+    ) -> f64 {
         use rand::rngs::StdRng;
         use rand::SeedableRng;
 
@@ -1053,7 +1087,7 @@ mod tests {
         let hits = (0..draws)
             .filter(|_| {
                 manager
-                    .pick_event(&phase, destination, &mut rng)
+                    .pick_event(&phase, destination, standing, &mut rng)
                     .unwrap()
                     .event_type
                     == event_type
@@ -1150,7 +1184,7 @@ mod tests {
             let destination = system(government, EconomyType::RichIndustrial);
             for phase in [EventPhase::Jump, EventPhase::Approach] {
                 for event in manager.get_available_events(&phase) {
-                    assert!(event_weight(&event.event_type, &destination) > 0.0);
+                    assert!(event_weight(&event.event_type, &destination, Standing::Neutral) > 0.0);
                 }
             }
         }
@@ -1162,7 +1196,7 @@ mod tests {
         let destination = system(GovernmentType::Anarchy, EconomyType::PoorAgricultural);
         for _ in 0..200 {
             let event = manager
-                .select_random_event(&EventPhase::Jump, &destination)
+                .select_random_event(&EventPhase::Jump, &destination, Standing::Neutral)
                 .unwrap();
             assert_eq!(event.phase, EventPhase::Jump);
         }
@@ -1201,5 +1235,68 @@ mod tests {
         assert_eq!(commander.credits, 100);
         assert_eq!(commander.reputation, 0);
         assert_eq!(ship.hull_percentage, 100);
+    }
+
+    fn law_enforcement_share(destination: &StarSystem, standing: Standing) -> f64 {
+        share_of_for(
+            EventType::MilitaryPatrol,
+            EventPhase::Approach,
+            destination,
+            standing,
+        ) + share_of_for(
+            EventType::GovernmentInspection,
+            EventPhase::Approach,
+            destination,
+            standing,
+        )
+    }
+
+    #[test]
+    fn infamy_brings_more_patrols_and_inspections_in_lawful_systems() {
+        let lawful = system(GovernmentType::Democracy, EconomyType::RichIndustrial);
+        let neutral = law_enforcement_share(&lawful, Standing::Neutral);
+        let disreputable = law_enforcement_share(&lawful, Standing::Disreputable);
+        let criminal = law_enforcement_share(&lawful, Standing::Criminal);
+
+        assert!(neutral < disreputable && disreputable < criminal);
+        assert!(criminal > 1.3 * neutral, "{} vs {}", criminal, neutral);
+    }
+
+    #[test]
+    fn infamy_brings_fewer_patrols_and_inspections_in_lawless_systems() {
+        let lawless = system(GovernmentType::Anarchy, EconomyType::RichIndustrial);
+        let neutral = law_enforcement_share(&lawless, Standing::Neutral);
+        let disreputable = law_enforcement_share(&lawless, Standing::Disreputable);
+        let criminal = law_enforcement_share(&lawless, Standing::Criminal);
+
+        assert!(criminal < disreputable && disreputable < neutral);
+    }
+
+    #[test]
+    fn a_good_name_brings_fewer_patrols_and_inspections() {
+        for government in [GovernmentType::Democracy, GovernmentType::Anarchy] {
+            let destination = system(government, EconomyType::RichIndustrial);
+            let neutral = law_enforcement_share(&destination, Standing::Neutral);
+            let trusted = law_enforcement_share(&destination, Standing::Trusted);
+            let respected = law_enforcement_share(&destination, Standing::Respected);
+            assert!(respected < trusted && trusted < neutral);
+        }
+    }
+
+    #[test]
+    fn standing_leaves_every_other_event_alone() {
+        for event_type in [
+            EventType::PirateAttack,
+            EventType::AlienEncounter,
+            EventType::RescueSignal,
+            EventType::Wormhole,
+        ] {
+            for standing in [Standing::Criminal, Standing::Respected] {
+                assert_eq!(
+                    standing_weight(&event_type, standing, &GovernmentType::Democracy),
+                    1.0
+                );
+            }
+        }
     }
 }

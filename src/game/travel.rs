@@ -139,7 +139,11 @@ impl TravelHandler {
         destination: &StarSystem,
     ) -> Result<bool, String> {
         if event_manager.should_trigger_event(&EventPhase::Jump, destination) {
-            if let Some(event) = event_manager.select_random_event(&EventPhase::Jump, destination) {
+            if let Some(event) = event_manager.select_random_event(
+                &EventPhase::Jump,
+                destination,
+                commander.standing(),
+            ) {
                 return self.handle_event(event, commander, ship, event_manager);
             }
         }
@@ -155,9 +159,11 @@ impl TravelHandler {
         destination: &StarSystem,
     ) -> Result<bool, String> {
         if event_manager.should_trigger_event(&EventPhase::Approach, destination) {
-            if let Some(event) =
-                event_manager.select_random_event(&EventPhase::Approach, destination)
-            {
+            if let Some(event) = event_manager.select_random_event(
+                &EventPhase::Approach,
+                destination,
+                commander.standing(),
+            ) {
                 return self.handle_event(event, commander, ship, event_manager);
             }
         }
