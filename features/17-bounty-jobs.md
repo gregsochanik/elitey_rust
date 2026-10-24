@@ -24,14 +24,16 @@ Spec only. Slices are tracked as GitHub issues.
 - If the player arrives after the deadline, the job has already failed (as for courier jobs) and no fight is forced
 
 ### Outcomes
+A failed attempt to flee is not an outcome: as in Feature 08 the raider gets a free attack and the fight continues. Only a successful escape ends the fight, and it fails the job with no retry.
+
 | Outcome | Job | Everything else |
 |---|---|---|
 | Victory | Paid, removed | Loot and +5 reputation as in combat |
-| Flee | Fails: −3 reputation | Nothing else lost |
+| Successful escape | Fails: −3 reputation | Nothing else lost |
 | Surrender | Fails: −3 reputation | Cargo and credit loss as in combat |
 | Defeat | Fails: −3 reputation | Defeat rules as in combat (cargo lost, half the credits, hull at 10%, −5 reputation) |
 
-- Several bounties for the same system are fought one after another; the player may flee or surrender from any of them and the rest fail with them
+- Several bounties for the same system are fought one after another; if the player escapes or surrenders from one, the rest fail with it
 - Courier jobs for the same destination are delivered as usual before the fight begins
 
 ## Not in v1
@@ -46,7 +48,6 @@ A bounty should pay clearly more than a courier job (about 55 net per jump at be
 **Separate issue.** A normal pirate victory already pays 200–400cr, which is many times what trading earns per trip. Bounties avoid adding to that, but the random fight rewards should be reviewed against the economy.
 
 ## Open Questions
-- **Fleeing.** Should fleeing fail the job, or let the player try again before the deadline?
 - **Rewards.** Is replacing the 200–400cr payout with a smaller bounty a nerf players will resent? It keeps the economy sane, but it makes accepting a bounty pay less than fighting a random pirate.
 - **Difficulty.** A single fixed raider means bounties get easy once the player has good equipment. Scaling the enemy by reward is the obvious later step.
 
@@ -56,7 +57,7 @@ A bounty should pay clearly more than a courier job (about 55 net per jump at be
 - [ ] `accept`, `missions` and `abandon` work for bounty jobs
 - [ ] Arriving at a bounty's system in time starts a pirate fight after travel events
 - [ ] Victory pays the bounty reward (not the random payout), keeps loot and +5 reputation, and removes the job
-- [ ] Flee, surrender and defeat fail the job for −3 reputation and apply the combat consequences
+- [ ] A successful escape, surrender and defeat fail the job for −3 reputation and apply the combat consequences
 - [ ] Arriving late fails the job without a fight
 - [ ] A simulation shows bounties out-earn courier jobs after repair costs, with a stated loss rate
 
@@ -66,7 +67,8 @@ A bounty should pay clearly more than a courier job (about 55 net per jump at be
 - [ ] Old-save compatibility for jobs without a kind
 - [ ] Settling a finished fight for each outcome (victory, flee, surrender, defeat) with injected dice
 - [ ] Late arrival: job fails and no fight starts
-- [ ] Two bounties for one system; fleeing the first fails both
+- [ ] A failed flee attempt leaves the fight and the job running; a successful escape fails the job
+- [ ] Two bounties for one system; escaping the first fails both
 - [ ] Simulation over many seeded fights of net income per bounty
 
 ## Dependencies
