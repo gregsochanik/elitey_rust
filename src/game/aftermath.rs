@@ -51,7 +51,7 @@ pub fn settle(
             let lost = commander.credits() / 2;
             commander.remove_credits(lost);
             commander.reputation -= 5;
-            ship.hull_percentage = DEFEAT_HULL_PERCENT.min(ship.ship_type.max_hull());
+            ship.hull_percentage = ship.ship_type.max_hull() * DEFEAT_HULL_PERCENT / 100;
             messages.push(format!(
                 "They take {} credits and leave you adrift with {} hull.",
                 lost,
@@ -141,6 +141,18 @@ mod tests {
         assert_eq!(commander.credits(), 251);
         assert_eq!(ship.hull_percentage, 10);
         assert_eq!(commander.reputation, -5);
+    }
+
+    #[test]
+    fn defeat_leaves_ten_percent_of_an_upgraded_ships_hull() {
+        let (mut commander, mut ship) = setup(100, &[]);
+        ship.ship_type = crate::data::ships::ShipType::Python;
+        ship.hull_percentage = 150;
+
+        let messages = settle(Outcome::Defeat, 0, &mut commander, &mut ship, &mut rng());
+
+        assert_eq!(ship.hull_percentage, 15);
+        assert!(messages.iter().any(|m| m.contains("15/150")));
     }
 
     #[test]
