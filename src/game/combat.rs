@@ -1,5 +1,8 @@
 #![allow(dead_code)]
 
+use crate::data::equipment::{CombatStats, EquipmentCategory};
+use crate::game::Ship;
+
 /// Chance of escaping when fleeing
 const FLEE_CHANCE: f64 = 0.5;
 
@@ -20,6 +23,32 @@ pub struct Combatant {
 }
 
 impl Combatant {
+    /// The player's fighter, built from the ship's hull and installed equipment
+    pub fn from_ship(ship: &Ship) -> Self {
+        let mut shield = CombatStats::NONE;
+        let mut weapons = Vec::new();
+        for installed in ship.equipment.installed() {
+            let item = installed.item();
+            match item.category {
+                EquipmentCategory::Weapon => weapons.push(Weapon {
+                    damage: item.combat.damage,
+                    accuracy: item.combat.accuracy,
+                }),
+                EquipmentCategory::Shield => shield = item.combat,
+                _ => {}
+            }
+        }
+
+        Self {
+            name: "Your ship".to_string(),
+            hull: ship.hull_percentage,
+            shield: shield.protection,
+            max_shield: shield.protection,
+            recharge: shield.recharge,
+            weapons,
+        }
+    }
+
     pub fn pirate_raider() -> Self {
         Self {
             name: "Pirate Raider".to_string(),
@@ -460,5 +489,108 @@ mod tests {
                 accuracy: 0.6
             }]
         );
+    }
+
+    fn fitted(ship: &mut Ship, buy: &[&str], sell: &[&str]) {
+        let mut commander = crate::game::Commander::new("Test".to_string());
+        commander.credits = 10_000;
+        for id in buy {
+            assert!(crate::game::equipment::EquipmentHandler::handle(
+                &["buy".to_string(), id.to_string()],
+                &mut commander,
+                ship
+            ));
+        }
+        for id in sell {
+            assert!(crate::game::equipment::EquipmentHandler::handle(
+                &["sell".to_string(), id.to_string()],
+                &mut commander,
+                ship
+            ));
+        }
+    }
+
+    #[test]
+    fn a_new_ship_fights_with_its_starting_equipment() {
+        let player = Combatant::from_ship(&Ship::new_cobra_mk3());
+
+        assert_eq!(player.hull, 100);
+        assert_eq!(
+            (player.shield, player.max_shield, player.recharge),
+            (20, 20, 5)
+        );
+        assert_eq!(
+            player.weapons,
+            vec![Weapon {
+                damage: 15,
+                accuracy: 0.9
+            }]
+        );
+    }
+
+    #[test]
+    fn every_installed_weapon_becomes_a_weapon() {
+        let mut ship = Ship::new_cobra_mk3();
+        fitted(&mut ship, &["beam-laser"], &[]);
+
+        let player = Combatant::from_ship(&ship);
+
+        assert_eq!(player.weapons.len(), 2);
+        assert!(player.weapons.contains(&Weapon {
+            damage: 25,
+            accuracy: 0.8
+        }));
+    }
+
+    #[test]
+    fn a_better_shield_changes_protection_and_recharge() {
+        let mut ship = Ship::new_cobra_mk3();
+        fitted(&mut ship, &["elite-shield"], &[]);
+
+        let player = Combatant::from_ship(&ship);
+
+        assert_eq!((player.shield, player.recharge), (100, 15));
+    }
+
+    #[test]
+    fn no_shield_means_no_shield_points() {
+        let mut ship = Ship::new_cobra_mk3();
+        fitted(&mut ship, &[], &["basic-shield"]);
+
+        let player = Combatant::from_ship(&ship);
+
+        assert_eq!(
+            (player.shield, player.max_shield, player.recharge),
+            (0, 0, 0)
+        );
+    }
+
+    #[test]
+    fn no_weapons_means_nothing_to_fire() {
+        let mut ship = Ship::new_cobra_mk3();
+        fitted(&mut ship, &[], &["pulse-laser"]);
+
+        assert!(Combatant::from_ship(&ship).weapons.is_empty());
+    }
+
+    #[test]
+    fn hull_follows_the_ships_damage() {
+        let mut ship = Ship::new_cobra_mk3();
+        ship.take_damage(30);
+
+        assert_eq!(Combatant::from_ship(&ship).hull, 70);
+    }
+
+    #[test]
+    fn non_combat_equipment_does_not_change_the_fighter() {
+        let mut ship = Ship::new_cobra_mk3();
+        let before = Combatant::from_ship(&ship);
+        fitted(
+            &mut ship,
+            &["elite-racks", "performance-drive", "military-scanner"],
+            &[],
+        );
+
+        assert_eq!(Combatant::from_ship(&ship), before);
     }
 }
