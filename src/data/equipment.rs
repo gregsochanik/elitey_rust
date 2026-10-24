@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EquipmentCategory {
@@ -32,7 +33,7 @@ impl EquipmentCategory {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum Quality {
     Basic,
     Standard,
@@ -51,12 +52,19 @@ impl Quality {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct CombatStats {
     pub damage: u32,
     pub accuracy: f64,
     pub protection: u32,
     pub recharge: u32,
+}
+
+impl Default for CombatStats {
+    fn default() -> Self {
+        CombatStats::NONE
+    }
 }
 
 impl CombatStats {
@@ -66,313 +74,46 @@ impl CombatStats {
         protection: 0,
         recharge: 0,
     };
-
-    pub const fn weapon(damage: u32, accuracy: f64) -> CombatStats {
-        CombatStats {
-            damage,
-            accuracy,
-            protection: 0,
-            recharge: 0,
-        }
-    }
-
-    pub const fn shield(protection: u32, recharge: u32) -> CombatStats {
-        CombatStats {
-            damage: 0,
-            accuracy: 0.0,
-            protection,
-            recharge,
-        }
-    }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Equipment {
-    pub id: &'static str,
-    pub name: &'static str,
+    pub id: String,
+    pub name: String,
     pub category: EquipmentCategory,
     pub quality: Quality,
     pub price: u32,
     pub power: u32,
+    #[serde(default = "no_cargo_change")]
     pub cargo_multiplier: f64,
+    #[serde(default)]
     pub combat: CombatStats,
-    pub effect: &'static str,
+    pub effect: String,
+}
+
+fn no_cargo_change() -> f64 {
+    1.0
+}
+
+/// Every item for sale, as described in `data/equipment.json`
+pub fn catalog() -> &'static [Equipment] {
+    static CATALOG: OnceLock<Vec<Equipment>> = OnceLock::new();
+    CATALOG.get_or_init(|| {
+        serde_json::from_str(include_str!("../../data/equipment.json"))
+            .expect("data/equipment.json is valid")
+    })
 }
 
 pub fn find(id: &str) -> Option<&'static Equipment> {
-    CATALOG.iter().find(|item| item.id == id)
+    catalog().iter().find(|item| item.id == id)
 }
 
 pub fn catalog_for(category: EquipmentCategory) -> impl Iterator<Item = &'static Equipment> {
-    CATALOG.iter().filter(move |item| item.category == category)
+    catalog()
+        .iter()
+        .filter(move |item| item.category == category)
 }
-
-pub const CATALOG: &[Equipment] = &[
-    Equipment {
-        id: "pulse-laser",
-        name: "Pulse Laser",
-        category: EquipmentCategory::Weapon,
-        quality: Quality::Basic,
-        price: 50,
-        power: 2,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::weapon(15, 0.9),
-        effect: "Damage 15, accuracy 0.9",
-    },
-    Equipment {
-        id: "beam-laser",
-        name: "Beam Laser",
-        category: EquipmentCategory::Weapon,
-        quality: Quality::Standard,
-        price: 120,
-        power: 4,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::weapon(25, 0.8),
-        effect: "Damage 25, accuracy 0.8",
-    },
-    Equipment {
-        id: "plasma-cannon",
-        name: "Plasma Cannon",
-        category: EquipmentCategory::Weapon,
-        quality: Quality::Military,
-        price: 250,
-        power: 6,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::weapon(45, 0.6),
-        effect: "Damage 45, accuracy 0.6",
-    },
-    Equipment {
-        id: "missile-launcher",
-        name: "Missile Launcher",
-        category: EquipmentCategory::Weapon,
-        quality: Quality::Elite,
-        price: 500,
-        power: 8,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::weapon(80, 0.4),
-        effect: "Damage 80, accuracy 0.4",
-    },
-    Equipment {
-        id: "basic-shield",
-        name: "Basic Shield",
-        category: EquipmentCategory::Shield,
-        quality: Quality::Basic,
-        price: 30,
-        power: 3,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::shield(20, 5),
-        effect: "Protection 20, recharge 5",
-    },
-    Equipment {
-        id: "standard-shield",
-        name: "Standard Shield",
-        category: EquipmentCategory::Shield,
-        quality: Quality::Standard,
-        price: 80,
-        power: 5,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::shield(40, 8),
-        effect: "Protection 40, recharge 8",
-    },
-    Equipment {
-        id: "military-shield",
-        name: "Military Shield",
-        category: EquipmentCategory::Shield,
-        quality: Quality::Military,
-        price: 180,
-        power: 7,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::shield(70, 12),
-        effect: "Protection 70, recharge 12",
-    },
-    Equipment {
-        id: "elite-shield",
-        name: "Elite Shield",
-        category: EquipmentCategory::Shield,
-        quality: Quality::Elite,
-        price: 350,
-        power: 10,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::shield(100, 15),
-        effect: "Protection 100, recharge 15",
-    },
-    Equipment {
-        id: "standard-drive",
-        name: "Standard Drive",
-        category: EquipmentCategory::Engine,
-        quality: Quality::Basic,
-        price: 20,
-        power: 2,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Speed 1.0x, fuel 1.0x",
-    },
-    Equipment {
-        id: "performance-drive",
-        name: "Performance Drive",
-        category: EquipmentCategory::Engine,
-        quality: Quality::Standard,
-        price: 60,
-        power: 3,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Speed 1.2x, fuel 1.1x",
-    },
-    Equipment {
-        id: "military-drive",
-        name: "Military Drive",
-        category: EquipmentCategory::Engine,
-        quality: Quality::Military,
-        price: 150,
-        power: 5,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Speed 1.4x, fuel 1.2x",
-    },
-    Equipment {
-        id: "elite-drive",
-        name: "Elite Drive",
-        category: EquipmentCategory::Engine,
-        quality: Quality::Elite,
-        price: 300,
-        power: 8,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Speed 1.6x, fuel 1.3x",
-    },
-    Equipment {
-        id: "basic-scanner",
-        name: "Basic Scanner",
-        category: EquipmentCategory::Sensor,
-        quality: Quality::Basic,
-        price: 15,
-        power: 1,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Range 1.0x, targeting +0",
-    },
-    Equipment {
-        id: "advanced-scanner",
-        name: "Advanced Scanner",
-        category: EquipmentCategory::Sensor,
-        quality: Quality::Standard,
-        price: 40,
-        power: 2,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Range 1.5x, targeting +10",
-    },
-    Equipment {
-        id: "military-scanner",
-        name: "Military Scanner",
-        category: EquipmentCategory::Sensor,
-        quality: Quality::Military,
-        price: 100,
-        power: 4,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Range 2.0x, targeting +25",
-    },
-    Equipment {
-        id: "elite-scanner",
-        name: "Elite Scanner",
-        category: EquipmentCategory::Sensor,
-        quality: Quality::Elite,
-        price: 200,
-        power: 6,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Range 3.0x, targeting +50",
-    },
-    Equipment {
-        id: "standard-racks",
-        name: "Standard Racks",
-        category: EquipmentCategory::Cargo,
-        quality: Quality::Basic,
-        price: 10,
-        power: 0,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Cargo capacity 1.0x",
-    },
-    Equipment {
-        id: "expanded-racks",
-        name: "Expanded Racks",
-        category: EquipmentCategory::Cargo,
-        quality: Quality::Standard,
-        price: 30,
-        power: 1,
-        cargo_multiplier: 1.25,
-        combat: CombatStats::NONE,
-        effect: "Cargo capacity 1.25x",
-    },
-    Equipment {
-        id: "military-racks",
-        name: "Military Racks",
-        category: EquipmentCategory::Cargo,
-        quality: Quality::Military,
-        price: 80,
-        power: 2,
-        cargo_multiplier: 1.5,
-        combat: CombatStats::NONE,
-        effect: "Cargo capacity 1.5x",
-    },
-    Equipment {
-        id: "elite-racks",
-        name: "Elite Racks",
-        category: EquipmentCategory::Cargo,
-        quality: Quality::Elite,
-        price: 150,
-        power: 3,
-        cargo_multiplier: 2.0,
-        combat: CombatStats::NONE,
-        effect: "Cargo capacity 2.0x",
-    },
-    Equipment {
-        id: "heat-sink",
-        name: "Heat Sink",
-        category: EquipmentCategory::Special,
-        quality: Quality::Basic,
-        price: 20,
-        power: 1,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "-30% heat",
-    },
-    Equipment {
-        id: "chaff-launcher",
-        name: "Chaff Launcher",
-        category: EquipmentCategory::Special,
-        quality: Quality::Standard,
-        price: 50,
-        power: 2,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "+40% evasion",
-    },
-    Equipment {
-        id: "ecm-system",
-        name: "ECM System",
-        category: EquipmentCategory::Special,
-        quality: Quality::Military,
-        price: 120,
-        power: 4,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "+60% jamming",
-    },
-    Equipment {
-        id: "cloaking-device",
-        name: "Cloaking Device",
-        category: EquipmentCategory::Special,
-        quality: Quality::Elite,
-        price: 250,
-        power: 8,
-        cargo_multiplier: 1.0,
-        combat: CombatStats::NONE,
-        effect: "Temporary invisibility",
-    },
-];
 
 #[cfg(test)]
 mod tests {
@@ -381,8 +122,8 @@ mod tests {
 
     #[test]
     fn ids_are_unique() {
-        let ids: HashSet<_> = CATALOG.iter().map(|item| item.id).collect();
-        assert_eq!(ids.len(), CATALOG.len());
+        let ids: HashSet<_> = catalog().iter().map(|item| item.id.clone()).collect();
+        assert_eq!(ids.len(), catalog().len());
     }
 
     #[test]
@@ -411,7 +152,7 @@ mod tests {
 
     #[test]
     fn only_cargo_racks_change_capacity() {
-        for item in CATALOG {
+        for item in catalog() {
             if item.category != EquipmentCategory::Cargo {
                 assert_eq!(item.cargo_multiplier, 1.0, "{}", item.id);
             }
@@ -436,7 +177,7 @@ mod tests {
 
     #[test]
     fn only_weapons_and_shields_have_combat_stats() {
-        for item in CATALOG {
+        for item in catalog() {
             match item.category {
                 EquipmentCategory::Weapon => {
                     assert!(
@@ -467,5 +208,56 @@ mod tests {
                 _ => assert_eq!(item.combat, CombatStats::NONE, "{}", item.id),
             }
         }
+    }
+
+    #[test]
+    fn prices_and_power_rise_with_quality_in_every_category() {
+        for category in EquipmentCategory::ALL {
+            let items: Vec<_> = catalog_for(category).collect();
+            for pair in items.windows(2) {
+                assert!(
+                    pair[1].price > pair[0].price,
+                    "{} costs no more",
+                    pair[1].id
+                );
+                assert!(
+                    pair[1].power >= pair[0].power,
+                    "{} needs less power",
+                    pair[1].id
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn names_and_effects_are_filled_in() {
+        for item in catalog() {
+            assert!(
+                !item.name.is_empty() && !item.effect.is_empty(),
+                "{}",
+                item.id
+            );
+            assert!(
+                item.id.chars().all(|c| c.is_ascii_lowercase() || c == '-'),
+                "{}",
+                item.id
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_fields_in_the_data_are_rejected() {
+        let json = r#"[{"id":"x","name":"X","category":"Weapon","quality":"Basic","price":1,"power":1,"effect":"e","speed":3}]"#;
+        assert!(serde_json::from_str::<Vec<Equipment>>(json).is_err());
+        let json = r#"[{"id":"x","name":"X","category":"Weapon","quality":"Basic","price":1,"power":1,"effect":"e","combat":{"damage":1,"speed":3}}]"#;
+        assert!(serde_json::from_str::<Vec<Equipment>>(json).is_err());
+    }
+
+    #[test]
+    fn an_item_without_combat_stats_or_a_cargo_multiplier_gets_the_defaults() {
+        let json = r#"[{"id":"x","name":"X","category":"Special","quality":"Basic","price":1,"power":1,"effect":"e"}]"#;
+        let items: Vec<Equipment> = serde_json::from_str(json).unwrap();
+        assert_eq!(items[0].combat, CombatStats::NONE);
+        assert_eq!(items[0].cargo_multiplier, 1.0);
     }
 }
