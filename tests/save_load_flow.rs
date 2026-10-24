@@ -27,7 +27,8 @@ fn a_played_game_survives_saving_to_disk_and_loading_back() {
     assert!(loaded.handle_buy_command(&args("food 1")));
     assert_eq!(
         loaded.trade_log.recent(1)[0].unit_price,
-        game.trade_log.recent(1)[0].unit_price
+        elitey_rust::game::commander::Standing::Trusted
+            .buy_price(game.trade_log.recent(1)[0].unit_price)
     );
 }
 
