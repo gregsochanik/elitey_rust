@@ -8,6 +8,9 @@ use std::collections::HashMap;
 
 const ILLEGAL_TRADE_REPUTATION: i32 = -2;
 const MARKET_REFRESH_JUMPS: u32 = 10;
+const IMPACT_PER_TON: f64 = 0.015;
+const MAX_IMPACT: f64 = 0.40;
+const RECOVERY_PER_JUMP: f64 = 0.10;
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -18,13 +21,82 @@ pub struct TradingHandler {
     markets: HashMap<String, SystemMarket>,
 }
 
-/// What a system's market remembers: its price roll, when it was rolled and what was bought
+/// What a system's market remembers: its price roll and how the player has pushed it since
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct SystemMarket {
     pub seed: u64,
     pub rolled_at: u32,
-    /// Tons bought since the roll, per commodity
-    pub purchased: HashMap<CommodityType, u32>,
+    /// The clock when the pushes below were last brought up to date
+    #[serde(default)]
+    pub updated_at: u32,
+    /// Tons bought since the roll that stock has not yet recovered from, per commodity
+    #[serde(default)]
+    pub purchased: HashMap<CommodityType, f64>,
+    /// How far buying has raised each buy price, as a fraction of the undisturbed price
+    #[serde(default)]
+    pub bought_impact: HashMap<CommodityType, f64>,
+    /// How far selling has lowered each sell price, as a fraction of the undisturbed price
+    #[serde(default)]
+    pub sold_impact: HashMap<CommodityType, f64>,
+}
+
+impl SystemMarket {
+    fn rolled(clock: u32) -> Self {
+        Self {
+            seed: rand::random(),
+            rolled_at: clock,
+            updated_at: clock,
+            ..Self::default()
+        }
+    }
+
+    /// Close a share of every gap for each jump since the last update
+    fn recover(&mut self, clock: u32) {
+        let jumps = clock.saturating_sub(self.updated_at);
+        if jumps == 0 {
+            return;
+        }
+        let keep = (1.0 - RECOVERY_PER_JUMP).powi(jumps as i32);
+        for gap in self
+            .purchased
+            .values_mut()
+            .chain(self.bought_impact.values_mut())
+            .chain(self.sold_impact.values_mut())
+        {
+            *gap *= keep;
+        }
+        self.updated_at = clock;
+    }
+
+    fn record_buy(&mut self, commodity: &CommodityType, tons: u32) {
+        *self.purchased.entry(commodity.clone()).or_insert(0.0) += f64::from(tons);
+        let impact = self.bought_impact.entry(commodity.clone()).or_insert(0.0);
+        *impact = (*impact + IMPACT_PER_TON * f64::from(tons)).min(MAX_IMPACT);
+    }
+
+    fn record_sell(&mut self, commodity: &CommodityType, tons: u32) {
+        let impact = self.sold_impact.entry(commodity.clone()).or_insert(0.0);
+        *impact = (*impact + IMPACT_PER_TON * f64::from(tons)).min(MAX_IMPACT);
+    }
+
+    /// Apply what the player has done here to freshly generated prices and stock
+    fn apply_to(&self, market: &mut MarketPrices) {
+        for (commodity, impact) in &self.bought_impact {
+            if let Some(price) = market.buy_prices.get_mut(commodity) {
+                *price = (f64::from(*price) * (1.0 + impact)).round() as u32;
+            }
+        }
+        for (commodity, impact) in &self.sold_impact {
+            if let Some(price) = market.sell_prices.get_mut(commodity) {
+                *price = ((f64::from(*price) * (1.0 - impact)).round() as u32).max(1);
+            }
+        }
+        for (commodity, bought) in &self.purchased {
+            if let Some(stock) = market.availability.get_mut(commodity) {
+                *stock = stock.saturating_sub(bought.round() as u32);
+            }
+        }
+    }
 }
 
 impl TradingHandler {
@@ -43,24 +115,18 @@ impl TradingHandler {
             .get(location)
             .is_none_or(|state| clock.saturating_sub(state.rolled_at) >= MARKET_REFRESH_JUMPS);
         if stale {
-            self.markets.insert(
-                location.to_string(),
-                SystemMarket {
-                    seed: rand::random(),
-                    rolled_at: clock,
-                    purchased: HashMap::new(),
-                },
-            );
+            self.markets
+                .insert(location.to_string(), SystemMarket::rolled(clock));
         }
-        let state = &self.markets[location];
+        let state = self
+            .markets
+            .get_mut(location)
+            .expect("market was just inserted");
+        state.recover(clock);
         let mut market = self
             .trading_system
             .generate_market_prices(economy, state.seed);
-        for (commodity, bought) in &state.purchased {
-            if let Some(stock) = market.availability.get_mut(commodity) {
-                *stock = stock.saturating_sub(*bought);
-            }
-        }
+        state.apply_to(&mut market);
         market
     }
 
@@ -308,7 +374,7 @@ impl TradingHandler {
         commander.remove_credits(total_cost);
         ship.add_cargo(commodity.clone(), quantity);
         if let Some(state) = self.markets.get_mut(commander.location()) {
-            *state.purchased.entry(commodity.clone()).or_insert(0) += quantity;
+            state.record_buy(&commodity, quantity);
         }
         trade_log.record_buy(
             commodity.clone(),
@@ -349,7 +415,7 @@ impl TradingHandler {
 
     /// Execute a sell transaction
     fn execute_sell(
-        &self,
+        &mut self,
         commodity: CommodityType,
         quantity: u32,
         commander: &mut Commander,
@@ -381,6 +447,9 @@ impl TradingHandler {
         // Execute the transaction
         ship.remove_cargo(&commodity, quantity);
         commander.add_credits(total_revenue);
+        if let Some(state) = self.markets.get_mut(commander.location()) {
+            state.record_sell(&commodity, quantity);
+        }
         trade_log.record_sell(
             commodity.clone(),
             quantity,
@@ -684,7 +753,7 @@ mod tests {
             .get_mut("LAVE")
             .unwrap()
             .purchased
-            .insert(CommodityType::Food, 4);
+            .insert(CommodityType::Food, 4.0);
 
         let json = serde_json::to_string(&handler).unwrap();
         let restored: TradingHandler = serde_json::from_str(&json).unwrap();
@@ -693,7 +762,7 @@ mod tests {
         assert_eq!(restored.markets["LAVE"].rolled_at, 7);
         assert_eq!(
             restored.markets["LAVE"].purchased.get(&CommodityType::Food),
-            Some(&4)
+            Some(&4.0)
         );
     }
 
@@ -702,5 +771,101 @@ mod tests {
         let json = r#"{"trading_system":{"commodities":["Food"]},"market_seed":5,"market_location":"LAVE","purchased":{"Food":2}}"#;
         let restored: TradingHandler = serde_json::from_str(json).unwrap();
         assert!(restored.markets.is_empty());
+    }
+
+    fn apply(state: &SystemMarket) -> MarketPrices {
+        let mut market = market(100, 90, 50);
+        state.apply_to(&mut market);
+        market
+    }
+
+    #[test]
+    fn selling_lowers_the_sell_price_by_one_and_a_half_percent_per_ton() {
+        let mut state = SystemMarket::rolled(0);
+        state.record_sell(&CommodityType::Food, 10);
+
+        let after = apply(&state);
+        assert_eq!(after.get_sell_price(&CommodityType::Food), Some(77));
+        assert_eq!(after.get_buy_price(&CommodityType::Food), Some(100));
+    }
+
+    #[test]
+    fn buying_raises_the_buy_price_and_lowers_stock() {
+        let mut state = SystemMarket::rolled(0);
+        state.record_buy(&CommodityType::Food, 10);
+
+        let after = apply(&state);
+        assert_eq!(after.get_buy_price(&CommodityType::Food), Some(115));
+        assert_eq!(after.get_sell_price(&CommodityType::Food), Some(90));
+        assert_eq!(after.get_availability(&CommodityType::Food), Some(40));
+    }
+
+    #[test]
+    fn impact_is_capped_at_forty_percent() {
+        let mut state = SystemMarket::rolled(0);
+        state.record_sell(&CommodityType::Food, 200);
+        state.record_buy(&CommodityType::Food, 200);
+
+        let after = apply(&state);
+        assert_eq!(after.get_sell_price(&CommodityType::Food), Some(54));
+        assert_eq!(after.get_buy_price(&CommodityType::Food), Some(140));
+    }
+
+    #[test]
+    fn impact_and_stock_recover_ten_percent_of_the_gap_per_jump() {
+        let mut state = SystemMarket::rolled(0);
+        state.record_sell(&CommodityType::Food, 20);
+        state.record_buy(&CommodityType::Food, 20);
+
+        state.recover(1);
+        assert!((state.sold_impact[&CommodityType::Food] - 0.27).abs() < 1e-9);
+        assert!((state.purchased[&CommodityType::Food] - 18.0).abs() < 1e-9);
+
+        state.recover(16);
+        let left = state.sold_impact[&CommodityType::Food] / 0.30;
+        assert!((left - 0.9_f64.powi(16)).abs() < 1e-9);
+        assert!(left < 0.2);
+    }
+
+    #[test]
+    fn recovery_happens_at_systems_the_player_is_not_in() {
+        let mut handler = TradingHandler::new();
+        let economy = EconomyType::RichIndustrial;
+        handler.market_for("LAVE", &economy, 0);
+        handler
+            .markets
+            .get_mut("LAVE")
+            .unwrap()
+            .record_sell(&CommodityType::Food, 20);
+
+        handler.market_for("DISO", &economy, 3);
+        handler.market_for("LAVE", &economy, 3);
+
+        let impact = handler.markets["LAVE"].sold_impact[&CommodityType::Food];
+        assert!((impact - 0.30 * 0.9_f64.powi(3)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_refresh_clears_the_impact() {
+        let mut handler = TradingHandler::new();
+        let economy = EconomyType::RichIndustrial;
+        handler.market_for("LAVE", &economy, 0);
+        handler
+            .markets
+            .get_mut("LAVE")
+            .unwrap()
+            .record_sell(&CommodityType::Food, 20);
+
+        handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
+
+        assert!(handler.markets["LAVE"].sold_impact.is_empty());
+    }
+
+    #[test]
+    fn old_markets_without_impact_fields_load_untouched() {
+        let json = r#"{"seed":3,"rolled_at":2,"purchased":{"Food":4.0}}"#;
+        let state: SystemMarket = serde_json::from_str(json).unwrap();
+        assert!(state.sold_impact.is_empty());
+        assert_eq!(state.updated_at, 0);
     }
 }

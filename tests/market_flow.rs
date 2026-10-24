@@ -51,7 +51,7 @@ fn hopping_between_systems_does_not_reroll_prices_or_stock() {
 }
 
 #[test]
-fn stock_bought_stays_gone_after_a_hop_and_prices_refresh_after_the_period() {
+fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
     let mut game = new_game(500);
     let before = game.market_prices().unwrap();
     assert!(game.handle_buy_command(&args("food 3")));
@@ -63,7 +63,7 @@ fn stock_bought_stays_gone_after_a_hop_and_prices_refresh_after_the_period() {
     let after = game.market_prices().unwrap();
     assert_eq!(
         after.availability[&elitey_rust::data::commodities::CommodityType::Food],
-        stock - 3
+        stock - 2
     );
 
     for _ in 0..4 {
@@ -74,4 +74,35 @@ fn stock_bought_stays_gone_after_a_hop_and_prices_refresh_after_the_period() {
     let refreshed = game.market_prices().unwrap();
     assert_eq!(game.world_clock, 10);
     assert_ne!(refreshed.buy_prices, before.buy_prices);
+}
+
+#[test]
+fn selling_pushes_the_price_down_and_it_recovers_over_the_next_jumps() {
+    use elitey_rust::data::commodities::CommodityType;
+
+    let mut game = new_game(2_000);
+    assert!(game.handle_buy_command(&args("luxury 5")));
+    let undisturbed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
+
+    assert!(game.handle_sell_command(&args("luxury 5")));
+    let pushed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
+    assert!(pushed < undisturbed);
+
+    game.travel_to_system("DISO").unwrap();
+    game.ship.refuel();
+    game.travel_to_system("LAVE").unwrap();
+    let recovering = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
+    assert!(recovering > pushed && recovering <= undisturbed);
+}
+
+#[test]
+fn buying_raises_the_buy_price_for_the_next_purchase() {
+    use elitey_rust::data::commodities::CommodityType;
+
+    let mut game = new_game(2_000);
+    let before = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
+    assert!(game.handle_buy_command(&args("food 5")));
+    let after = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
+
+    assert!(after > before);
 }
