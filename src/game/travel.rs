@@ -39,6 +39,10 @@ impl TravelHandler {
             .get_system_case_insensitive(&commander.location)
             .ok_or_else(|| format!("Current system '{}' not found", commander.location))?;
 
+        if current_system.name.eq_ignore_ascii_case(&destination.name) {
+            return Err("You are already in this system.".to_string());
+        }
+
         // Calculate distance and fuel cost
         let distance = current_system.distance_to(destination);
         let fuel_cost = distance.ceil() as u32;
@@ -300,6 +304,27 @@ impl TravelHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jumping_to_the_current_system_is_refused_without_cost() {
+        let system_manager = SystemManager::new().expect("Failed to load galaxy data");
+        let travel_handler = TravelHandler::new(system_manager);
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+        let fuel = ship.fuel_current;
+
+        for name in ["LAVE", "lave"] {
+            let result = travel_handler.travel_to_system(
+                &mut commander,
+                &mut ship,
+                &EventManager::new(),
+                name,
+            );
+            assert_eq!(result, Err("You are already in this system.".to_string()));
+        }
+        assert_eq!(ship.fuel_current, fuel);
+        assert_eq!(commander.location, "LAVE");
+    }
 
     #[test]
     fn jump_fuel_cost_rounds_distance_up() {
