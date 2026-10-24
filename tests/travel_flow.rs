@@ -26,3 +26,16 @@ fn only_systems_within_fuel_range_are_listed() {
     assert_eq!(destinations[0].name, "DISO");
     assert!(destinations.iter().all(|d| d.fuel <= 3));
 }
+
+#[test]
+fn a_stranded_ship_can_refuel_and_jump_again() {
+    let mut game = new_game(100);
+    game.ship.fuel_current = 1;
+    assert!(game.reachable_destinations().unwrap().is_empty());
+
+    assert!(game.handle_refuel_command(&[]));
+
+    assert_eq!(game.ship.fuel_current, 7);
+    assert_eq!(game.commander.credits(), 70);
+    assert!(!game.reachable_destinations().unwrap().is_empty());
+}

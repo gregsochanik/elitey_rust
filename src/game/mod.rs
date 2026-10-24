@@ -5,6 +5,7 @@ pub mod equipment;
 pub mod events;
 pub mod fight;
 pub mod game_state;
+pub mod refuel;
 pub mod repair;
 pub mod save_load;
 pub mod ship;
