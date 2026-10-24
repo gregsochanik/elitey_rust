@@ -27,12 +27,12 @@ Playing the game showed the loop has no goals beyond a 500cr ship, money rather 
 ### Taking and tracking jobs
 - `accept <n>` takes job *n* from the board; it leaves the board
 - At most 3 jobs active at once
-- `missions` lists active jobs with destination, reward and jumps left
-- `abandon <n>` drops an active job at a cost of 3 reputation
+- `missions` lists active jobs numbered 1, 2, 3 with destination, reward and jumps left
+- `abandon <n>` drops the active job with that number from `missions` at a cost of 3 reputation; numbers are the current list positions, so they change as jobs complete
 
 ### Delivery and failure
 - Arriving at a job's destination with the job still in time completes it automatically: the reward is paid and reputation rises by 2
-- Every jump uses one of the deadline. A job with no jumps left that is not delivered on that jump fails: it is removed and reputation falls by 3
+- Every jump uses one of the deadline. A job with deadline N must be delivered by the end of its Nth jump after accepting. If the Nth jump ends anywhere other than the destination, the job fails at once: it is removed and reputation falls by 3
 - A job can be delivered on the jump that uses its last deadline jump
 - Several jobs for the same destination all complete on arrival
 - Delivery happens after any travel events on that jump
@@ -40,10 +40,8 @@ Playing the game showed the loop has no goals beyond a 500cr ship, money rather 
 ### Saves
 - The board and active jobs are saved. Old saves without them load with an empty board and no active jobs (the board is generated on the next arrival or `jobs` call)
 
-## Stranded relief (separate bug fix)
-The game has a dead end: a player with an empty hold, almost no credits and too little fuel to reach any system cannot do anything. Jobs cannot fix this alone because even a courier job needs fuel to deliver. Fix: when `refuel` finds the player stranded, a rescue crew tops up enough fuel to reach the nearest system for free, at a cost of 2 reputation.
-
-- **Stranded** means: the hold is empty, and `fuel + credits / 2` (fuel affordable) is less than the fuel cost of the nearest system
+## Stranded relief
+Done in Feature 14: a player with an empty hold and too little fuel to reach any system can call a rescue with a plain `refuel`, for 2 reputation. Jobs cannot fix that dead end alone, because even a courier job needs fuel to deliver.
 
 ## Not in v1
 - Haul, bounty and supply jobs (see Later)
@@ -68,7 +66,7 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - **Parcel weight.** A weightless parcel is simplest. A 1-ton parcel would make full holds matter and interact with event cargo loss.
 - **Abandoning.** With no advance there is nothing to refund, so abandoning only costs reputation. Revisit if advances arrive.
 - **Board refresh.** Should the board change when the player stays but time passes? There is no clock, so v1 says no.
-- **Reputation gating.** When reputation affects what is offered, a Criminal could be locked out of work. That worsens dead ends, so it needs the stranded relief first.
+- **Reputation gating.** When reputation affects what is offered, a Criminal could be locked out of work. That worsens dead ends, and relies on the stranded rescue in Feature 14.
 
 ## Acceptance Criteria
 - [ ] `jobs` shows 3 to 5 courier jobs with number, destination, reward and deadline, all reachable on a full tank
@@ -78,20 +76,19 @@ A courier job should out-earn trading when the player is poor and fade as tradin
 - [ ] A job that runs out of jumps fails, is removed and costs 3 reputation
 - [ ] `abandon <n>` removes the job and costs 3 reputation
 - [ ] Jobs and the board persist across save and load; old saves still load
-- [ ] A stranded player who runs `refuel` is rescued once, for 2 reputation, and can jump again
 - [ ] A simulation shows courier jobs out-earn trading at starting capital
 
 ## Testing (write first)
 - [ ] Board generation from a fixed seed: count, reachable destinations, reward range, deadline range
 - [ ] Reward formula at known fuel costs
 - [ ] Accept, the three-job limit, abandon
-- [ ] Deliver on the last allowed jump; fail one jump later
+- [ ] A job with deadline N: delivered on jump N succeeds; if jump N ends elsewhere it fails at once
 - [ ] Several jobs for one destination
 - [ ] Delivery after an event on the jump
 - [ ] Save, load and old-save compatibility
-- [ ] Stranded detection and rescue; not triggered when the player can still afford to move
 
 ## Dependencies
 - Feature 02: Star Systems & Travel ✅ (jumps, fuel)
 - Feature 05: Save/Load ✅
+- Feature 14: Refuelling ✅ (the stranded rescue that jobs rely on)
 - Feature 10: Reputation ✅ (rewards and penalties)
