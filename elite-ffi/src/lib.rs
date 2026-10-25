@@ -1,5 +1,6 @@
 use elite_core::data::commodities::CommodityType;
 use elite_core::data::equipment::EquipmentCategory;
+use elite_core::data::save_load::SaveLoadManager;
 use elite_core::data::ships::ShipType;
 use elite_core::data::systems::EconomyType;
 use elite_core::game::equipment;
@@ -12,6 +13,7 @@ use elite_core::game::smuggling::InspectionChoice;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::travel::fuel_for_distance;
 use elite_core::game::GameState;
+use elite_core::game::SaveLoadHandler;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use std::sync::{Arc, Mutex};
@@ -294,6 +296,17 @@ pub struct StepData {
 }
 
 #[derive(Debug, Clone)]
+pub struct SaveSlotData {
+    pub slot: String,
+    pub commander: String,
+    pub location: String,
+    pub credits: u32,
+    pub ship: String,
+    pub saved_at: String,
+    pub is_autosave: bool,
+}
+
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
@@ -319,6 +332,21 @@ impl Game {
     /// A game whose jobs, events and fights are repeatable
     pub fn with_seed(commander_name: String, seed: u64) -> Arc<Self> {
         Self::with_rng(commander_name, StdRng::seed_from_u64(seed))
+    }
+
+    /// A game that keeps its saves in `directory`, for tests
+    pub fn with_saves_in(
+        commander_name: String,
+        seed: u64,
+        directory: std::path::PathBuf,
+    ) -> Arc<Self> {
+        let game = Self::with_seed(commander_name, seed);
+        game.state
+            .lock()
+            .expect("game state lock")
+            .save_load_handler =
+            SaveLoadHandler::with_directory(directory).expect("save directory");
+        game
     }
 
     fn with_rng(commander_name: String, rng: StdRng) -> Arc<Self> {
@@ -834,6 +862,115 @@ impl Game {
             *voyage = Some(Voyage { journey, step });
         }
         data
+    }
+
+    /// Every save, newest first, with the slot name it loads from
+    pub fn saves(&self) -> Vec<SaveSlotData> {
+        let state = self.state.lock().expect("game state lock");
+        state
+            .save_load_handler
+            .list_slots()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(slot, metadata)| SaveSlotData {
+                is_autosave: slot.starts_with("autosave"),
+                saved_at: SaveLoadManager::format_timestamp(metadata.timestamp),
+                slot,
+                commander: metadata.commander_name,
+                location: metadata.location,
+                credits: metadata.credits,
+                ship: metadata.ship_type,
+            })
+            .collect()
+    }
+
+    /// Whether this commander already has an autosave that a new game would replace
+    pub fn autosave_exists(&self, commander_name: String) -> bool {
+        let state = self.state.lock().expect("game state lock");
+        state
+            .save_load_handler
+            .preview(&SaveLoadHandler::autosave_slot(commander_name.trim()))
+            .is_ok()
+    }
+
+    /// Start over as a new commander; nothing is saved until you save or quit
+    pub fn new_game(&self, commander_name: String) -> ActionResult {
+        let name = commander_name.trim();
+        if name.is_empty() {
+            return failed("Name cannot be empty");
+        }
+        self.replace_state(|_| GameState::new(name.to_string()));
+        ok(format!("Commander {}, your journey begins!", name))
+    }
+
+    /// Continue a commander's autosave
+    pub fn continue_game(&self, commander_name: String) -> ActionResult {
+        let found = {
+            let state = self.state.lock().expect("game state lock");
+            state.save_load_handler.find_autosave(commander_name.trim())
+        };
+        match found {
+            Ok(Some(loaded)) => self.finish_load(loaded),
+            Ok(None) => failed(format!("No save found for {}", commander_name.trim())),
+            Err(error) => failed(error),
+        }
+    }
+
+    pub fn load_slot(&self, slot: String) -> ActionResult {
+        let loaded = {
+            let state = self.state.lock().expect("game state lock");
+            state.save_load_handler.load(&slot)
+        };
+        match loaded {
+            Ok(loaded) => self.finish_load(loaded),
+            Err(error) => failed(error),
+        }
+    }
+
+    pub fn save_slot(&self, slot: String) -> ActionResult {
+        let state = self.state.lock().expect("game state lock");
+        match state.save_load_handler.save(&state, &slot) {
+            Ok(()) => ok(format!("Game saved to slot '{}'.", slot)),
+            Err(error) => failed(error),
+        }
+    }
+
+    pub fn delete_slot(&self, slot: String) -> ActionResult {
+        let state = self.state.lock().expect("game state lock");
+        match state.save_load_handler.delete(&slot) {
+            Ok(()) => ok(format!("Deleted save '{}'.", slot)),
+            Err(error) => failed(error),
+        }
+    }
+
+    /// Write the commander's autosave
+    pub fn autosave(&self) -> ActionResult {
+        let state = self.state.lock().expect("game state lock");
+        match state.save_load_handler.auto_save(&state) {
+            Ok(()) => ok(format!(
+                "Commander {}'s progress has been saved.",
+                state.commander.name()
+            )),
+            Err(error) => failed(error),
+        }
+    }
+
+    fn finish_load(&self, loaded: GameState) -> ActionResult {
+        let name = loaded.commander.name().to_string();
+        self.replace_state(|_| loaded);
+        ok(format!(
+            "Game loaded. Commander {}, your journey continues!",
+            name
+        ))
+    }
+
+    fn replace_state(&self, next: impl FnOnce(&GameState) -> GameState) {
+        let mut state = self.state.lock().expect("game state lock");
+        let handler = state.save_load_handler.clone();
+        let mut replacement = next(&state);
+        replacement.save_load_handler = handler;
+        *state = replacement;
+        *self.voyage.lock().expect("voyage lock") = None;
     }
 
     pub fn market(&self) -> Result<MarketData, GameError> {
@@ -1394,6 +1531,70 @@ mod tests {
             (kinds, last.arrived_at, game.status().credits)
         };
         assert_eq!(run(7), run(7));
+    }
+
+    fn temp_saves(label: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("elite_ffi_{}_{}", label, std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        dir
+    }
+
+    #[test]
+    fn a_game_saves_and_loads_by_slot() {
+        let game = Game::with_saves_in("Saver".to_string(), 1, temp_saves("slots"));
+        game.buy("food".to_string(), 3).unwrap();
+        let credits = game.status().credits;
+
+        assert!(game.save_slot("first".to_string()).ok);
+        assert!(!game.save_slot("bad name!".to_string()).ok);
+        let saves = game.saves();
+        assert_eq!(saves.len(), 1);
+        assert_eq!(saves[0].slot, "first");
+        assert_eq!(saves[0].commander, "Saver");
+        assert!(!saves[0].is_autosave);
+
+        game.new_game("Other".to_string());
+        assert_eq!(game.status().commander_name, "Other");
+        assert_eq!(game.status().credits, 100);
+
+        assert!(game.load_slot("first".to_string()).ok);
+        assert_eq!(game.status().commander_name, "Saver");
+        assert_eq!(game.status().credits, credits);
+        assert_eq!(game.cargo().weight, 3);
+        assert!(!game.load_slot("missing".to_string()).ok);
+    }
+
+    #[test]
+    fn the_autosave_is_found_by_commander_name_and_deleted_by_slot() {
+        let game = Game::with_saves_in("Greg".to_string(), 1, temp_saves("auto"));
+        assert!(!game.autosave_exists("Greg".to_string()));
+        game.buy("food".to_string(), 1).unwrap();
+
+        assert!(game.autosave().ok);
+
+        assert!(game.autosave_exists(" greg ".to_string()));
+        let saves = game.saves();
+        assert!(saves[0].is_autosave);
+        game.new_game("Greg".to_string());
+        assert_eq!(game.cargo().weight, 0);
+        assert!(game.continue_game("greg".to_string()).ok);
+        assert_eq!(game.cargo().weight, 1);
+        assert!(!game.continue_game("nobody".to_string()).ok);
+        assert!(game.delete_slot(saves[0].slot.clone()).ok);
+        assert!(game.saves().is_empty());
+        assert!(!game.delete_slot("gone".to_string()).ok);
+    }
+
+    #[test]
+    fn a_new_game_needs_a_name_and_ends_any_journey() {
+        let game = Game::with_saves_in("Test".to_string(), 1, temp_saves("new"));
+        assert!(!game.new_game("   ".to_string()).ok);
+        let step = game.begin_jump("DISO".to_string());
+        if step.kind != "arrived" {
+            assert!(game.journey_in_progress());
+            assert!(game.new_game("Fresh".to_string()).ok);
+            assert!(!game.journey_in_progress());
+        }
     }
 
     #[test]

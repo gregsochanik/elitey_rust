@@ -74,6 +74,11 @@ impl SaveLoadHandler {
         self.save_manager.list_saves().map_err(SaveError::List)
     }
 
+    /// Every save with the slot name it loads from, newest first
+    pub fn list_slots(&self) -> Result<Vec<(String, SaveMetadata)>, SaveError> {
+        self.save_manager.list_slots().map_err(SaveError::List)
+    }
+
     pub fn delete(&self, slot_name: &str) -> Result<(), SaveError> {
         if !self.save_manager.save_exists(slot_name) {
             return Err(SaveError::NotFound(slot_name.to_string()));
@@ -178,6 +183,9 @@ mod tests {
 
         assert_eq!(handler.preview("slot1").unwrap().credits, 777);
         assert_eq!(handler.list().unwrap().len(), 1);
+        let slots = handler.list_slots().unwrap();
+        assert_eq!(slots.len(), 1);
+        assert_eq!(slots[0].0, "slot1");
         assert_eq!(handler.load("slot1").unwrap().commander.credits(), 777);
         assert!(handler.delete("slot1").is_ok());
         assert!(handler.list().unwrap().is_empty());
