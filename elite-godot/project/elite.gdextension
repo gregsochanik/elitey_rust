@@ -4,5 +4,9 @@ compatibility_minimum = 4.1
 reloadable = true
 
 [libraries]
-macos.debug = "res://../../target/debug/libelite_godot.dylib"
-macos.release = "res://../../target/release/libelite_godot.dylib"
+macos.debug = "res://bin/libelite_godot.macos.dylib"
+macos.release = "res://bin/libelite_godot.macos.dylib"
+linux.debug.x86_64 = "res://bin/libelite_godot.linux.x86_64.so"
+linux.release.x86_64 = "res://bin/libelite_godot.linux.x86_64.so"
+windows.debug.x86_64 = "res://bin/elite_godot.windows.x86_64.dll"
+windows.release.x86_64 = "res://bin/elite_godot.windows.x86_64.dll"

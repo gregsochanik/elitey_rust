@@ -1,0 +1,85 @@
+name: GUI
+
+on:
+  pull_request:
+    paths:
+      - "elite-godot/**"
+      - "elite-ffi/**"
+      - "elite-core/**"
+      - ".github/workflows/gui.yml"
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: gui-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  export:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: Linux
+            output: Elite-linux.x86_64
+            editor_zip: Godot_v4.7.2-stable_linux.x86_64.zip
+            editor: Godot_v4.7.2-stable_linux.x86_64
+            templates: ~/.local/share/godot/export_templates
+          - os: macos-latest
+            preset: macOS
+            output: Elite-macos.zip
+            editor_zip: Godot_v4.7.2-stable_macos.universal.zip
+            editor: Godot.app/Contents/MacOS/Godot
+            templates: ~/Library/Application Support/Godot/export_templates
+          - os: windows-latest
+            preset: Windows
+            output: Elite-windows.exe
+            editor_zip: Godot_v4.7.2-stable_win64.exe.zip
+            editor: Godot_v4.7.2-stable_win64_console.exe
+            templates: ~/AppData/Roaming/Godot/export_templates
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: gui-${{ matrix.os }}
+      - name: Build the extension
+        shell: bash
+        env:
+          PROFILE: release
+          UNIVERSAL: ${{ matrix.os == 'macos-latest' && '1' || '0' }}
+        run: sh elite-godot/build.sh
+      - name: Install Godot and its export templates
+        shell: bash
+        run: |
+          base="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          mkdir -p "$RUNNER_TEMP/godot"
+          curl -fsSL -o "$RUNNER_TEMP/editor.zip" "$base/${{ matrix.editor_zip }}"
+          unzip -q "$RUNNER_TEMP/editor.zip" -d "$RUNNER_TEMP/godot"
+          curl -fsSL -o "$RUNNER_TEMP/templates.tpz" "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          templates="${{ matrix.templates }}"
+          templates="${templates/#\~/$HOME}/${GODOT_VERSION}.stable"
+          mkdir -p "$templates"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP/templates"
+          mv "$RUNNER_TEMP/templates/templates/"* "$templates/"
+          chmod +x "$RUNNER_TEMP/godot/${{ matrix.editor }}" || true
+          echo "GODOT=$RUNNER_TEMP/godot/${{ matrix.editor }}" >> "$GITHUB_ENV"
+      - name: Export
+        shell: bash
+        run: |
+          mkdir -p elite-godot/dist
+          # Godot can abort while shutting down the editor after importing, so judge the result by the exported file
+          "$GODOT" --headless --path elite-godot/project --import || echo "import exited with $?"
+          "$GODOT" --headless --path elite-godot/project --export-release "${{ matrix.preset }}" "../dist/${{ matrix.output }}" || echo "export exited with $?"
+          ls -la elite-godot/dist
+          test -s "elite-godot/dist/${{ matrix.output }}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: elite-gui-${{ matrix.preset }}
+          path: elite-godot/dist/*
+          if-no-files-found: error
