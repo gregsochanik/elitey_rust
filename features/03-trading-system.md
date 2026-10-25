@@ -154,9 +154,9 @@ The trading system foundation is now ready for implementing:
 - [x] Simulate one-way trips and record the typical profit per trip (see Fuel and the early game)
 
 ### Acceptance Criteria
-- [ ] A player choosing the best commodity usually profits on a short trip
-- [ ] A poor choice (or bad luck) still loses money, so choices matter
-- [ ] Prices remain stable within a system visit
+- [x] A player choosing the best commodity usually profits on a short trip
+- [x] A poor choice (or bad luck) still loses money, so choices matter
+- [x] Prices remain stable within a system visit (until the player trades)
 
 ### Result and follow-up
 The spread change raised the hindsight measure (best commodity profits on a trip) from 80% to 94%, and the simulation test now asserts at least 90%.
