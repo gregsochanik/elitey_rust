@@ -1,4 +1,5 @@
 use crate::data::commodities::CommodityType;
+use crate::data::star_class::StarClass;
 use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
 use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
@@ -348,6 +349,7 @@ impl GameState {
             tech_level: system.tech_level,
             population: system.population.clone(),
             description: system.description.clone(),
+            star: StarClass::from_code(&system.star_class),
             from_here,
         })
     }

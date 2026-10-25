@@ -141,6 +141,28 @@ FAMOUS = {
 }
 
 
+def star_class(row):
+    spect = re.sub(r"[:\s]", "", row["spect"]).lstrip("d")
+    if row["proper"] == "Sol":
+        return "G2V"
+    match = re.match(r"(D[A-Z]?|[OBAFGKMLTobafgkmlt])(\d(?:\.\d)?)?(I{1,3}|IV|V)?", spect)
+    if match:
+        letter, subtype, luminosity = match.groups()
+        return f"{letter.upper() if len(letter) == 1 else letter}{subtype or ''}{luminosity or ''}"
+    return estimate_class(row)
+
+
+def estimate_class(row):
+    try:
+        colour = float(row["ci"])
+    except ValueError:
+        return ""
+    for limit, letter in ((-0.2, "B"), (0.2, "A"), (0.45, "F"), (0.7, "G"), (1.4, "K")):
+        if colour < limit:
+            return letter
+    return "M"
+
+
 def star_line(row, rng):
     spect = row["spect"].strip()
     letter = spect[:1].upper()
@@ -182,7 +204,8 @@ def main(path):
     for index, ((name, row), (x, y)) in enumerate(zip(stars, positions)):
         entry = traits["start"] if index == 0 else pool.pop()
         galaxy[name] = {"name": name, "x": x, "y": y, **entry,
-                        "description": description(name, row, entry)}
+                        "description": description(name, row, entry),
+                        "star_class": star_class(row)}
     json.dump(galaxy, sys.stdout, indent=1, ensure_ascii=False)
     print()
 

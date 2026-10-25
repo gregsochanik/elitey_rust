@@ -191,6 +191,10 @@ fn print_system_info(view: &SystemInfoView) {
     );
     println!("Tech Level: {}", view.tech_level);
     println!("Population: {}", view.population);
+    if let Some(star) = &view.star {
+        println!("Star: {} ({})", star.type_name, star.code);
+        println!("      {}", star.note);
+    }
     println!("Description: {}", view.description);
     if let Some(jump) = &view.from_here {
         println!("Distance: {:.1} light years", jump.distance);

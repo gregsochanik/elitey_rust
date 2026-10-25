@@ -34,6 +34,7 @@ fn test_contextual_modifier_calculation() {
         radius: 100,
         population: "1000000".to_string(),
         description: "Test system".to_string(),
+        star_class: String::new(),
     };
 
     let modifier = manager.calculate_contextual_modifier(&anarchy_system);
@@ -229,6 +230,7 @@ fn system(government: GovernmentType, economy: EconomyType) -> StarSystem {
         radius: 100,
         population: "1000000".to_string(),
         description: "Test system".to_string(),
+        star_class: String::new(),
     }
 }
 
