@@ -1,9 +1,9 @@
 mod common;
 
 use common::new_game;
+use elitey_rust::cli::fight::run_fight;
 use elitey_rust::game::aftermath::settle;
 use elitey_rust::game::combat::{Combat, Combatant, Outcome};
-use elitey_rust::game::fight::run_fight;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 

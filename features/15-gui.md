@@ -37,7 +37,7 @@ Prefer one small command/outcome surface over many `handle_*` methods:
 
 ### Phase 1: Core refactor (in place, single crate)
 Do this first and on its own.
-- Areas migrated so far (typed API in the core, text in `src/cli/`): trading, refuel, repair, equipment, ship upgrades, save/load, status, system info and trade log views, new-game start-up (`GameState::new(name)`, `SaveLoadHandler::with_directory`).
+- Areas migrated so far (typed API in the core, text in `src/cli/`): trading, refuel, repair, equipment, ship upgrades, save/load, status, system info and trade log views, new-game start-up, and travel as a step machine (`plan_jump`, `start_jump`, `advance_journey`; events, fights and job arrival are `Step`s answered with `Input`s; `cli/fight.rs` is the terminal driver) (`GameState::new(name)`, `SaveLoadHandler::with_directory`).
 - [ ] Introduce the action/outcome/error/view types above and migrate one area at a time: trading, refuel, repair, equipment, upgrades/ships, save/load, trade log, travel and events, combat entry.
 - [ ] Keep each existing command working through a thin CLI layer that calls the new API and prints. The CLI's visible output may only change where the old text was wrong.
 - [ ] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.

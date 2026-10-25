@@ -2,7 +2,6 @@ use crate::data::commodities::CommodityType;
 use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 use crate::game::commander::Standing;
 use crate::game::{Commander, Ship};
-use crate::utils::display::show_info;
 use rand::Rng;
 use std::collections::HashMap;
 
@@ -69,6 +68,17 @@ pub struct EventOutcome {
     #[serde(default)]
     pub redirect: Option<Redirect>,
     pub message: String,
+}
+
+/// What applying an event outcome did, beyond the credits, hull and fuel it states
+#[derive(Debug, Clone)]
+pub struct EventReport {
+    pub outcome: EventOutcome,
+    /// Cargo taken from the hold (empty when there was nothing to take)
+    pub cargo_lost: Option<Vec<(CommodityType, u32)>>,
+    pub cargo_gained: Option<(CommodityType, u32)>,
+    pub no_room_for_cargo: bool,
+    pub new_standing: Option<Standing>,
 }
 
 /// Represents a choice the player can make during an event
@@ -361,7 +371,7 @@ impl EventManager {
         self.pick_event(phase, destination, standing, &mut rand::thread_rng())
     }
 
-    fn pick_event<R: Rng>(
+    pub fn pick_event<R: Rng>(
         &self,
         phase: &EventPhase,
         destination: &StarSystem,
@@ -415,6 +425,19 @@ impl EventManager {
         choice_index: usize,
         rng: &mut R,
     ) -> Result<EventOutcome, String> {
+        self.process_event_reported(event, commander, ship, choice_index, rng)
+            .map(|report| report.outcome)
+    }
+
+    /// Apply a choice's rolled outcome and report what happened to the cargo and standing
+    pub fn process_event_reported<R: Rng>(
+        &self,
+        event: &Event,
+        commander: &mut Commander,
+        ship: &mut Ship,
+        choice_index: usize,
+        rng: &mut R,
+    ) -> Result<EventReport, String> {
         if choice_index >= event.choices.len() {
             return Err("Invalid choice index".to_string());
         }
@@ -422,44 +445,35 @@ impl EventManager {
         let choice = &event.choices[choice_index];
         let rolled = roll_outcome(&choice.outcome, commander.credits, rng);
         let outcome = &rolled;
+        let mut report = EventReport {
+            outcome: rolled.clone(),
+            cargo_lost: None,
+            cargo_gained: None,
+            no_room_for_cargo: false,
+            new_standing: None,
+        };
 
-        // Apply outcome effects
         commander.credits = (commander.credits as i32 + outcome.credits_change).max(0) as u32;
 
         if let Some(loss) = &outcome.cargo_loss {
-            let taken = apply_cargo_loss(ship, loss);
-            if taken.is_empty() {
-                show_info("You had no cargo to lose.");
-            }
-            for (commodity, tons) in taken {
-                show_info(&format!("Lost {} tons of {}", tons, commodity.name()));
-            }
+            report.cargo_lost = Some(apply_cargo_loss(ship, loss));
         }
 
         if let Some(gain) = &outcome.cargo_gain {
-            let added = apply_cargo_gain(ship, gain);
-            if added == 0 {
-                show_info("No room in your hold for the cargo.");
-            } else {
-                show_info(&format!(
-                    "Gained {} tons of {}",
-                    added,
-                    gain.commodity.name()
-                ));
+            match apply_cargo_gain(ship, gain) {
+                0 => report.no_room_for_cargo = true,
+                added => report.cargo_gained = Some((gain.commodity.clone(), added)),
             }
         }
 
-        if let Some(standing) = commander
+        report.new_standing = commander
             .change_reputation(outcome.reputation_change)
-            .new_standing
-        {
-            show_info(&format!("Your standing is now {}.", standing.name()));
-        }
+            .new_standing;
 
         ship.take_damage(outcome.hull_damage.unsigned_abs());
         ship.fuel_current = (ship.fuel_current as i32 + outcome.fuel_change).max(0) as u32;
 
-        Ok(rolled)
+        Ok(report)
     }
 
     // Event creation methods

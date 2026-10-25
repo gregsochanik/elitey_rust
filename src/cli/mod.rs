@@ -1,7 +1,9 @@
 pub mod equipment;
+pub mod fight;
 pub mod info;
 pub mod saves;
 pub mod startup;
 pub mod trading;
+pub mod travel;
 pub mod upgrades;
 pub mod upkeep;

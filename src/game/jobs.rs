@@ -216,10 +216,7 @@ pub fn abandon(
     }
     let abandoned = active.remove(number - 1);
     release_freight(&abandoned.job, ship);
-    let change = commander.change_reputation(ABANDON_REPUTATION);
-    if let Some(standing) = change.new_standing {
-        crate::utils::display::show_info(&format!("Your standing is now {}.", standing.name()));
-    }
+    commander.change_reputation(ABANDON_REPUTATION);
     Ok(abandoned.job)
 }
 
@@ -321,6 +318,50 @@ pub fn settle_arrival(
     arrival
 }
 
+/// Settle one bounty after its fight: `Ok` is how it ended and the player's remaining hull.
+/// Returns the messages and whether the hunt goes on; anything but a victory ends it.
+pub fn finish_bounty_fight(
+    entry: &ActiveJob,
+    result: Result<(Outcome, u32), String>,
+    commander: &mut Commander,
+    ship: &mut Ship,
+    rng: &mut impl Rng,
+) -> (Vec<String>, bool) {
+    let mut messages = Vec::new();
+    match result {
+        Ok((outcome, hull)) => {
+            messages.extend(settle_with_reward(
+                outcome,
+                hull,
+                commander,
+                ship,
+                rng,
+                Some(entry.job.reward),
+            ));
+            if outcome == Outcome::Victory {
+                messages.push(format!(
+                    "Bounty claimed near {}: {}cr.",
+                    entry.job.destination, entry.job.reward
+                ));
+                return (messages, true);
+            }
+        }
+        Err(error) => messages.push(format!("The fight was interrupted: {}", error)),
+    }
+    messages.extend(fail_bounty(entry, commander));
+    (messages, false)
+}
+
+/// A bounty that is not fought because an earlier fight ended the hunt
+pub fn fail_bounty(entry: &ActiveJob, commander: &mut Commander) -> Vec<String> {
+    let mut messages = vec![format!("The bounty near {} failed.", entry.job.destination)];
+    reputation_messages(
+        &mut messages,
+        commander.change_reputation(FAILURE_REPUTATION),
+    );
+    messages
+}
+
 /// Fight each bounty in turn. `fight` plays one fight and returns how it ended and the
 /// player's remaining hull. Anything but a victory ends the hunt and fails the rest.
 pub fn resolve_bounties(
@@ -334,34 +375,14 @@ pub fn resolve_bounties(
     let mut hunt_over = false;
 
     for entry in bounties {
-        if !hunt_over {
-            match fight(ship) {
-                Ok((outcome, hull)) => {
-                    messages.extend(settle_with_reward(
-                        outcome,
-                        hull,
-                        commander,
-                        ship,
-                        rng,
-                        Some(entry.job.reward),
-                    ));
-                    if outcome == Outcome::Victory {
-                        messages.push(format!(
-                            "Bounty claimed near {}: {}cr.",
-                            entry.job.destination, entry.job.reward
-                        ));
-                        continue;
-                    }
-                }
-                Err(error) => messages.push(format!("The fight was interrupted: {}", error)),
-            }
-            hunt_over = true;
+        if hunt_over {
+            messages.extend(fail_bounty(&entry, commander));
+            continue;
         }
-        messages.push(format!("The bounty near {} failed.", entry.job.destination));
-        reputation_messages(
-            &mut messages,
-            commander.change_reputation(FAILURE_REPUTATION),
-        );
+        let result = fight(ship).map_err(|error| error.to_string());
+        let (more, goes_on) = finish_bounty_fight(&entry, result, commander, ship, rng);
+        messages.extend(more);
+        hunt_over = !goes_on;
     }
     messages
 }
