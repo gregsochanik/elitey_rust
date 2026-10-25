@@ -279,14 +279,14 @@ fn fitted(ship: &mut Ship, buy: &[&str], sell: &[&str]) {
     let mut commander = crate::game::Commander::new("Test".to_string());
     commander.credits = 10_000;
     for id in buy {
-        assert!(crate::game::equipment::EquipmentHandler::handle(
+        assert!(crate::cli::equipment::handle(
             &["buy".to_string(), id.to_string()],
             &mut commander,
             ship
         ));
     }
     for id in sell {
-        assert!(crate::game::equipment::EquipmentHandler::handle(
+        assert!(crate::cli::equipment::handle(
             &["sell".to_string(), id.to_string()],
             &mut commander,
             ship

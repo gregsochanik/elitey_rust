@@ -4,6 +4,7 @@ use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
+use crate::game::upgrades::{UpgradeError, UpgradeReceipt};
 use crate::utils::display::{show_error, show_success};
 use crate::utils::input;
 use colored::*;
@@ -359,7 +360,7 @@ impl GameState {
 
     /// Handle equipment command
     pub fn handle_equipment_command(&mut self, args: &[String]) -> bool {
-        super::equipment::EquipmentHandler::handle(args, &mut self.commander, &mut self.ship)
+        crate::cli::equipment::handle(args, &mut self.commander, &mut self.ship)
     }
 
     /// Handle refuel command
@@ -451,20 +452,26 @@ impl GameState {
 
     /// Handle upgrade command
     pub fn handle_upgrade_command(&self) {
-        self.upgrade_handler
-            .handle_upgrade(&self.commander, &self.ship);
+        crate::cli::upgrades::show_upgrades(self);
     }
 
     /// Handle upgrade purchase command
     pub fn handle_upgrade_purchase_command(&mut self, args: &[String]) -> bool {
+        crate::cli::upgrades::buy(self, args)
+    }
+
+    /// Buy a better ship
+    pub fn buy_ship(
+        &mut self,
+        ship_type: crate::data::ships::ShipType,
+    ) -> Result<UpgradeReceipt, UpgradeError> {
         self.upgrade_handler
-            .handle_upgrade_purchase(args, &mut self.commander, &mut self.ship)
+            .upgrade(ship_type, &mut self.commander, &mut self.ship)
     }
 
     /// Handle ships command
     pub fn handle_ships_command(&self) {
-        self.upgrade_handler
-            .handle_ships(&self.commander, &self.ship);
+        crate::cli::upgrades::show_ships(self);
     }
 
     /// Handle save command
