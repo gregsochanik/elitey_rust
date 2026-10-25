@@ -3,9 +3,10 @@ pub mod combat;
 pub mod commander;
 pub mod equipment;
 pub mod events;
-pub mod fight;
+
 pub mod game_state;
 pub mod jobs;
+pub mod journey;
 pub mod refuel;
 pub mod repair;
 pub mod save_load;
