@@ -1,5 +1,5 @@
 use crate::utils::display::{
-    credits, economy_icon, government_icon, header, icon, show_error, system_name, Icon,
+    bar, credits, economy_icon, government_icon, header, icon, show_error, system_name, Fill, Icon,
 };
 use colored::*;
 use elite_core::game::trade_log::TradeKind;
@@ -113,23 +113,32 @@ fn print_status(view: &StatusView) {
     header(Icon::Hull, "Ship Status");
     println!("{}Ship: {}", icon(Icon::Ship), view.ship_name.yellow());
     println!(
-        "{}Cargo: {}/{} tons",
+        "{}Cargo: {}/{} tons {}",
         icon(Icon::Cargo),
         view.cargo_used,
-        view.cargo_capacity
+        view.cargo_capacity,
+        bar(view.cargo_used, view.cargo_capacity, Fill::FullIsWarning)
     );
     println!(
-        "{}Fuel: {}/{} light years",
+        "{}Fuel: {}/{} light years {}",
         icon(Icon::Fuel),
         view.fuel_current,
-        view.fuel_capacity
+        view.fuel_capacity,
+        bar(view.fuel_current, view.fuel_capacity, Fill::FullIsGood)
     );
-    println!("{}Hull: {}/{}", icon(Icon::Hull), view.hull, view.max_hull);
     println!(
-        "{}Power: {}/{}",
+        "{}Hull: {}/{} {}",
+        icon(Icon::Hull),
+        view.hull,
+        view.max_hull,
+        bar(view.hull, view.max_hull, Fill::FullIsGood)
+    );
+    println!(
+        "{}Power: {}/{} {}",
         icon(Icon::Power),
         view.power_used,
-        view.power_capacity
+        view.power_capacity,
+        bar(view.power_used, view.power_capacity, Fill::FullIsWarning)
     );
 
     if view.damaged {

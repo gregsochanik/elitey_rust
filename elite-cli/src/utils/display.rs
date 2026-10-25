@@ -111,6 +111,56 @@ fn glyph_prefix(glyph: &str, enabled: bool) -> String {
     }
 }
 
+const BAR_WIDTH: usize = 10;
+
+/// Whether a full bar is healthy (fuel, hull) or a warning (cargo, power in use)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Fill {
+    FullIsGood,
+    FullIsWarning,
+}
+
+fn filled_cells(current: u32, max: u32) -> usize {
+    if max == 0 {
+        return 0;
+    }
+    let ratio = f64::from(current.min(max)) / f64::from(max);
+    (ratio * BAR_WIDTH as f64).round() as usize
+}
+
+fn bar_text(current: u32, max: u32, unicode: bool) -> String {
+    let filled = filled_cells(current, max);
+    let (on, off) = if unicode { ('█', '░') } else { ('#', '-') };
+    format!(
+        "[{}{}]",
+        on.to_string().repeat(filled),
+        off.to_string().repeat(BAR_WIDTH - filled)
+    )
+}
+
+fn bar_colour(current: u32, max: u32, fill: Fill) -> Color {
+    let percent = if max == 0 {
+        0
+    } else {
+        u64::from(current.min(max)) * 100 / u64::from(max)
+    };
+    let health = match fill {
+        Fill::FullIsGood => percent,
+        Fill::FullIsWarning => 100 - percent,
+    };
+    match health {
+        60..=100 => Color::Green,
+        30..=59 => Color::Yellow,
+        _ => Color::Red,
+    }
+}
+
+/// A `[████░░░░░░]` gauge coloured by how healthy the level is; `[####------]` without colour
+pub fn bar(current: u32, max: u32, fill: Fill) -> ColoredString {
+    let unicode = control::SHOULD_COLORIZE.should_colorize();
+    bar_text(current, max, unicode).color(bar_colour(current, max, fill))
+}
+
 /// Credits in green, or red when negative
 pub fn credits(amount: i64) -> ColoredString {
     let text = format!("{}cr", amount);
@@ -321,6 +371,29 @@ mod tests {
     fn economy_and_government_icons_are_dropped_with_colour_off() {
         assert_eq!(glyph_prefix("🏭", false), "");
         assert_eq!(glyph_prefix("🏭", true), "🏭  ");
+    }
+
+    #[test]
+    fn bars_fill_in_proportion() {
+        assert_eq!(bar_text(0, 10, true), "[░░░░░░░░░░]");
+        assert_eq!(bar_text(8, 10, true), "[████████░░]");
+        assert_eq!(bar_text(10, 10, true), "[██████████]");
+        assert_eq!(bar_text(5, 20, false), "[###-------]");
+    }
+
+    #[test]
+    fn bars_stay_within_range() {
+        assert_eq!(bar_text(30, 10, true), "[██████████]");
+        assert_eq!(bar_text(3, 0, true), "[░░░░░░░░░░]");
+    }
+
+    #[test]
+    fn bar_colour_follows_health() {
+        assert_eq!(bar_colour(8, 10, Fill::FullIsGood), Color::Green);
+        assert_eq!(bar_colour(4, 10, Fill::FullIsGood), Color::Yellow);
+        assert_eq!(bar_colour(1, 10, Fill::FullIsGood), Color::Red);
+        assert_eq!(bar_colour(1, 10, Fill::FullIsWarning), Color::Green);
+        assert_eq!(bar_colour(9, 10, Fill::FullIsWarning), Color::Red);
     }
 
     #[test]

@@ -100,8 +100,9 @@ fn the_market_and_status_are_laid_out_as_before() {
     assert!(output.contains("vs base"));
     assert!(output.contains("Commander Status"));
     assert!(output.contains("Combat rating: Harmless (0 kills, 3 more for Mostly Harmless)"));
-    assert!(output.contains("Fuel: 7/7 light years"));
-    assert!(output.contains("Hull: 100/100"));
+    assert!(output.contains("Fuel: 7/7 light years [##########]"));
+    assert!(output.contains("Hull: 100/100 [##########]"));
+    assert!(output.contains("Cargo: 0/20 tons [----------]"));
     assert!(output.contains("Power: 9/20"));
 }
 
@@ -116,7 +117,7 @@ fn power_is_shown_in_the_shop_and_the_installed_list_and_can_be_upgraded() {
     assert!(output.contains("gives 28"));
     assert!(output.contains("Success: Installed Improved Reactor for 60cr"));
     assert!(output.contains("Power: 9/28 used, 19 free"));
-    assert!(output.contains("Power: 9/28\n"));
+    assert!(output.contains("Power: 9/28 [###-------]"));
     assert!(output.contains("Error: Insufficient credits"));
 }
 
@@ -220,4 +221,11 @@ fn systems_and_info_show_economy_and_government() {
     );
     assert!(coloured.contains('🏭') || coloured.contains('🌾'));
     assert!(coloured.contains("Government: "));
+}
+
+#[test]
+fn status_bars_use_blocks_with_colour_and_hashes_without() {
+    let coloured = play_with("coloured_bars", "status", &[("CLICOLOR_FORCE", "1")]);
+    assert!(coloured.contains("██████████"));
+    assert!(coloured.contains("░░░░░░░░░░"));
 }
