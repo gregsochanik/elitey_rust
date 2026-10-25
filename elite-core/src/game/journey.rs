@@ -1,5 +1,6 @@
 use crate::data::enemies::find_enemy;
 use crate::data::systems::StarSystem;
+use crate::game::aftermath::Foe;
 use crate::game::combat::{Combat, Combatant, Outcome};
 use crate::game::events::{Event, EventPhase, EventReport};
 use crate::game::jobs::{self, ActiveJob};
@@ -64,7 +65,7 @@ enum Stage {
     Start,
     JumpEvent,
     AwaitEvent { event: Event, phase: EventPhase },
-    AwaitEventFight { phase: EventPhase },
+    AwaitEventFight { phase: EventPhase, foe: Foe },
     Fuel,
     ApproachEvent,
     Arrive,
@@ -184,16 +185,17 @@ impl GameState {
                     };
                     let starts_combat = self.report_event(journey, &report, rng);
                     if starts_combat {
-                        journey.stage = Stage::AwaitEventFight { phase };
-                        return Ok(Step::Fight(self.fight_against("pirate-raider")));
+                        let foe = Foe::of_event(&event.event_type);
+                        journey.stage = Stage::AwaitEventFight { phase, foe };
+                        return Ok(Step::Fight(self.fight_against(foe.enemy_id())));
                     }
                     journey.stage = after_event(&phase);
                 }
-                Stage::AwaitEventFight { phase } => {
+                Stage::AwaitEventFight { phase, foe } => {
                     let result = match input.take().map(fight_result) {
                         Some(Ok(result)) => result,
                         Some(Err(error)) => {
-                            journey.stage = Stage::AwaitEventFight { phase };
+                            journey.stage = Stage::AwaitEventFight { phase, foe };
                             return Err(error);
                         }
                         None => return Err(JourneyError::WrongInput),
@@ -201,7 +203,8 @@ impl GameState {
                     match result {
                         Ok((outcome, hull)) => {
                             journey.notices.push(Notice::Blank);
-                            for message in aftermath::settle(
+                            for message in aftermath::settle_against(
+                                foe,
                                 outcome,
                                 hull,
                                 &mut self.commander,

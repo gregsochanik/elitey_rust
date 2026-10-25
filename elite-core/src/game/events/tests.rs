@@ -4,7 +4,7 @@ use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 #[test]
 fn test_event_manager_creation() {
     let manager = EventManager::new();
-    assert_eq!(manager.events.len(), 9); // 9 event types
+    assert_eq!(manager.events.len(), 10); // 10 event types
 }
 
 #[test]
@@ -15,7 +15,7 @@ fn test_phase_event_filtering() {
     let approach_events = manager.get_available_events(&EventPhase::Approach);
 
     assert_eq!(jump_events.len(), 4); // 4 jump events
-    assert_eq!(approach_events.len(), 5); // 5 approach events
+    assert_eq!(approach_events.len(), 6); // 6 approach events
 }
 
 #[test]
@@ -369,7 +369,7 @@ fn picking_an_event_always_matches_the_phase() {
 }
 
 #[test]
-fn only_fighting_pirates_starts_combat() {
+fn only_fighting_pirates_patrols_and_convoys_starts_combat() {
     let manager = EventManager::new();
     let mut starters = Vec::new();
     for (event_type, event) in &manager.events {
@@ -380,9 +380,14 @@ fn only_fighting_pirates_starts_combat() {
         }
     }
 
+    starters.sort_by_key(|(event_type, _)| format!("{:?}", event_type));
     assert_eq!(
         starters,
-        vec![(EventType::PirateAttack, "Fight the pirates".to_string())]
+        vec![
+            (EventType::MilitaryPatrol, "Engage the patrol".to_string()),
+            (EventType::PirateAttack, "Fight the pirates".to_string()),
+            (EventType::TraderConvoy, "Rob the convoy".to_string()),
+        ]
     );
 }
 

@@ -79,7 +79,7 @@ mod tests {
                 assert!((0.0..=1.0).contains(&value), "{}", enemy.id);
             }
             assert!(b.flee_odds >= 0.0, "{}", enemy.id);
-            assert!(enemy.hull > 0 && !enemy.weapons.is_empty(), "{}", enemy.id);
+            assert!(enemy.hull > 0, "{}", enemy.id);
         }
     }
 }

@@ -23,11 +23,11 @@
     "recharge": 4,
     "weapons": [{ "damage": 14, "accuracy": 0.65 }],
     "behaviour": {
-      "aggression": 1.0,
+      "aggression": 0.8,
       "flee_below_hull": 0.0,
       "flee_odds": 0.0,
       "flee_chance": 0.5,
-      "surrender_below_hull": 0.0,
+      "surrender_below_hull": 0.1,
       "surrender_chance": 0.5
     }
   },
@@ -45,6 +45,22 @@
       "flee_chance": 0.5,
       "surrender_below_hull": 0.0,
       "surrender_chance": 0.5
+    }
+  },
+  {
+    "id": "trader",
+    "name": "Trader Convoy",
+    "hull": 50,
+    "shield": 10,
+    "recharge": 2,
+    "weapons": [],
+    "behaviour": {
+      "aggression": 0.0,
+      "flee_below_hull": 0.9,
+      "flee_odds": 0.0,
+      "flee_chance": 0.5,
+      "surrender_below_hull": 0.5,
+      "surrender_chance": 0.4
     }
   }
 ]
