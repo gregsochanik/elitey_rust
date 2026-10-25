@@ -7,6 +7,7 @@ pub mod events;
 pub mod game_state;
 pub mod jobs;
 pub mod journey;
+pub mod npc;
 pub mod refuel;
 pub mod repair;
 pub mod save_load;

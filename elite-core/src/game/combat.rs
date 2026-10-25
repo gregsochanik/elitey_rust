@@ -1,3 +1,4 @@
+use crate::data::enemies::{find_enemy, EnemyClass};
 use crate::data::equipment::{CombatStats, EquipmentCategory};
 use crate::game::Ship;
 
@@ -49,27 +50,36 @@ impl Combatant {
         }
     }
 
-    pub fn pirate_raider() -> Self {
+    /// An enemy built from its entry in `data/enemies.json`
+    pub fn from_enemy(enemy: &EnemyClass) -> Self {
         Self {
-            name: "Pirate Raider".to_string(),
-            hull: 70,
-            max_hull: 70,
-            shield: 25,
-            max_shield: 25,
-            recharge: 4,
-            weapons: vec![Weapon {
-                damage: 14,
-                accuracy: 0.65,
-            }],
+            name: enemy.name.clone(),
+            hull: enemy.hull,
+            max_hull: enemy.hull,
+            shield: enemy.shield,
+            max_shield: enemy.shield,
+            recharge: enemy.recharge,
+            weapons: enemy
+                .weapons
+                .iter()
+                .map(|weapon| Weapon {
+                    damage: weapon.damage,
+                    accuracy: weapon.accuracy,
+                })
+                .collect(),
         }
     }
 
-    /// A law-enforcement ship, as tough as a raider
+    fn named_enemy(id: &str) -> Self {
+        Self::from_enemy(find_enemy(id).expect("enemy is in data/enemies.json"))
+    }
+
+    pub fn pirate_raider() -> Self {
+        Self::named_enemy("pirate-raider")
+    }
+
     pub fn patrol_vessel() -> Self {
-        Self {
-            name: "Patrol Vessel".to_string(),
-            ..Self::pirate_raider()
-        }
+        Self::named_enemy("patrol-vessel")
     }
 
     pub fn is_destroyed(&self) -> bool {
