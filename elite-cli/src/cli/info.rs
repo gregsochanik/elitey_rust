@@ -1,4 +1,4 @@
-use crate::utils::display::{credits, icon, show_error, system_name, Icon};
+use crate::utils::display::{credits, header, icon, show_error, system_name, Icon};
 use colored::*;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::views::{StatusView, SystemInfoView, TradeLogView};
@@ -31,9 +31,7 @@ pub fn systems(game: &GameState) {
         return;
     };
 
-    println!();
-    println!("{}", "Available Star Systems".cyan().bold());
-    println!("{}", "=====================".cyan());
+    header(Icon::Ship, "Available Star Systems");
     println!("Current fuel: {} light years", game.ship.fuel_current);
     println!();
 
@@ -72,38 +70,61 @@ pub fn system_info(game: &GameState, args: &[String]) -> bool {
 }
 
 fn print_status(view: &StatusView) {
-    println!();
-    println!("{}", "Commander Status".cyan().bold());
-    println!("{}", "================".cyan());
+    header(Icon::Ship, "Commander Status");
     println!("Commander: {}", view.commander_name.yellow());
-    println!("Credits: {}", credits(i64::from(view.credits)));
-    println!("Location: {}", system_name(&view.location, true));
-    println!("Reputation: {} ({})", view.reputation, view.standing.name());
+    println!(
+        "{}Credits: {}",
+        icon(Icon::Credits),
+        credits(i64::from(view.credits))
+    );
+    println!(
+        "{}Location: {}",
+        icon(Icon::Ship),
+        system_name(&view.location, true)
+    );
+    println!(
+        "{}Reputation: {} ({})",
+        icon(Icon::Rating),
+        view.reputation,
+        view.standing.name()
+    );
     match view.combat_rating.next() {
         Some((next, needed)) => println!(
-            "Combat rating: {} ({} kills, {} more for {})",
+            "{}Combat rating: {} ({} kills, {} more for {})",
+            icon(Icon::Combat),
             view.combat_rating.name(),
             view.kills,
             needed - view.kills,
             next.name()
         ),
         None => println!(
-            "Combat rating: {} ({} kills)",
+            "{}Combat rating: {} ({} kills)",
+            icon(Icon::Combat),
             view.combat_rating.name(),
             view.kills
         ),
     }
-    println!();
-    println!("{}", "Ship Status".cyan().bold());
-    println!("{}", "===========".cyan());
-    println!("Ship: {}", view.ship_name.yellow());
-    println!("Cargo: {}/{} tons", view.cargo_used, view.cargo_capacity);
+    header(Icon::Hull, "Ship Status");
+    println!("{}Ship: {}", icon(Icon::Ship), view.ship_name.yellow());
     println!(
-        "Fuel: {}/{} light years",
-        view.fuel_current, view.fuel_capacity
+        "{}Cargo: {}/{} tons",
+        icon(Icon::Cargo),
+        view.cargo_used,
+        view.cargo_capacity
     );
-    println!("Hull: {}/{}", view.hull, view.max_hull);
-    println!("Power: {}/{}", view.power_used, view.power_capacity);
+    println!(
+        "{}Fuel: {}/{} light years",
+        icon(Icon::Fuel),
+        view.fuel_current,
+        view.fuel_capacity
+    );
+    println!("{}Hull: {}/{}", icon(Icon::Hull), view.hull, view.max_hull);
+    println!(
+        "{}Power: {}/{}",
+        icon(Icon::Power),
+        view.power_used,
+        view.power_capacity
+    );
 
     if view.damaged {
         println!(
@@ -127,9 +148,7 @@ fn print_status(view: &StatusView) {
 }
 
 fn print_system_info(view: &SystemInfoView) {
-    println!();
-    println!("{}", format!("System: {}", view.name).cyan().bold());
-    println!("{}", "=".repeat(30));
+    header(Icon::Ship, &format!("System: {}", view.name));
     println!("Economy: {:?}", view.economy);
     println!("Government: {:?}", view.government);
     println!("Tech Level: {}", view.tech_level);
@@ -143,8 +162,7 @@ fn print_system_info(view: &SystemInfoView) {
 }
 
 fn print_trade_log(view: &TradeLogView) {
-    println!("\n{}", "Trading Log".cyan().bold());
-    println!("{}", "===========".cyan());
+    header(Icon::Market, "Trading Log");
 
     if view.recent.is_empty() {
         println!("No trades yet.\n");

@@ -1,4 +1,4 @@
-use crate::utils::display::{show_error, show_info, show_success};
+use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use colored::*;
 use elite_core::data::ships::ShipType;
 use elite_core::game::upgrades::{ShipList, UpgradeError, UpgradeOptions};
@@ -59,8 +59,7 @@ pub fn buy(game: &mut GameState, args: &[String]) -> bool {
 }
 
 fn print_upgrades(view: &UpgradeOptions, current_name: &str) {
-    println!("\n{}", "Available Upgrades".cyan().bold());
-    println!("{}", "==================".cyan());
+    header(Icon::Ship, "Available Upgrades");
     println!("Current Ship: {}", current_name.yellow());
     println!("Credits: {}cr", view.credits.to_string().green());
     println!();
@@ -103,8 +102,7 @@ fn print_upgrades(view: &UpgradeOptions, current_name: &str) {
 }
 
 fn print_ships(view: &ShipList, current_name: &str) {
-    println!("\n{}", "Available Ships".cyan().bold());
-    println!("{}", "===============".cyan());
+    header(Icon::Ship, "Available Ships");
     println!("Current Ship: {}", current_name.yellow());
     println!("Credits: {}cr", view.credits.to_string().green());
     println!();

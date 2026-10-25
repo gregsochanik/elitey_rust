@@ -1,4 +1,4 @@
-use crate::utils::display::{show_error, show_info, show_success};
+use crate::utils::display::{header, icon, show_error, show_info, show_success, Icon};
 use colored::*;
 use elite_core::game::game_state::JobListing;
 use elite_core::game::jobs::{self, ActiveJob};
@@ -76,8 +76,7 @@ fn jumps(count: u32) -> String {
 }
 
 fn print_missions(active: &[ActiveJob]) {
-    println!("\n{}", "Active Jobs".cyan().bold());
-    println!("{}", "===========".cyan());
+    header(Icon::Jobs, "Active Jobs");
     if active.is_empty() {
         println!("No active jobs. Use 'jobs' to see the board.");
     }
@@ -94,8 +93,7 @@ fn print_missions(active: &[ActiveJob]) {
 }
 
 fn print_jobs(location: &str, jobs: &[JobListing]) {
-    println!("\n{}", format!("Jobs at {}", location).cyan().bold());
-    println!("{}", "=".repeat(location.len() + 8).cyan());
+    header(Icon::Jobs, &format!("Jobs at {}", location));
     if jobs.is_empty() {
         println!("No jobs on offer here.");
     }
@@ -114,7 +112,7 @@ fn print_jobs(location: &str, jobs: &[JobListing]) {
             Some(lock) => println!(
                 "{} {}",
                 line.dimmed(),
-                format!("[Locked: {}]", lock.describe()).red()
+                format!("[{}Locked: {}]", icon(Icon::Locked), lock.describe()).red()
             ),
             None => println!(
                 "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
