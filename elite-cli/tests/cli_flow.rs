@@ -229,3 +229,15 @@ fn status_bars_use_blocks_with_colour_and_hashes_without() {
     assert!(coloured.contains("██████████"));
     assert!(coloured.contains("░░░░░░░░░░"));
 }
+
+#[test]
+fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
+    let output = play("menu", "help\n2\ns\n6\nm\n99");
+
+    assert!(output.contains(" 1. help - Show this help menu"));
+    assert!(output.contains(" 2. status - Display ship and commander status"));
+    assert!(output.contains("24. quit - Exit the game"));
+    assert_eq!(output.matches("Commander Status").count(), 2);
+    assert_eq!(output.matches("LAVE Market").count(), 2);
+    assert!(output.contains("Unknown command."));
+}

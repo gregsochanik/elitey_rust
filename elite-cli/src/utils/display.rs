@@ -219,77 +219,6 @@ pub fn print_goodbye(commander_name: &str) {
     println!("{}", "Thanks for playing Elite Rust!".green());
 }
 
-/// Show help menu with available commands
-pub fn show_help() {
-    header(Icon::Help, "Available Commands");
-    println!("{} - Show this help menu", "help".yellow());
-    println!("{} - Display ship and commander status", "status".yellow());
-    println!("{} - List all available star systems", "systems".yellow());
-    println!(
-        "{} - Show information about a system",
-        "info <system>".yellow()
-    );
-    println!(
-        "{} - Travel to a star system (with events!)",
-        "jump <system>".yellow()
-    );
-    header(Icon::Market, "Trading Commands");
-    println!(
-        "{} - Show current system's market prices",
-        "market".yellow()
-    );
-    println!("{} - Buy commodities", "buy <item> <quantity>".yellow());
-    println!("{} - Sell commodities", "sell <item> <quantity>".yellow());
-    println!("{} - Show cargo hold contents", "cargo".yellow());
-    println!(
-        "{} - Show trading history and statistics",
-        "log [count]".yellow()
-    );
-    header(Icon::Ship, "Ship Upgrade Commands");
-    println!("{} - Show available ship upgrades", "upgrade".yellow());
-    println!("{} - Purchase ship upgrade", "upgrade <ship>".yellow());
-    println!("{} - List all available ships", "ships".yellow());
-    header(Icon::Equipment, "Equipment Commands");
-    println!("{} - Show equipment for sale", "equipment".yellow());
-    println!(
-        "{} - Buy and install equipment",
-        "equipment buy <item>".yellow()
-    );
-    println!(
-        "{} - Sell installed equipment (half price)",
-        "equipment sell <item>".yellow()
-    );
-    println!(
-        "{} - Show installed equipment, slots and power",
-        "equipment installed".yellow()
-    );
-    header(Icon::Jobs, "Job Commands");
-    println!("{} - Show the jobs on offer here", "jobs".yellow());
-    println!("{} - Take a job from the board", "accept <number>".yellow());
-    println!("{} - List your active jobs", "missions".yellow());
-    println!(
-        "{} - Drop an active job (-3 reputation)",
-        "abandon <number>".yellow()
-    );
-    header(Icon::Repair, "Repair and Refuel Commands");
-    println!(
-        "{} - Repair hull damage (2 credits per point)",
-        "repair [points]".yellow()
-    );
-    println!(
-        "{} - Refuel (2 credits per light year)",
-        "refuel [units]".yellow()
-    );
-    header(Icon::Save, "Save/Load Commands");
-    println!("{} - Save game to slot", "save <slot>".yellow());
-    println!("{} - Load game from slot", "load <slot>".yellow());
-    println!("{} - List all save files", "saves".yellow());
-    println!("{} - Delete save file", "delete <slot>".yellow());
-    println!();
-    println!("{} - Exit the game", "quit".yellow());
-    println!();
-}
-
 /// Show error message
 pub fn show_error(message: &str) {
     println!(
@@ -394,11 +323,5 @@ mod tests {
         assert_eq!(bar_colour(1, 10, Fill::FullIsGood), Color::Red);
         assert_eq!(bar_colour(1, 10, Fill::FullIsWarning), Color::Green);
         assert_eq!(bar_colour(9, 10, Fill::FullIsWarning), Color::Red);
-    }
-
-    #[test]
-    fn test_show_help() {
-        // This test just ensures the function doesn't panic
-        show_help();
     }
 }
