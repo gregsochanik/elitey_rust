@@ -80,6 +80,15 @@ fn check(id: &str, model: &Value) -> Result<(), String> {
     if let Some(unused) = (0..vertices.len()).find(|i| !used.contains(i)) {
         return Err(format!("vertex {unused} is not used by any edge or face"));
     }
+    if let Some(engines) = model.get("engines") {
+        let points = engines.as_array().ok_or("engines is not a list")?;
+        for point in points {
+            let coords = point.as_array().ok_or("an engine is not a list")?;
+            if coords.len() != 3 || coords.iter().any(|c| c.as_f64().is_none()) {
+                return Err(format!("engine {point} needs three numbers"));
+            }
+        }
+    }
     if let Some(uvs) = model.get("uvs") {
         if uvs.as_array().map(Vec::len) != Some(vertices.len()) {
             return Err("uvs need one entry per vertex".to_string());
@@ -167,6 +176,10 @@ fn the_check_rejects_broken_models() {
         (
             r#"{"id":"m","vertices":[[0,0,0],[1,0,0]],"edges":[[0,1]],"uvs":[[0,0]]}"#,
             "uvs",
+        ),
+        (
+            r#"{"id":"m","vertices":[[0,0,0],[1,0,0]],"edges":[[0,1]],"engines":[[0,0]]}"#,
+            "engine",
         ),
     ];
     for (json, expected) in cases {

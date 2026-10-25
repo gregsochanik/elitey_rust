@@ -35,7 +35,10 @@ static func load_model(id: String) -> Dictionary:
 		if face[0] >= vertices.size() or face[1] >= vertices.size() or face[2] >= vertices.size():
 			return {}
 		faces.append_array(PackedInt32Array([face[0], face[1], face[2]]))
-	return {"id": id, "vertices": vertices, "edges": edges, "faces": faces}
+	var engines := PackedVector3Array()
+	for engine in data.get("engines", []):
+		engines.append(Vector3(engine[0], engine[1], engine[2]))
+	return {"id": id, "vertices": vertices, "edges": edges, "faces": faces, "engines": engines}
 
 
 ## A model's own mesh, or the fallback ship's when no file exists for the id.
