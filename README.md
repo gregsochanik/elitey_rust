@@ -114,7 +114,7 @@ Hull: [Current]/[Max]
 ### Project Structure
 ```
 ```
-Cargo.toml               # Workspace: elite-core and elite-cli
+Cargo.toml               # Workspace: elite-core, elite-cli, elite-ffi, elite-godot
 elite-core/              # Rules, data and state; no terminal I/O
 ├── src/game/            # Commander, ship, trading, travel, events, jobs, combat, upgrades
 ├── src/data/            # Star systems, commodities, ships, equipment catalogue, save file I/O
@@ -126,6 +126,8 @@ elite-cli/               # The terminal game (binary: elitey_rust)
 ├── src/cli/             # Command handlers and text
 ├── src/utils/           # Terminal output and input helpers
 └── tests/               # Command-level and play-through tests
+elite-ffi/               # Small facade over the core for front ends (plain records, one error type)
+elite-godot/             # Godot extension and project; see features/15-gui.md
 features/                # Feature specs (see AGENTS.md)
 ```
 

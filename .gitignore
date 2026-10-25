@@ -44,3 +44,4 @@ node_modules/
 
 # dotenv environment variables file
 .env
+elite-godot/project/.godot/

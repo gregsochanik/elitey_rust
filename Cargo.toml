@@ -1,5 +1,5 @@
 [workspace]
-members = ["elite-core", "elite-cli"]
+members = ["elite-core", "elite-cli", "elite-ffi", "elite-godot"]
 resolver = "2"
 
 [workspace.package]

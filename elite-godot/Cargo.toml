@@ -1,0 +1,14 @@
+[package]
+name = "elite-godot"
+description = "Godot extension exposing the game to GDScript"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+name = "elite_godot"
+crate-type = ["cdylib"]
+
+[dependencies]
+elite-ffi = { path = "../elite-ffi" }
+godot = "0.4.5"

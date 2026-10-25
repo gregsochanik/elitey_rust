@@ -50,7 +50,7 @@ Done. Typed actions, outcomes, errors and views live in `src/game`; all text, pr
 - [x] `elite-core` must not depend on `colored`, `crossterm` or `clap`, including as dev or build dependencies. CI fails if `cargo tree -p elite-core -e normal,build,dev` mentions any of them.
 
 ### Phase 3: GUI shell (macOS)
-- [ ] Toolkit: **TBC**; see Toolkit options. Decide before starting this phase. Phases 1 and 2 do not depend on the choice.
+- [x] Toolkit: **Godot with gdext** (see Decision). `elite-ffi` is the small facade over the core; `elite-godot` exposes it to GDScript.
 - [ ] Screens, all over the core API: Status, Market (buy/sell), Cargo, Galaxy map (reachable systems, fuel cost, jump), Equipment, Ship upgrades/Shipyard, Refuel/Repair, Trade log, Save/Load.
 - [ ] Travel events and combat as modal flows driven by `PendingEvent` and `Combat`.
 - [ ] Autosave on quit, as in the CLI.
@@ -67,11 +67,23 @@ Done. Typed actions, outcomes, errors and views live in `src/game`; all text, pr
 - Replacing the CLI.
 
 ## Open Questions
-- **GUI toolkit.** TBC; see Toolkit options.
+- **GUI toolkit.** Decided: Godot with gdext; see Decision.
 - **When to start.** Phase 1 touches almost every file under `src/game/`, so it conflicts with any feature in flight. Land the remaining reputation issues (feature 10) first, then do Phase 1 as a series of small PRs, one area each.
 - **Reputation and UI-13 ordering.** Feature 13 (CLI presentation) should follow Phase 1, so its colour and table work lands in the CLI layer.
 
-## Toolkit options (TBC)
+## Decision
+**Godot 4 with gdext.** Both leading options were spiked with the same Market screen over a small facade (`elite-ffi`: a `Game` object with `market`, `buy`, `sell`, plain records and one error type).
+
+- **SwiftUI over UniFFI** built the Market screen quickly with native tables, but the journey scene between the jump and the station, where events, inspections and fights happen, would need a hand-written Metal or SceneKit renderer, and it is Apple-only. It needs the full Xcode toolchain, not just the command line tools.
+- **Godot over gdext** built the same screen with a `Tree` control and added the journey scene (a wireframe ship and a starfield that streaks during a jump) in about 110 lines of GDScript. `elite-godot` wraps `elite_ffi::Game` in about 90 lines, with no binding generator. It also runs on Windows and Linux.
+
+The journey scene is part of every jump, so the engine's 3D, camera, effects and (later) audio count for more than native menus.
+
+**Known risks.** iOS export with gdext is unverified. `godot` crate 0.4.5 is used because 0.5.x needs Rust 1.94; it targets the Godot 4.5 API and runs on 4.7.2. The theme and tables are built by hand rather than native.
+
+**Run the spike.** Install Godot 4, run `cargo build -p elite-godot`, then open `elite-godot/project` in Godot (macOS only for now).
+
+## Toolkit options (considered)
 The game is mostly menus, tables and dialogs, with a wireframe galaxy map later. Targets are macOS now and iOS later. Check each option's current iOS status before choosing; these tools move quickly.
 
 | Option | Language | Fit | Concerns |
