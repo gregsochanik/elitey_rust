@@ -4,7 +4,7 @@
 Replace the invented system names with real stars (Sol, Sirius, Tau Ceti, Barnard's Star), placed where they really are.
 
 ## Status
-Proposed. Open decisions are marked **Decide**.
+Approved.
 
 ## Source
 HYG star database v4.4 (<https://codeberg.org/astronexus/hyg>, `data/hyg/CURRENT/hyg_v44.csv.gz`), CC BY-SA 4.0. Columns used: `proper`, `bf` (Bayer/Flamsteed), `gl` (Gliese), `dist` (parsecs), `x`/`y`/`z` (parsecs, Sol at origin), `spect`, `comp_primary`.
@@ -22,10 +22,10 @@ Of 119,614 stars, 549 have proper names; 149 of those lie within 100 ly of Sol.
 - Spectral class is shown on the system info screen
 - Credit HYG and the licence in the README and on the GUI start screen; `galaxy1.json` stays CC BY-SA 4.0
 
-## Decide
-- **Old saves**: they name systems that no longer exist. Options: refuse with a clear message (recommended: pre-1.0 game, few saves), or map old names to the nearest new system
-- **Distances**: scaling real light years onto the grid makes jump costs and fuel range depend on the scale factor. Keep the current fuel economics by scaling so the nearest neighbours stay 2 to 4 ly apart (recommended), or use true distances and rebalance
-- **Names with spaces/punctuation**: `Barnard's Star` breaks the unquoted `jump <system>` CLI command and some tests (`LAVE`, `DISO`); allow multi-word names in `jump`/`info` (already joins args?) and update tests
+## Decisions
+- **Old saves**: refused with a clear message naming the unknown system; no migration
+- **Distances**: real positions are scaled so the nearest neighbours stay 2 to 4 ly apart, keeping fuel and jump economics unchanged
+- **Names**: multi-word and punctuated names work in `jump` and `info`; tests move from `LAVE`/`DISO` to Sol and its neighbours
 
 ## Tests
 - Generated file has 256 unique systems, all within the 0 to 255 grid, none overlapping
