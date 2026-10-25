@@ -22,7 +22,7 @@ func setup(the_game: EliteGame) -> void:
 func _ready() -> void:
 	add_theme_constant_override("separation", 8)
 	heading.text = "🧰  Equipment"
-	heading.add_theme_font_size_override("font_size", 30)
+	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	add_child(heading)
 	add_child(power)
@@ -53,7 +53,7 @@ func _ready() -> void:
 func _title(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", Theme_.FONT_SECTION)
 	return label
 
 

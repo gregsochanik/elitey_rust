@@ -16,7 +16,7 @@ func setup(the_game: EliteGame) -> void:
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 10)
-	heading.add_theme_font_size_override("font_size", 30)
+	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	add_child(heading)
 
@@ -34,7 +34,7 @@ func _ready() -> void:
 		tree.set_column_expand_ratio(i, 3 if i == 0 else 2)
 	add_child(tree)
 
-	total.add_theme_font_size_override("font_size", 24)
+	total.add_theme_font_size_override("font_size", Theme_.FONT_STRONG)
 	add_child(total)
 
 

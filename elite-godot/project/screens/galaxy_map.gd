@@ -105,9 +105,9 @@ func _draw() -> void:
 		if system["is_current"] and local_view:
 			draw_arc(current_at, radius + 4.0, 0.0, TAU, 32, Theme_.ACCENT, 2.0)
 		if labelled:
-			draw_string(font, at + Vector2(radius + 6.0, 6.0), system["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Theme_.TEXT)
+			draw_string(font, at + Vector2(radius + 6.0, 6.0), system["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_BODY, Theme_.TEXT)
 		if system["reachable"] and system["name"] != selected and local_view:
-			draw_string(font, at + Vector2(radius + 6.0, 24.0), "%d ⛽" % system["fuel_cost"], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Theme_.MUTED)
+			draw_string(font, at + Vector2(radius + 6.0, 24.0), "%d ⛽" % system["fuel_cost"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_SMALL, Theme_.MUTED)
 
 
 ## Pixels per light year of fuel, from the nearest reachable system

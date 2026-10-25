@@ -15,7 +15,7 @@ func _ready() -> void:
 	row.add_theme_constant_override("separation", 16)
 	add_child(row)
 
-	identity.add_theme_font_size_override("font_size", 24)
+	identity.add_theme_font_size_override("font_size", Theme_.FONT_STRONG)
 	row.add_child(identity)
 	row.add_child(location)
 	credits.add_theme_color_override("font_color", Theme_.GOOD)
@@ -34,7 +34,7 @@ func _bar(key: String) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_font_size_override("font_size", Theme_.FONT_SMALL)
 	label.add_theme_color_override("font_color", Theme_.MUTED)
 	box.add_child(label)
 	var bar := ProgressBar.new()
