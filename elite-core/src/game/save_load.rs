@@ -174,6 +174,18 @@ mod tests {
     }
 
     #[test]
+    fn a_save_at_an_unknown_system_loads_at_sol() {
+        let handler = temp_handler("lost");
+        let mut game = GameState::new("Test".to_string());
+        game.commander.location = "USCELA".to_string();
+        handler.save(&game, "lost").unwrap();
+
+        let loaded = handler.load("lost").unwrap();
+
+        assert_eq!(loaded.commander.location, "Sol");
+    }
+
+    #[test]
     fn saves_round_trip_through_a_chosen_directory() {
         let handler = temp_handler("round-trip");
         let mut game = GameState::new("Test".to_string());
