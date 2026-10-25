@@ -16,7 +16,7 @@ func setup(the_game: EliteGame) -> void:
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 10)
-	heading.text = "🧾  Trading Log"
+	heading.text = "📜  Trading Log"
 	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	add_child(heading)

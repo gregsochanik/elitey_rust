@@ -57,7 +57,7 @@ func _ready() -> void:
 
 	_add_screen(nav, "market", "📊  Market", _make_market())
 	_add_screen(nav, "cargo", "📦  Cargo", _make(CargoScreen))
-	_add_screen(nav, "log", "🧾  Trading Log", _make(LogScreen))
+	_add_screen(nav, "log", "📜  Trading Log", _make(LogScreen))
 	_add_screen(nav, "jobs", "💼  Jobs", _make(JobsScreen))
 	_add_screen(nav, "galaxy", "🗺️  Galaxy", _make(GalaxyScreen))
 	_add_screen(nav, "equipment", "🧰  Equipment", _make_changing(EquipmentScreen))
