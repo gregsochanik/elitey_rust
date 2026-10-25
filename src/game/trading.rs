@@ -1,10 +1,10 @@
 use crate::data::commodities::{CommodityType, MarketPrices, TradingSystem};
-use crate::data::systems::{EconomyType, StarSystem, SystemManager};
-use crate::game::commander::Standing;
+use crate::data::systems::{EconomyType, SystemManager};
+use crate::game::commander::{ReputationChange, Standing};
+use crate::game::trade_log::TradeKind;
 use crate::game::{Commander, Ship, TradeLog};
-use crate::utils::display::{show_error, show_info, show_success};
-use colored::*;
 use std::collections::HashMap;
+use thiserror::Error;
 
 const ILLEGAL_TRADE_REPUTATION: i32 = -2;
 const MARKET_REFRESH_JUMPS: u32 = 20;
@@ -12,6 +12,76 @@ const IMPACT_PER_TON: f64 = 0.015;
 const MAX_IMPACT: f64 = 0.40;
 const RECOVERY_PER_JUMP: f64 = 0.10;
 const MARKER_JUMPS: u32 = 16;
+
+/// Why a buy or sell was refused
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum TradeError {
+    #[error("System not found")]
+    UnknownSystem,
+    #[error("Commodity not available in this system")]
+    NotSoldHere,
+    #[error("Commodity not available for sale")]
+    NotBoughtHere,
+    #[error("Only {available} tons available, requested {requested}")]
+    NotEnoughStock { available: u32, requested: u32 },
+    #[error("Insufficient cargo space. Need {needed} tons, have {available} tons available")]
+    NoCargoSpace { needed: u32, available: u32 },
+    #[error("Insufficient credits. Need {needed}cr, have {have}cr")]
+    NotEnoughCredits { needed: u32, have: u32 },
+    #[error("Insufficient cargo. Have {held} tons, trying to sell {requested}")]
+    NotEnoughCargo { held: u32, requested: u32 },
+}
+
+/// What a completed buy or sell did
+#[derive(Debug, Clone, PartialEq)]
+pub struct TradeReceipt {
+    pub kind: TradeKind,
+    pub commodity: CommodityType,
+    pub quantity: u32,
+    pub unit_price: u32,
+    pub total: u32,
+    pub credits_after: u32,
+    /// Set when the commodity is illegal and the trade cost reputation
+    pub illegal_penalty: Option<ReputationChange>,
+}
+
+/// One commodity in the market table
+#[derive(Debug, Clone, PartialEq)]
+pub struct MarketRow {
+    pub commodity: CommodityType,
+    pub buy_price: u32,
+    pub sell_price: u32,
+    pub available: u32,
+    pub percent_vs_base: i32,
+    pub pushed: Pushed,
+}
+
+/// The market at a system as the player sees it
+#[derive(Debug, Clone, PartialEq)]
+pub struct MarketView {
+    pub system_name: String,
+    pub standing: Standing,
+    pub rows: Vec<MarketRow>,
+}
+
+/// One commodity in the hold
+#[derive(Debug, Clone, PartialEq)]
+pub struct CargoLine {
+    pub commodity: CommodityType,
+    pub quantity: u32,
+    pub estimated_value: u32,
+}
+
+/// The cargo hold
+#[derive(Debug, Clone, PartialEq)]
+pub struct CargoView {
+    pub weight: u32,
+    pub capacity: u32,
+    /// Tons of contract cargo, not for sale
+    pub reserved: u32,
+    pub items: Vec<CargoLine>,
+    pub total_value: u32,
+}
 
 /// Trading command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -214,148 +284,110 @@ impl TradingHandler {
         market
     }
 
-    /// Handle the market command - show current system's market prices
-    pub fn handle_market(
+    /// The market here as a table of rows, or `None` for an unknown system
+    pub fn market_overview(
         &mut self,
         system_manager: &SystemManager,
-        current_location: &str,
+        location: &str,
         standing: Standing,
         clock: u32,
-    ) {
-        if let Some(system) = system_manager.get_system(current_location) {
-            let market = self.priced_market(current_location, &system.economy, standing, clock);
-            let pushed = self.pushed_commodities(current_location, clock);
-            self.display_market(system, &market, standing, &pushed);
-        } else {
-            show_error("System not found");
-        }
+    ) -> Option<MarketView> {
+        let market = self.market_view(system_manager, location, standing, clock)?;
+        let pushed = self.pushed_commodities(location, clock);
+        let rows = self
+            .trading_system
+            .get_commodities()
+            .iter()
+            .map(|commodity| {
+                let buy_price = market.get_buy_price(commodity).unwrap_or(0);
+                MarketRow {
+                    commodity: commodity.clone(),
+                    buy_price,
+                    sell_price: market.get_sell_price(commodity).unwrap_or(0),
+                    available: market.get_availability(commodity).unwrap_or(0),
+                    percent_vs_base: commodity.percent_vs_base(buy_price),
+                    pushed: pushed.get(commodity).copied().unwrap_or_default(),
+                }
+            })
+            .collect();
+        Some(MarketView {
+            system_name: system_manager.get_system(location)?.name.clone(),
+            standing,
+            rows,
+        })
     }
 
-    /// Handle the buy command - purchase commodities
-    pub fn handle_buy(
+    /// Buy `quantity` tons of `commodity` at the commander's current system
+    #[allow(clippy::too_many_arguments)]
+    pub fn buy(
         &mut self,
-        args: &[String],
+        commodity: CommodityType,
+        quantity: u32,
         commander: &mut Commander,
         ship: &mut Ship,
         system_manager: &SystemManager,
         trade_log: &mut TradeLog,
         clock: u32,
-    ) -> bool {
-        if args.is_empty() {
-            show_error("Usage: buy <item> [quantity]");
-            return false;
-        }
-
-        let commodity_name = &args[0];
-        let quantity_str = args.get(1).map(|s| s.as_str()).unwrap_or("1");
-
-        // Parse commodity
-        let commodity = match self.parse_commodity(commodity_name) {
-            Some(c) => c,
-            None => {
-                show_error(&format!("Unknown commodity: {}", commodity_name));
-                return false;
-            }
-        };
-
-        // Parse quantity
-        let quantity = match quantity_str.parse::<u32>() {
-            Ok(q) if q > 0 => q,
-            _ => {
-                show_error("Quantity must be a positive number");
-                return false;
-            }
-        };
-
-        // Get current system and market
-        let current_location = commander.location();
-        let system = match system_manager.get_system(current_location) {
-            Some(s) => s,
-            None => {
-                show_error("System not found");
-                return false;
-            }
-        };
-
-        let market = self.priced_market(
-            current_location,
-            &system.economy,
-            commander.standing(),
-            clock,
-        );
-
-        // Perform the purchase
+    ) -> Result<TradeReceipt, TradeError> {
+        let market = self.market_at(commander, system_manager, clock)?;
         self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
     }
 
-    /// Handle the sell command - sell commodities
-    pub fn handle_sell(
+    /// Sell `quantity` tons of `commodity` at the commander's current system
+    #[allow(clippy::too_many_arguments)]
+    pub fn sell(
         &mut self,
-        args: &[String],
+        commodity: CommodityType,
+        quantity: u32,
         commander: &mut Commander,
         ship: &mut Ship,
         system_manager: &SystemManager,
         trade_log: &mut TradeLog,
         clock: u32,
-    ) -> bool {
-        if args.is_empty() {
-            show_error("Usage: sell <item> [quantity]");
-            return false;
-        }
-
-        let commodity_name = &args[0];
-        let quantity_str = args.get(1).map(|s| s.as_str()).unwrap_or("1");
-
-        // Parse commodity
-        let commodity = match self.parse_commodity(commodity_name) {
-            Some(c) => c,
-            None => {
-                show_error(&format!("Unknown commodity: {}", commodity_name));
-                return false;
-            }
-        };
-
-        // Parse quantity
-        let quantity = match quantity_str.parse::<u32>() {
-            Ok(q) if q > 0 => q,
-            _ => {
-                show_error("Quantity must be a positive number");
-                return false;
-            }
-        };
-
-        // Get current system and market
-        let current_location = commander.location();
-        let system = match system_manager.get_system(current_location) {
-            Some(s) => s,
-            None => {
-                show_error("System not found");
-                return false;
-            }
-        };
-
-        let market = self.priced_market(
-            current_location,
-            &system.economy,
-            commander.standing(),
-            clock,
-        );
-
-        // Perform the sale
+    ) -> Result<TradeReceipt, TradeError> {
+        let market = self.market_at(commander, system_manager, clock)?;
         self.execute_sell(commodity, quantity, commander, ship, &market, trade_log)
     }
 
-    /// Handle the cargo command - show current cargo hold contents
-    pub fn handle_cargo(&self, ship: &Ship) {
-        self.display_cargo(ship);
+    fn market_at(
+        &mut self,
+        commander: &Commander,
+        system_manager: &SystemManager,
+        clock: u32,
+    ) -> Result<MarketPrices, TradeError> {
+        let location = commander.location();
+        let system = system_manager
+            .get_system(location)
+            .ok_or(TradeError::UnknownSystem)?;
+        Ok(self.priced_market(location, &system.economy, commander.standing(), clock))
+    }
+
+    /// The cargo hold as lines with a rough value
+    pub fn cargo_view(&self, ship: &Ship) -> CargoView {
+        let hold = ship.cargo_hold();
+        let items: Vec<CargoLine> = hold
+            .get_items()
+            .iter()
+            .map(|item| CargoLine {
+                commodity: item.commodity.clone(),
+                quantity: item.quantity,
+                estimated_value: item.quantity * item.commodity.base_price(),
+            })
+            .collect();
+        CargoView {
+            weight: hold.current_weight(),
+            capacity: ship.cargo_capacity(),
+            reserved: hold.reserved,
+            total_value: items.iter().map(|line| line.estimated_value).sum(),
+            items,
+        }
     }
 
     /// Parse commodity name to CommodityType
-    fn parse_commodity(&self, name: &str) -> Option<CommodityType> {
+    pub fn parse_commodity(&self, name: &str) -> Option<CommodityType> {
         CommodityType::from_string(name)
     }
 
-    /// Execute a buy transaction
     fn execute_buy(
         &mut self,
         commodity: CommodityType,
@@ -364,58 +396,35 @@ impl TradingHandler {
         ship: &mut Ship,
         market: &MarketPrices,
         trade_log: &mut TradeLog,
-    ) -> bool {
-        // Check if commodity is available
-        let availability = match market.get_availability(&commodity) {
-            Some(avail) => avail,
-            None => {
-                show_error("Commodity not available in this system");
-                return false;
-            }
-        };
-
-        if availability < quantity {
-            show_error(&format!(
-                "Only {} tons available, requested {}",
-                availability, quantity
-            ));
-            return false;
+    ) -> Result<TradeReceipt, TradeError> {
+        let available = market
+            .get_availability(&commodity)
+            .ok_or(TradeError::NotSoldHere)?;
+        if available < quantity {
+            return Err(TradeError::NotEnoughStock {
+                available,
+                requested: quantity,
+            });
         }
-
-        // Check cargo space
         if !ship.has_cargo_space(quantity) {
-            show_error(&format!(
-                "Insufficient cargo space. Need {} tons, have {} tons available",
-                quantity,
-                ship.cargo_available()
-            ));
-            return false;
+            return Err(TradeError::NoCargoSpace {
+                needed: quantity,
+                available: ship.cargo_available(),
+            });
+        }
+        let unit_price = market
+            .get_buy_price(&commodity)
+            .ok_or(TradeError::NotSoldHere)?;
+        let total = unit_price * quantity;
+        if !commander.has_credits(total) {
+            return Err(TradeError::NotEnoughCredits {
+                needed: total,
+                have: commander.credits(),
+            });
         }
 
-        // Get buy price
-        let buy_price = match market.get_buy_price(&commodity) {
-            Some(price) => price,
-            None => {
-                show_error("Commodity not available for purchase");
-                return false;
-            }
-        };
-
-        let total_cost = buy_price * quantity;
-
-        // Check if commander has enough credits
-        if !commander.has_credits(total_cost) {
-            show_error(&format!(
-                "Insufficient credits. Need {}cr, have {}cr",
-                total_cost,
-                commander.credits()
-            ));
-            return false;
-        }
-
-        // Execute the transaction
         let cargo_before = ship.cargo_hold().get_quantity(&commodity);
-        commander.remove_credits(total_cost);
+        commander.remove_credits(total);
         ship.add_cargo(commodity.clone(), quantity);
         if let Some(state) = self.markets.get_mut(commander.location()) {
             state.record_buy(&commodity, quantity);
@@ -423,41 +432,23 @@ impl TradingHandler {
         trade_log.record_buy(
             commodity.clone(),
             quantity,
-            buy_price,
+            unit_price,
             commander.location(),
             cargo_before,
         );
 
-        show_success(&format!(
-            "Purchased {} tons of {} for {}cr",
+        let illegal_penalty = Self::penalise_illegal_trade(&commodity, commander);
+        Ok(TradeReceipt {
+            kind: TradeKind::Buy,
+            commodity,
             quantity,
-            commodity.name(),
-            total_cost
-        ));
-        Self::penalise_illegal_trade(&commodity, commander);
-        true
+            unit_price,
+            total,
+            credits_after: commander.credits(),
+            illegal_penalty,
+        })
     }
 
-    fn penalise_illegal_trade(commodity: &CommodityType, commander: &mut Commander) {
-        if !commodity.is_illegal() {
-            return;
-        }
-        let change = commander.change_reputation(ILLEGAL_TRADE_REPUTATION);
-        println!(
-            "{}",
-            format!(
-                "Trading {} is illegal. Reputation {:+}.",
-                commodity.name(),
-                change.applied
-            )
-            .yellow()
-        );
-        if let Some(standing) = change.new_standing {
-            show_info(&format!("Your standing is now {}.", standing.name()));
-        }
-    }
-
-    /// Execute a sell transaction
     fn execute_sell(
         &mut self,
         commodity: CommodityType,
@@ -466,145 +457,51 @@ impl TradingHandler {
         ship: &mut Ship,
         market: &MarketPrices,
         trade_log: &mut TradeLog,
-    ) -> bool {
-        // Check if we have the commodity
-        let current_quantity = ship.cargo_hold().get_quantity(&commodity);
-        if current_quantity < quantity {
-            show_error(&format!(
-                "Insufficient cargo. Have {} tons, trying to sell {}",
-                current_quantity, quantity
-            ));
-            return false;
+    ) -> Result<TradeReceipt, TradeError> {
+        let held = ship.cargo_hold().get_quantity(&commodity);
+        if held < quantity {
+            return Err(TradeError::NotEnoughCargo {
+                held,
+                requested: quantity,
+            });
         }
+        let unit_price = market
+            .get_sell_price(&commodity)
+            .ok_or(TradeError::NotBoughtHere)?;
+        let total = unit_price * quantity;
 
-        // Get sell price
-        let sell_price = match market.get_sell_price(&commodity) {
-            Some(price) => price,
-            None => {
-                show_error("Commodity not available for sale");
-                return false;
-            }
-        };
-
-        let total_revenue = sell_price * quantity;
-
-        // Execute the transaction
         ship.remove_cargo(&commodity, quantity);
-        commander.add_credits(total_revenue);
+        commander.add_credits(total);
         if let Some(state) = self.markets.get_mut(commander.location()) {
             state.record_sell(&commodity, quantity);
         }
         trade_log.record_sell(
             commodity.clone(),
             quantity,
-            sell_price,
+            unit_price,
             commander.location(),
-            current_quantity,
+            held,
         );
 
-        show_success(&format!(
-            "Sold {} tons of {} for {}cr",
+        let illegal_penalty = Self::penalise_illegal_trade(&commodity, commander);
+        Ok(TradeReceipt {
+            kind: TradeKind::Sell,
+            commodity,
             quantity,
-            commodity.name(),
-            total_revenue
-        ));
-        Self::penalise_illegal_trade(&commodity, commander);
-        true
+            unit_price,
+            total,
+            credits_after: commander.credits(),
+            illegal_penalty,
+        })
     }
 
-    /// Display market information
-    fn display_market(
-        &self,
-        system: &StarSystem,
-        market: &MarketPrices,
-        standing: Standing,
-        pushed: &HashMap<CommodityType, Pushed>,
-    ) {
-        println!("\n{} Market", system.name().yellow());
-        println!("{}", "=".repeat(system.name().len() + 7));
-        if standing != Standing::Neutral {
-            println!(
-                "Prices adjusted for your standing: {} ({:+}% on trades)",
-                standing.name(),
-                standing.price_favour_percent()
-            );
-        }
-
-        for commodity in self.trading_system.get_commodities() {
-            let buy_price = market.get_buy_price(commodity).unwrap_or(0);
-            let sell_price = market.get_sell_price(commodity).unwrap_or(0);
-            let availability = market.get_availability(commodity).unwrap_or(0);
-
-            let commodity_name = format!("{}:", commodity.name());
-            let buy_str = format!("Buy: {}cr", buy_price);
-            let sell_str = format!("Sell: {}cr", sell_price);
-            let avail_str = format!("Available: {} tons", availability);
-
-            let versus_base = commodity.percent_vs_base(buy_price);
-            let base_str = format!("{:+}% vs base", versus_base);
-            let base_coloured = if versus_base <= -10 {
-                base_str.green()
-            } else if versus_base >= 10 {
-                base_str.red()
-            } else {
-                base_str.normal()
-            };
-
-            let markers = pushed
-                .get(commodity)
-                .map(|pushed| pushed.markers().join(" "))
-                .unwrap_or_default();
-            println!(
-                "{:<12} {:<12} {:<12} {:<20} {} {}",
-                commodity_name,
-                buy_str,
-                sell_str,
-                avail_str,
-                base_coloured,
-                markers.yellow()
-            );
-        }
-        println!();
-    }
-
-    /// Display cargo information
-    fn display_cargo(&self, ship: &Ship) {
-        let cargo_hold = ship.cargo_hold();
-        let current_weight = cargo_hold.current_weight();
-        let capacity = ship.cargo_capacity();
-
-        println!("\nCargo Hold ({}/{})", current_weight, capacity);
-        println!("{}", "=".repeat(20));
-
-        if cargo_hold.reserved > 0 {
-            println!(
-                "Contract cargo: {} tons (not for sale)",
-                cargo_hold.reserved
-            );
-        }
-        if cargo_hold.is_empty() {
-            println!("No goods in the hold");
-        } else {
-            let mut total_value = 0;
-
-            for item in cargo_hold.get_items() {
-                // For display purposes, we'll use a rough estimate of value
-                // In a real implementation, you'd track purchase prices
-                let estimated_value = item.quantity * item.commodity.base_price();
-                total_value += estimated_value;
-
-                println!(
-                    "{:<12} {} tons  Value: {}cr",
-                    format!("{}:", item.commodity.name()),
-                    item.quantity,
-                    estimated_value
-                );
-            }
-
-            println!("{}", "-".repeat(20));
-            println!("Total Value: {}cr", total_value);
-        }
-        println!();
+    fn penalise_illegal_trade(
+        commodity: &CommodityType,
+        commander: &mut Commander,
+    ) -> Option<ReputationChange> {
+        commodity
+            .is_illegal()
+            .then(|| commander.change_reputation(ILLEGAL_TRADE_REPUTATION))
     }
 }
 
