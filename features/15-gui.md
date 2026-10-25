@@ -6,7 +6,7 @@ Add a graphical front end (macOS first, iOS later) alongside the CLI. The game r
 The CLI stays supported and must behave the same from the player's point of view.
 
 ## Status
-Spec only. Nothing is built.
+Core refactor and the Godot front end are built and released for macOS, Linux and Windows. Ship models, wireframe-to-solid styles and the flight view continue in Feature 23.
 
 ## Problem (current state)
 - 118 `println!` / `print!` calls (plus `colored`) live inside `src/game/*` and `src/data/*` (`trading.rs`, `travel.rs`, `upgrades.rs`, `equipment.rs`, `save_load.rs`, `game_state.rs`).
@@ -55,7 +55,7 @@ Done. Typed actions, outcomes, errors and views live in `src/game`; all text, pr
 - [ ] Travel events and combat as modal flows driven by `PendingEvent` and `Combat`.
 - [ ] Autosave on quit, as in the CLI.
 
-### Phase 4: Wireframe views (later, cosmetic)
+### Phase 4: Wireframe views (later, cosmetic; see Feature 23)
 - [ ] Galaxy map and system view in the classic wireframe look; flight/docking view. Purely presentation; no new rules.
 
 ### Phase 5: iOS (later)

@@ -8,7 +8,7 @@ Terminal Elite-style space trading game: explore systems, trade commodities, sur
 - Turn-based; no real-time simulation.
 - Local save files only.
 
-Out of scope: multiplayer, real-time combat. A graphical front end is planned (Feature 15).
+Out of scope: multiplayer, real-time combat. A graphical front end (Godot, Feature 15) is built; ship visuals are Feature 23.
 
 ## Status
 
@@ -26,7 +26,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 11 | Trading log (v1: record, `log`, persist) | Done (v1) | 03, 05 |
 | 12 | Ship repair (v1: `repair` for credits) | Done (v1) | 08 |
 | 14 | Refuelling (v1: `refuel` for credits) | Done (v1) | 02 |
-| 15 | GUI (core refactor, then macOS front end) | Spec only | 01–08, 10, 11, 12, 14 |
+| 15 | GUI (core refactor, then macOS front end) | Done (Godot front end; wireframe views continue in 23) | 01–08, 10, 11, 12, 14 |
 | 13 | UI improvements | Spec only | – |
 | 16 | Jobs (v1: board, courier jobs, deadlines) | Done (v1) | 02, 05, 10, 14 |
 | 17 | Bounty jobs (v1: pirate hunt jobs using combat) | Done (v1) | 08, 12, 16 |
@@ -34,6 +34,8 @@ Out of scope: multiplayer, real-time combat. A graphical front end is planned (F
 | 19 | Market dynamics (v1: market memory, price impact, recovery) | Done (v1) | 03, 05, 10, 16 |
 | 20 | Combat rating (v1: kills and the Harmless to ELITE rating, shown in `status`) | Done (v1) | 08, 10 |
 | 21 | Locked jobs (v1: the board shows jobs the commander cannot take yet, with the reason) | Done (v1) | 16, 18, 20 |
+| 22 | Real star systems (v1: 256 real stars from HYG, star classes) | Done (v1) | 02, 05 |
+| 23 | GUI ship visuals (ship models as data; wireframe, hidden-line, flat, textured styles) | Spec only | 15, 22 |
 
 ## Roadmap
 
