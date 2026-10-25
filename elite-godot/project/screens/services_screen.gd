@@ -21,7 +21,7 @@ func setup(the_game: EliteGame) -> void:
 func _ready() -> void:
 	add_theme_constant_override("separation", 14)
 	heading.text = "🔧  Station Services"
-	heading.add_theme_font_size_override("font_size", 30)
+	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	add_child(heading)
 
@@ -46,7 +46,7 @@ func _section(title: String, label: Label, buttons: HBoxContainer) -> Control:
 	panel.add_child(box)
 	var name := Label.new()
 	name.text = title
-	name.add_theme_font_size_override("font_size", 24)
+	name.add_theme_font_size_override("font_size", Theme_.FONT_STRONG)
 	box.add_child(name)
 	box.add_child(label)
 	buttons.add_theme_constant_override("separation", 10)

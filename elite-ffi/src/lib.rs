@@ -3,6 +3,7 @@ use elite_core::data::equipment::EquipmentCategory;
 use elite_core::data::ships::ShipType;
 use elite_core::data::systems::EconomyType;
 use elite_core::game::equipment;
+use elite_core::game::jobs::{ABANDON_REPUTATION, MAX_ACTIVE_JOBS};
 use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
 use elite_core::game::repair::CREDITS_PER_POINT;
 use elite_core::game::trade_log::TradeKind;
@@ -224,6 +225,38 @@ pub struct ShipyardData {
     pub credits: u32,
     pub current: String,
     pub ships: Vec<ShipData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct JobData {
+    pub number: u32,
+    pub kind: String,
+    pub description: String,
+    pub destination: String,
+    pub distance: f64,
+    pub fuel_cost: u32,
+    pub reward: u32,
+    pub deadline_jumps: u32,
+    pub locked: bool,
+    pub lock_reason: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct JobBoardData {
+    pub location: String,
+    pub active: u32,
+    pub max_active: u32,
+    pub jobs: Vec<JobData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MissionData {
+    pub number: u32,
+    pub kind: String,
+    pub description: String,
+    pub destination: String,
+    pub reward: u32,
+    pub jumps_left: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -582,6 +615,85 @@ impl Game {
         }
     }
 
+    /// The jobs on offer here, rolled on first sight; locked ones say why
+    pub fn jobs(&self) -> JobBoardData {
+        let mut state = self.state.lock().expect("game state lock");
+        let listings = state.jobs_here(&mut rand::thread_rng()).unwrap_or_default();
+        JobBoardData {
+            location: state.commander.location.clone(),
+            active: state.active_jobs.len() as u32,
+            max_active: MAX_ACTIVE_JOBS as u32,
+            jobs: listings
+                .into_iter()
+                .enumerate()
+                .map(|(index, listing)| JobData {
+                    number: index as u32 + 1,
+                    kind: job_kind(&listing.job),
+                    description: listing.job.describe(),
+                    destination: listing.job.destination.clone(),
+                    distance: listing.job.distance,
+                    fuel_cost: listing.job.fuel_cost,
+                    reward: listing.job.reward,
+                    deadline_jumps: listing.job.deadline_jumps,
+                    locked: listing.lock.is_some(),
+                    lock_reason: listing.lock.map(|lock| lock.describe()).unwrap_or_default(),
+                })
+                .collect(),
+        }
+    }
+
+    pub fn accept_job(&self, number: u32) -> ActionResult {
+        let mut state = self.state.lock().expect("game state lock");
+        match state.accept_job(number as usize) {
+            Ok(job) => ok(format!(
+                "Accepted: {} for {}cr within {} jumps.",
+                job.describe(),
+                job.reward,
+                job.deadline_jumps
+            )),
+            Err(message) => failed(message),
+        }
+    }
+
+    pub fn missions(&self) -> Vec<MissionData> {
+        let state = self.state.lock().expect("game state lock");
+        state
+            .active_jobs
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| MissionData {
+                number: index as u32 + 1,
+                kind: job_kind(&entry.job),
+                description: entry.job.describe(),
+                destination: entry.job.destination.clone(),
+                reward: entry.job.reward,
+                jumps_left: entry.jumps_left,
+            })
+            .collect()
+    }
+
+    pub fn abandon_job(&self, number: u32) -> ActionResult {
+        let mut state = self.state.lock().expect("game state lock");
+        let standing = state.commander.standing();
+        match state.abandon_job(number as usize) {
+            Ok(job) => {
+                let mut message = format!(
+                    "Abandoned: {}. Reputation {:+}.",
+                    job.describe(),
+                    ABANDON_REPUTATION
+                );
+                if state.commander.standing() != standing {
+                    message.push_str(&format!(
+                        " Your standing is now {}.",
+                        state.commander.standing().name()
+                    ));
+                }
+                ok(message)
+            }
+            Err(message) => failed(message),
+        }
+    }
+
     pub fn market(&self) -> Result<MarketData, GameError> {
         let mut state = self.state.lock().expect("game state lock");
         let view = state
@@ -644,6 +756,10 @@ impl Game {
             credits_after: receipt.credits_after,
         })
     }
+}
+
+fn job_kind(job: &elite_core::game::jobs::Job) -> String {
+    format!("{:?}", job.kind).to_lowercase()
 }
 
 fn ok(message: String) -> ActionResult {
@@ -892,6 +1008,59 @@ mod tests {
         assert!(!result.ok);
         assert!(result.message.contains("Insufficient credits"));
         assert!(!game.buy_ship("nonsense".to_string()).ok);
+    }
+
+    #[test]
+    fn the_job_board_numbers_jobs_and_says_why_some_are_locked() {
+        let game = Game::new("Test".to_string());
+
+        let board = game.jobs();
+
+        assert_eq!(board.location, "LAVE");
+        assert!((3..=5).contains(&board.jobs.len()));
+        assert_eq!(board.jobs[0].number, 1);
+        assert!(board
+            .jobs
+            .iter()
+            .all(|j| j.locked != j.lock_reason.is_empty()));
+        assert_eq!(game.jobs().jobs.len(), board.jobs.len());
+    }
+
+    #[test]
+    fn accepting_and_abandoning_jobs_moves_them_between_the_board_and_missions() {
+        let game = Game::new("Test".to_string());
+        let board = game.jobs();
+        let open = board.jobs.iter().find(|j| !j.locked).unwrap();
+
+        let accepted = game.accept_job(open.number);
+        assert!(accepted.ok, "{}", accepted.message);
+        let missions = game.missions();
+        assert_eq!(missions.len(), 1);
+        assert_eq!(missions[0].reward, open.reward);
+        assert_eq!(game.jobs().jobs.len(), board.jobs.len() - 1);
+        assert_eq!(game.jobs().active, 1);
+
+        let abandoned = game.abandon_job(1);
+        assert!(abandoned.ok);
+        assert!(abandoned.message.contains("Reputation -3"));
+        assert!(game.missions().is_empty());
+        assert!(!game.abandon_job(1).ok);
+    }
+
+    #[test]
+    fn a_locked_job_cannot_be_accepted() {
+        let game = Game::new("Test".to_string());
+        for _ in 0..40 {
+            let board = game.jobs();
+            if let Some(locked) = board.jobs.iter().find(|j| j.locked) {
+                let result = game.accept_job(locked.number);
+                assert!(!result.ok);
+                assert!(result.message.starts_with("Locked:"));
+                return;
+            }
+            game.state.lock().unwrap().job_board.clear();
+        }
+        panic!("no locked job appeared");
     }
 
     #[test]

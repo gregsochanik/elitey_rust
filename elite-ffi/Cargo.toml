@@ -7,4 +7,5 @@ authors.workspace = true
 
 [dependencies]
 elite-core = { path = "../elite-core" }
+rand = "0.8"
 thiserror = "1.0"

@@ -343,6 +343,7 @@ name = "elite-ffi"
 version = "0.0.0-dev"
 dependencies = [
  "elite-core",
+ "rand",
  "thiserror",
 ]
 

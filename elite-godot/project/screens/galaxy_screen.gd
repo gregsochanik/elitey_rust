@@ -28,7 +28,7 @@ func _ready() -> void:
 
 	var heading := Label.new()
 	heading.text = "🗺️  Galaxy Chart"
-	heading.add_theme_font_size_override("font_size", 30)
+	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	left.add_child(heading)
 
@@ -52,7 +52,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
 
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	box.add_child(title)
 	details.bbcode_enabled = true
 	details.fit_content = false

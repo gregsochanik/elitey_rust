@@ -11,6 +11,13 @@ const GOOD := Color("5ee08a")
 const WARNING := Color("f2c14e")
 const BAD := Color("ef6f6c")
 
+## Every font size in the GUI comes from here.
+const FONT_SMALL := 14
+const FONT_BODY := 17
+const FONT_SECTION := 20
+const FONT_STRONG := 22
+const FONT_TITLE := 26
+
 
 static func make() -> Theme:
 	var theme := Theme.new()
@@ -23,7 +30,7 @@ static func make() -> Theme:
 	theme.set_color("title_button_color", "Tree", ACCENT)
 	theme.set_color("font_selected_color", "Tree", BACKGROUND)
 	theme.set_color("font_color", "TabBar", TEXT)
-	theme.default_font_size = 20
+	theme.default_font_size = FONT_BODY
 	theme.set_constant("v_separation", "Tree", 8)
 	theme.set_constant("item_margin", "Tree", 8)
 

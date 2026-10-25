@@ -1,7 +1,7 @@
 use elite_ffi::{
-    ActionResult, CargoData, EquipmentShopData, GalaxyData, Game, InstalledData, JumpPlanData,
-    MarketData, ShipyardData, StatusData, SystemDetailData, TradeLogData, TradeRecordData,
-    TradeResult,
+    ActionResult, CargoData, EquipmentShopData, GalaxyData, Game, InstalledData, JobBoardData,
+    JumpPlanData, MarketData, ShipyardData, StatusData, SystemDetailData, TradeLogData,
+    TradeRecordData, TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -35,6 +35,42 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    /// The board here: `location`, `active`, `max_active` and numbered `jobs` with lock reasons
+    #[func]
+    fn jobs(&self) -> VarDictionary {
+        board_to_dictionary(self.game.jobs())
+    }
+
+    #[func]
+    fn accept_job(&self, number: i64) -> VarDictionary {
+        action_to_dictionary(self.game.accept_job(number.max(0) as u32))
+    }
+
+    /// The jobs being worked on, numbered from 1
+    #[func]
+    fn missions(&self) -> VarArray {
+        let mut missions = VarArray::new();
+        for mission in self.game.missions() {
+            missions.push(
+                &vdict! {
+                    "number": mission.number,
+                    "kind": mission.kind,
+                    "description": mission.description,
+                    "destination": mission.destination,
+                    "reward": mission.reward,
+                    "jumps_left": mission.jumps_left,
+                }
+                .to_variant(),
+            );
+        }
+        missions
+    }
+
+    #[func]
+    fn abandon_job(&self, number: i64) -> VarDictionary {
+        action_to_dictionary(self.game.abandon_job(number.max(0) as u32))
     }
 
     /// The equipment catalogue with `installed` flags, plus credits and power
@@ -380,4 +416,31 @@ fn shipyard_to_dictionary(yard: ShipyardData) -> VarDictionary {
         );
     }
     vdict! { "credits": yard.credits, "current": yard.current, "ships": ships }
+}
+
+fn board_to_dictionary(board: JobBoardData) -> VarDictionary {
+    let mut jobs = VarArray::new();
+    for job in board.jobs {
+        jobs.push(
+            &vdict! {
+                "number": job.number,
+                "kind": job.kind,
+                "description": job.description,
+                "destination": job.destination,
+                "distance": job.distance,
+                "fuel_cost": job.fuel_cost,
+                "reward": job.reward,
+                "deadline_jumps": job.deadline_jumps,
+                "locked": job.locked,
+                "lock_reason": job.lock_reason,
+            }
+            .to_variant(),
+        );
+    }
+    vdict! {
+        "location": board.location,
+        "active": board.active,
+        "max_active": board.max_active,
+        "jobs": jobs,
+    }
 }
