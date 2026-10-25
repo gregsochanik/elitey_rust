@@ -42,22 +42,16 @@ Feature specs and implementation details live in the [features/](features/) dire
 
 2. **Build the project**
    ```bash
-   make build
-   # or
    cargo build
    ```
 
 3. **Run the game**
    ```bash
-   make run
-   # or
    cargo run
    ```
 
 4. **Run tests**
    ```bash
-   make test
-   # or
    cargo test
    ```
 
@@ -135,22 +129,19 @@ elite-cli/               # The terminal game (binary: elitey_rust)
 features/                # Feature specs (see AGENTS.md)
 ```
 
-### Makefile Targets
-- `make build` - Build the project
-- `make test` - Run all tests
-- `make run` - Run the game
-- `make lint` - Run linter (clippy)
-- `make check` - Check if code compiles
-- `make format` - Format code with rustfmt
-- `make clean` - Clean build artifacts
-- `make all-checks` - Run lint, test, and check
-- `make help` - Show available targets
+### Checks
+Run what CI runs:
+```bash
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
 
 ### Testing
 - **Unit tests**: In-module `#[cfg(test)]` tests where present.
 - **Integration / BDD**: Feature-first specs in `features/`; tests added per feature.
 
-Run tests with `make test` or `cargo test`.
+Run tests with `cargo test`.
 
 ### Code Quality
 - **Linting**: Uses `clippy` for code quality checks
@@ -197,7 +188,7 @@ To force a release, run the Release workflow manually from the Actions tab and p
 1. Follow the existing code style and patterns
 2. Write tests for new features
 3. Update documentation as needed
-4. Use the Makefile targets for development workflow
+4. Run the checks above before opening a PR
 
 ## License
 
