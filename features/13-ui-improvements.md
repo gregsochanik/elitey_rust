@@ -16,11 +16,11 @@ Enhance the visual appeal and usability of the CLI interface with minimal code c
 - [ ] Success Messages: Green text for successful actions
 
 ### Enhanced Table Alignment
-- [ ] Consistent column widths across all tables
-- [ ] Right-aligned numbers (prices, quantities, stats)
-- [ ] Left-aligned text (names, descriptions)
-- [ ] Proper spacing between columns
-- [ ] Clear header separation from data
+- [x] Consistent column widths across all tables
+- [x] Right-aligned numbers (prices, quantities, stats)
+- [x] Left-aligned text (names, descriptions)
+- [x] Proper spacing between columns
+- [x] Clear header separation from data
 
 ### Status Indicators
 - [ ] Fuel Gauge: `[████████░░] 80%` format with color coding

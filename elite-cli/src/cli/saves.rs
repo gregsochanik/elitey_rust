@@ -1,5 +1,6 @@
 use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use crate::utils::input;
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
 use elite_core::data::save_load::{SaveLoadManager, SaveMetadata};
 use elite_core::game::save_load::SaveError;
@@ -74,21 +75,28 @@ pub fn list(game: &GameState) {
         Ok(saves) => {
             header(Icon::Save, "Available Save Files");
 
+            let mut table = Table::new(&[
+                ("#", RIGHT),
+                ("Commander", LEFT),
+                ("Saved", LEFT),
+                ("Location", LEFT),
+                ("Credits", RIGHT),
+                ("Ship", LEFT),
+            ]);
             for (i, save) in saves.iter().enumerate() {
-                let timestamp = SaveLoadManager::format_timestamp(save.timestamp);
-
-                println!(
-                    "{}. {} ({})",
-                    i + 1,
-                    save.commander_name.yellow(),
-                    timestamp.blue()
-                );
-                println!("   Commander: {}", save.commander_name.green());
-                println!("   Location: {}", save.location.cyan());
-                println!("   Credits: {}cr", save.credits.to_string().green());
-                println!("   Ship: {}", save.ship_type.magenta());
-                println!();
+                table.row([
+                    (i + 1).to_string(),
+                    save.commander_name.yellow().to_string(),
+                    SaveLoadManager::format_timestamp(save.timestamp)
+                        .blue()
+                        .to_string(),
+                    save.location.cyan().to_string(),
+                    format!("{}cr", save.credits).green().to_string(),
+                    save.ship_type.magenta().to_string(),
+                ]);
             }
+            table.print();
+            println!();
         }
         Err(error) => show_error(&error.to_string()),
     }

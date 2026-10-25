@@ -1,4 +1,5 @@
 use crate::utils::display::{header, show_error, show_info, show_success, Icon};
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
 use elite_core::game::commander::Standing;
 use elite_core::game::trade_log::TradeKind;
@@ -111,12 +112,17 @@ fn print_market(view: &MarketView) {
         );
     }
 
+    let mut table = Table::new(&[
+        ("Commodity", LEFT),
+        ("Buy", RIGHT),
+        ("Sell", RIGHT),
+        ("Available", RIGHT),
+        ("vs Base", RIGHT),
+        ("Hold", LEFT),
+        ("", LEFT),
+    ]);
     for row in &view.rows {
-        let name = format!("{}:", row.commodity.name());
-        let buy = format!("Buy: {}cr", row.buy_price);
-        let sell = format!("Sell: {}cr", row.sell_price);
-        let available = format!("Available: {} tons", row.available);
-        let versus_base = format!("{:<14}", format!("{:+}% vs base", row.percent_vs_base));
+        let versus_base = format!("{:+}%", row.percent_vs_base);
         let versus_base = if row.percent_vs_base <= -10 {
             versus_base.green()
         } else if row.percent_vs_base >= 10 {
@@ -126,20 +132,20 @@ fn print_market(view: &MarketView) {
         };
         let holding = match (row.held, row.paid) {
             (0, _) => String::new(),
-            (held, Some(paid)) => format!("Hold: {}t @ {}cr", held, paid),
-            (held, None) => format!("Hold: {}t", held),
+            (held, Some(paid)) => format!("{}t @ {}cr", held, paid),
+            (held, None) => format!("{}t", held),
         };
-        println!(
-            "{:<12} {:<12} {:<12} {:<20} {} {} {}",
-            name,
-            buy,
-            sell,
-            available,
-            versus_base,
-            holding.cyan(),
-            markers(row.pushed).yellow()
-        );
+        table.row([
+            row.commodity.name().to_string(),
+            format!("{}cr", row.buy_price),
+            format!("{}cr", row.sell_price),
+            format!("{}t", row.available),
+            versus_base.to_string(),
+            holding.cyan().to_string(),
+            markers(row.pushed).yellow().to_string(),
+        ]);
     }
+    table.print();
     println!();
 }
 
@@ -155,20 +161,23 @@ fn print_cargo(view: &CargoView) {
     if view.items.is_empty() {
         println!("No goods in the hold");
     } else {
+        let mut table = Table::new(&[
+            ("Commodity", LEFT),
+            ("Tons", RIGHT),
+            ("Value", RIGHT),
+            ("Paid/ton", RIGHT),
+        ]);
         for line in &view.items {
-            let paid = line
-                .paid
-                .map(|paid| format!("  Paid: {}cr/ton", paid))
-                .unwrap_or_default();
-            println!(
-                "{:<12} {} tons  Value: {}cr{}",
-                format!("{}:", line.commodity.name()),
-                line.quantity,
-                line.estimated_value,
-                paid
-            );
+            table.row([
+                line.commodity.name().to_string(),
+                line.quantity.to_string(),
+                format!("{}cr", line.estimated_value),
+                line.paid
+                    .map(|paid| format!("{}cr", paid))
+                    .unwrap_or_default(),
+            ]);
         }
-        println!("{}", "-".repeat(20));
+        table.print();
         println!("Total Value: {}cr", view.total_value);
     }
     println!();

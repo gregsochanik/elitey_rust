@@ -1,4 +1,5 @@
 use crate::utils::display::{header, icon, show_error, show_info, show_success, Icon};
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
 use elite_core::game::game_state::JobListing;
 use elite_core::game::jobs::{self, ActiveJob};
@@ -80,14 +81,22 @@ fn print_missions(active: &[ActiveJob]) {
     if active.is_empty() {
         println!("No active jobs. Use 'jobs' to see the board.");
     }
-    for (index, entry) in active.iter().enumerate() {
-        println!(
-            "{}. {} - Reward: {}cr - {} left",
-            index + 1,
-            entry.job.describe().yellow(),
-            entry.job.reward.to_string().green(),
-            jumps(entry.jumps_left)
-        );
+    if !active.is_empty() {
+        let mut table = Table::new(&[
+            ("#", RIGHT),
+            ("Job", LEFT),
+            ("Reward", RIGHT),
+            ("Time left", RIGHT),
+        ]);
+        for (index, entry) in active.iter().enumerate() {
+            table.row([
+                (index + 1).to_string(),
+                entry.job.describe().yellow().to_string(),
+                format!("{}cr", entry.job.reward).green().to_string(),
+                jumps(entry.jumps_left),
+            ]);
+        }
+        table.print();
     }
     println!();
 }
@@ -97,33 +106,49 @@ fn print_jobs(location: &str, jobs: &[JobListing]) {
     if jobs.is_empty() {
         println!("No jobs on offer here.");
     }
+    if jobs.is_empty() {
+        println!();
+        return;
+    }
+    let mut table = Table::new(&[
+        ("#", RIGHT),
+        ("Job", LEFT),
+        ("Distance", RIGHT),
+        ("Fuel", RIGHT),
+        ("Reward", RIGHT),
+        ("Deadline", RIGHT),
+        ("", LEFT),
+    ]);
     for (index, listing) in jobs.iter().enumerate() {
         let job = &listing.job;
-        let line = format!(
-            "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
-            index + 1,
+        let row = [
+            (index + 1).to_string(),
             job.describe(),
-            job.distance,
-            job.fuel_cost,
-            job.reward,
-            jumps(job.deadline_jumps)
-        );
+            format!("{:.1} ly", job.distance),
+            job.fuel_cost.to_string(),
+            format!("{}cr", job.reward),
+            jumps(job.deadline_jumps),
+        ];
         match &listing.lock {
-            Some(lock) => println!(
-                "{} {}",
-                line.dimmed(),
-                format!("[{}Locked: {}]", icon(Icon::Locked), lock.describe()).red()
-            ),
-            None => println!(
-                "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
-                index + 1,
-                job.describe().yellow(),
-                job.distance,
-                job.fuel_cost,
-                job.reward.to_string().green(),
-                jumps(job.deadline_jumps)
-            ),
+            Some(lock) => {
+                let mut cells: Vec<String> =
+                    row.iter().map(|cell| cell.dimmed().to_string()).collect();
+                cells.push(
+                    format!("[{}Locked: {}]", icon(Icon::Locked), lock.describe())
+                        .red()
+                        .to_string(),
+                );
+                table.row(cells);
+            }
+            None => {
+                let mut cells = row.to_vec();
+                cells[1] = cells[1].yellow().to_string();
+                cells[4] = cells[4].green().to_string();
+                cells.push(String::new());
+                table.row(cells);
+            }
         }
     }
+    table.print();
     println!();
 }

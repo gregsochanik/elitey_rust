@@ -1,6 +1,7 @@
 use crate::utils::display::{self, credits, header, icon, show_error, show_success, Icon};
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
-use elite_core::data::equipment::Equipment;
+use elite_core::data::equipment::{Equipment, EquipmentCategory};
 use elite_core::game::equipment::{self, InstalledView, ShopView};
 use elite_core::game::{Commander, Ship};
 
@@ -90,9 +91,17 @@ fn sell(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
 
 fn power_column(item: &Equipment) -> String {
     if item.output > 0 {
-        format!("gives {}", item.output)
+        format!("+{}", item.output)
     } else {
-        format!("{:>2} power", item.power)
+        item.power.to_string()
+    }
+}
+
+fn category_cell(category: EquipmentCategory, index: usize) -> String {
+    if index == 0 {
+        display::category_name(category).to_string()
+    } else {
+        String::new()
     }
 }
 
@@ -118,25 +127,34 @@ fn print_shop(view: &ShopView) {
         power_line(view.power_used, view.power_capacity)
     );
 
+    let mut table = Table::new(&[
+        ("Category", LEFT),
+        ("Item", LEFT),
+        ("Quality", LEFT),
+        ("Price", RIGHT),
+        ("Power", RIGHT),
+        ("Effect", LEFT),
+        ("", LEFT),
+    ]);
     for group in &view.categories {
-        println!("\n{}", display::category_name(group.category));
-        for entry in &group.items {
+        for (index, entry) in group.items.iter().enumerate() {
             let item = entry.item;
-            println!(
-                "  {:<18} {:<9} {:>5}cr  {:<10}  {}{}",
-                item.id,
-                item.quality.name(),
-                item.price,
+            table.row([
+                category_cell(group.category, index),
+                item.id.clone(),
+                item.quality.name().to_string(),
+                format!("{}cr", item.price),
                 power_column(item),
-                item.effect,
+                item.effect.clone(),
                 if entry.installed {
-                    "  [installed]".green().to_string()
+                    "[installed]".green().to_string()
                 } else {
                     String::new()
-                }
-            );
+                },
+            ]);
         }
     }
+    table.print();
     println!("\nUse: equipment buy <item>\n");
 }
 
@@ -148,21 +166,28 @@ fn print_installed(view: &InstalledView) {
         power_line(view.power_used, view.power_capacity)
     );
 
+    let mut table = Table::new(&[
+        ("Category", LEFT),
+        ("Slots", RIGHT),
+        ("Item", LEFT),
+        ("Power", RIGHT),
+        ("Effect", LEFT),
+    ]);
     for group in &view.categories {
-        println!(
-            "\n{} ({}/{} slots)",
-            display::category_name(group.category),
-            group.slots_used,
-            group.slots_capacity
-        );
-        for item in &group.items {
-            println!(
-                "  {:<18} {:<10}  {}",
-                item.name,
+        for (index, item) in group.items.iter().enumerate() {
+            table.row([
+                category_cell(group.category, index),
+                if index == 0 {
+                    format!("{}/{}", group.slots_used, group.slots_capacity)
+                } else {
+                    String::new()
+                },
+                item.name.clone(),
                 power_column(item),
-                item.effect
-            );
+                item.effect.clone(),
+            ]);
         }
     }
+    table.print();
     println!("\nCargo capacity: {} tons\n", view.cargo_capacity);
 }

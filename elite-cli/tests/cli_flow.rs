@@ -80,14 +80,14 @@ fn trading_commands_print_receipts_and_errors() {
     assert!(output.contains("Error: Only "));
     assert!(output.contains("Error: Insufficient cargo. Have 2 tons, trying to sell 5"));
     assert!(output.contains("Cargo Hold (2/20)"));
-    assert!(output.contains("Paid: "));
+    assert!(output.contains("Paid/ton"));
 }
 
 #[test]
 fn the_market_shows_what_held_cargo_cost() {
     let output = play("hold", "buy food 2\nmarket");
 
-    assert!(output.contains("Hold: 2t @ "));
+    assert!(output.contains("2t @ "));
 }
 
 #[test]
@@ -95,9 +95,9 @@ fn the_market_and_status_are_laid_out_as_before() {
     let output = play("layout", "market\nstatus");
 
     assert!(output.contains("LAVE Market"));
-    assert!(output.contains("Food:"));
-    assert!(output.contains("Buy: "));
-    assert!(output.contains("vs base"));
+    assert!(output.contains("Food"));
+    assert!(output.contains("Commodity") && output.contains("Buy"));
+    assert!(output.contains("vs Base"));
     assert!(output.contains("Commander Status"));
     assert!(output.contains("Combat rating: Harmless (0 kills, 3 more for Mostly Harmless)"));
     assert!(output.contains("Fuel: 7/7 light years [##########]"));
@@ -114,7 +114,7 @@ fn power_is_shown_in_the_shop_and_the_installed_list_and_can_be_upgraded() {
     );
 
     assert!(output.contains("Power: 9/20 used, 11 free"));
-    assert!(output.contains("gives 28"));
+    assert!(output.contains("+28"));
     assert!(output.contains("Success: Installed Improved Reactor for 60cr"));
     assert!(output.contains("Power: 9/28 used, 19 free"));
     assert!(output.contains("Power: 9/28 [###-------]"));
@@ -206,7 +206,7 @@ fn screens_open_with_an_icon_header_when_colour_is_on() {
 #[test]
 fn systems_and_info_show_economy_and_government() {
     let plain = play("plain_systems", "systems\ninfo diso");
-    assert!(plain.contains("light years, 3 fuel - "));
+    assert!(plain.contains("DISO") && plain.contains("2.3 ly"));
     assert!(plain.contains("Economy: "));
     assert!(
         !plain.contains("Economy: Rich Ind"),
@@ -240,4 +240,15 @@ fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
     assert_eq!(output.matches("Commander Status").count(), 2);
     assert_eq!(output.matches("LAVE Market").count(), 2);
     assert!(output.contains("Unknown command."));
+}
+
+#[test]
+fn lists_are_tables_with_a_header_rule() {
+    let output = play("tables", "market\ncargo\nsystems\njobs");
+
+        assert!(output.contains(header), "missing {}", header);
+    }
+    assert!(output
+        .lines()
+        .any(|line| line.trim().chars().all(|c| c == '-') && line.len() > 20));
 }
