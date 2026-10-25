@@ -4,11 +4,13 @@ extends VBoxContainer
 signal changed
 
 const Theme_ := preload("res://theme/elite_theme.gd")
+const ModelViewer := preload("res://widgets/model_viewer.gd")
 
 var game: EliteGame
 var heading := Label.new()
 var summary := Label.new()
 var tree := Tree.new()
+var viewer := ModelViewer.new()
 var buy_button := Button.new()
 var confirm := ConfirmationDialog.new()
 var feedback := Label.new()
@@ -35,9 +37,18 @@ func _ready() -> void:
 	for i in titles.size():
 		tree.set_column_title(i, titles[i])
 		tree.set_column_expand(i, true)
-		tree.set_column_expand_ratio(i, 3 if i == 0 else 2)
+		tree.set_column_expand_ratio(i, 3 if i == 0 or i == 6 else 2)
 	tree.item_selected.connect(_update_button)
-	add_child(tree)
+	var yard_row := HBoxContainer.new()
+	yard_row.add_theme_constant_override("separation", 12)
+	yard_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	yard_row.add_child(tree)
+	viewer.custom_minimum_size = Vector2(320, 0)
+	viewer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	viewer.size_flags_stretch_ratio = 0.8
+	yard_row.add_child(viewer)
+	add_child(yard_row)
 
 	buy_button.text = "Buy selected ship"
 	buy_button.pressed.connect(_ask)
@@ -91,6 +102,7 @@ func _selected_id() -> String:
 
 func _update_button() -> void:
 	var item := tree.get_selected()
+	viewer.show_model(_selected_id())
 	buy_button.disabled = item == null or not item.get_metadata(1)["is_upgrade"]
 
 
