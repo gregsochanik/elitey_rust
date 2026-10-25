@@ -76,9 +76,12 @@ The numbers on an outcome are bases; each time an outcome is applied they are ro
 
 - **Credits** (gains and fines): base × a roll from 0.6 to 1.4, rounded
 - **Cargo tons** (gained or lost): base ± 1 ton, at least 1
-- **Windfalls** (a gain with a base of 400 credits or more) are capped at 200 plus half the commander's credits, so a poor commander cannot jump-start the game with one event
+- **Windfalls** (a gain with a base of 200 credits or more) are capped at 100 plus half the commander's credits, so a poor commander cannot jump-start the game with one event
 - **Reputation, hull and fuel** stay fixed
 - The message shows the amounts that were rolled
+- Base credits: anomaly 200, debris 100, alien communication 150, alien fight 200, rescue 200, patrol engage 300; fines 50, 100 and 200
+- Balance: a player who always takes the best credit choice earns about 18, 26 and 26 credits per jump from events at 100, 500 and 2,000 credits, against about 84 and 151 per jump from trading at 500 and 2,000
+- [x] Event income stays a modest share of trading income (simulation)
 - [x] Credits and cargo tons fall within their ranges, and windfalls respect the cap
 - [x] The message matches the amounts applied
 
