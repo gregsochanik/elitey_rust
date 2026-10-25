@@ -139,6 +139,7 @@ static func restyle(node: MeshInstance3D, model_id: String, role: String) -> voi
 		draws = "lines"
 	node.mesh = ModelLoader.line_mesh(model_id)
 	node.material_override = material(role)
+	_add_engine_glow(node, model_id, role)
 	match draws:
 		"hidden_line":
 			var fill := MeshInstance3D.new()
@@ -149,6 +150,27 @@ static func restyle(node: MeshInstance3D, model_id: String, role: String) -> voi
 		"flat":
 			node.mesh = solid
 			node.material_override = _fill_material(colour(role).lerp(Color(0.75, 0.78, 0.8), 0.55).darkened(0.25), false)
+
+
+## A small bright sphere at each engine; the scene pulses anything in the `engine_glow` group.
+static func _add_engine_glow(node: MeshInstance3D, model_id: String, role: String) -> void:
+	var model := ModelLoader.load_model(model_id)
+	if model.is_empty():
+		return
+	var glow_colour := colour(role).lerp(Color.WHITE, 0.55)
+	for point in model["engines"]:
+		var glow := MeshInstance3D.new()
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.11
+		sphere.height = 0.22
+		glow.mesh = sphere
+		var glow_material := StandardMaterial3D.new()
+		glow_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		glow_material.albedo_color = glow_colour
+		glow.material_override = glow_material
+		glow.position = point
+		glow.add_to_group("engine_glow")
+		node.add_child(glow)
 
 
 static func _fill_material(colour: Color, unshaded: bool) -> StandardMaterial3D:
