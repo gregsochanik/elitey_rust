@@ -79,6 +79,20 @@ fn print_status(view: &StatusView) {
     println!("Credits: {} cr", view.credits.to_string().green());
     println!("Location: {}", view.location.blue());
     println!("Reputation: {} ({})", view.reputation, view.standing.name());
+    match view.combat_rating.next() {
+        Some((next, needed)) => println!(
+            "Combat rating: {} ({} kills, {} more for {})",
+            view.combat_rating.name(),
+            view.kills,
+            needed - view.kills,
+            next.name()
+        ),
+        None => println!(
+            "Combat rating: {} ({} kills)",
+            view.combat_rating.name(),
+            view.kills
+        ),
+    }
     println!();
     println!("{}", "Ship Status".cyan().bold());
     println!("{}", "===========".cyan());

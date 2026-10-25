@@ -1,5 +1,5 @@
 use crate::data::systems::{EconomyType, GovernmentType};
-use crate::game::commander::Standing;
+use crate::game::commander::{CombatRating, Standing};
 use crate::game::trade_log::{TradeStats, Transaction};
 
 /// The commander and ship at a glance
@@ -10,6 +10,8 @@ pub struct StatusView {
     pub location: String,
     pub reputation: i32,
     pub standing: Standing,
+    pub kills: u32,
+    pub combat_rating: CombatRating,
     pub ship_name: String,
     pub cargo_used: u32,
     pub cargo_capacity: u32,
