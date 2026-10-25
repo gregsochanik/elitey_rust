@@ -3,12 +3,17 @@ use elite_core::data::equipment::EquipmentCategory;
 use elite_core::data::ships::ShipType;
 use elite_core::data::systems::EconomyType;
 use elite_core::game::equipment;
+use elite_core::game::events::EventPhase;
 use elite_core::game::jobs::{ABANDON_REPUTATION, MAX_ACTIVE_JOBS};
+use elite_core::game::journey::{auto_fight, Input, Journey, Notice, Step};
 use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
 use elite_core::game::repair::CREDITS_PER_POINT;
+use elite_core::game::smuggling::InspectionChoice;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::travel::fuel_for_distance;
 use elite_core::game::GameState;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug, thiserror::Error)]
@@ -260,19 +265,67 @@ pub struct MissionData {
 }
 
 #[derive(Debug, Clone)]
+pub struct NoticeData {
+    /// `blank`, `text`, `info`, `success` or `error`
+    pub kind: String,
+    pub text: String,
+}
+
+/// What a journey needs next, with the lines to show first
+#[derive(Debug, Clone, Default)]
+pub struct StepData {
+    /// `event`, `fight`, `inspection`, `arrived` or `error`
+    pub kind: String,
+    pub notices: Vec<NoticeData>,
+    pub title: String,
+    pub description: String,
+    /// `jump` or `approach` for events
+    pub phase: String,
+    pub choices: Vec<String>,
+    pub enemy_name: String,
+    pub enemy_hull: u32,
+    pub player_hull: u32,
+    pub bribe_cost: u32,
+    pub can_bribe: bool,
+    pub arrived_at: String,
+    pub planned: String,
+    pub eventful: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
 }
 
+/// A jump in progress and the step it is waiting on
+struct Voyage {
+    journey: Journey,
+    step: Step,
+}
+
 pub struct Game {
     state: Mutex<GameState>,
+    rng: Mutex<StdRng>,
+    voyage: Mutex<Option<Voyage>>,
 }
 
 impl Game {
     pub fn new(commander_name: String) -> Arc<Self> {
+        Self::with_rng(commander_name, StdRng::from_entropy())
+    }
+
+    /// A game whose jobs, events and fights are repeatable
+    pub fn with_seed(commander_name: String, seed: u64) -> Arc<Self> {
+        Self::with_rng(commander_name, StdRng::seed_from_u64(seed))
+    }
+
+    fn with_rng(commander_name: String, rng: StdRng) -> Arc<Self> {
         Arc::new(Self {
             state: Mutex::new(GameState::new(commander_name)),
+            rng: Mutex::new(rng),
+            voyage: Mutex::new(None),
         })
     }
 
@@ -618,7 +671,9 @@ impl Game {
     /// The jobs on offer here, rolled on first sight; locked ones say why
     pub fn jobs(&self) -> JobBoardData {
         let mut state = self.state.lock().expect("game state lock");
-        let listings = state.jobs_here(&mut rand::thread_rng()).unwrap_or_default();
+        let listings = state
+            .jobs_here(&mut *self.rng.lock().expect("rng lock"))
+            .unwrap_or_default();
         JobBoardData {
             location: state.commander.location.clone(),
             active: state.active_jobs.len() as u32,
@@ -694,6 +749,93 @@ impl Game {
         }
     }
 
+    /// Confirm nothing: plan and start a jump, returning its first step
+    pub fn begin_jump(&self, destination: String) -> StepData {
+        let mut state = self.state.lock().expect("game state lock");
+        let mut voyage = self.voyage.lock().expect("voyage lock");
+        if voyage.is_some() {
+            return step_error("A jump is already in progress");
+        }
+        let plan = match state.plan_jump(&destination) {
+            Ok(plan) => plan,
+            Err(error) => return step_error(error),
+        };
+        let mut rng = self.rng.lock().expect("rng lock");
+        let (mut journey, step) = state.start_jump(plan, &mut *rng);
+        Self::settle(&mut voyage, journey.take_notices(), journey, step)
+    }
+
+    /// Answer an event with the 0-based choice
+    pub fn answer_event(&self, choice: u32) -> StepData {
+        self.answer(Input::Choice(choice as usize))
+    }
+
+    /// Answer an inspection: `bribe`, `run` or `hand_over`
+    pub fn answer_inspection(&self, choice: String) -> StepData {
+        let choice = match choice.as_str() {
+            "bribe" => InspectionChoice::Bribe,
+            "run" => InspectionChoice::Run,
+            "hand_over" => InspectionChoice::HandOver,
+            other => return step_error(format!("Unknown inspection choice: {}", other)),
+        };
+        self.answer(Input::Inspection(choice))
+    }
+
+    /// Play the current fight out automatically
+    pub fn resolve_fight_automatically(&self) -> StepData {
+        let mut voyage = self.voyage.lock().expect("voyage lock");
+        let Some(Voyage {
+            step: Step::Fight(combat),
+            ..
+        }) = voyage.as_mut()
+        else {
+            return step_error("No fight is waiting");
+        };
+        let mut combat = combat.clone();
+        auto_fight(&mut combat, &mut *self.rng.lock().expect("rng lock"));
+        drop(voyage);
+        self.answer(Input::FightEnded(combat))
+    }
+
+    pub fn journey_in_progress(&self) -> bool {
+        self.voyage.lock().expect("voyage lock").is_some()
+    }
+
+    fn answer(&self, input: Input) -> StepData {
+        let mut state = self.state.lock().expect("game state lock");
+        let mut voyage = self.voyage.lock().expect("voyage lock");
+        let Some(current) = voyage.as_mut() else {
+            return step_error("No jump is in progress");
+        };
+        let mut rng = self.rng.lock().expect("rng lock");
+        match state.advance_journey(&mut current.journey, input, &mut *rng) {
+            Ok(step) => {
+                let notices = current.journey.take_notices();
+                let data = step_data(&step, notices);
+                if data.kind == "arrived" {
+                    *voyage = None;
+                } else {
+                    current.step = step;
+                }
+                data
+            }
+            Err(error) => step_error(error),
+        }
+    }
+
+    fn settle(
+        voyage: &mut Option<Voyage>,
+        notices: Vec<Notice>,
+        journey: Journey,
+        step: Step,
+    ) -> StepData {
+        let data = step_data(&step, notices);
+        if data.kind != "arrived" {
+            *voyage = Some(Voyage { journey, step });
+        }
+        data
+    }
+
     pub fn market(&self) -> Result<MarketData, GameError> {
         let mut state = self.state.lock().expect("game state lock");
         let view = state
@@ -755,6 +897,90 @@ impl Game {
             ),
             credits_after: receipt.credits_after,
         })
+    }
+}
+
+fn step_error(message: impl ToString) -> StepData {
+    StepData {
+        kind: "error".to_string(),
+        message: message.to_string(),
+        ..StepData::default()
+    }
+}
+
+fn step_data(step: &Step, notices: Vec<Notice>) -> StepData {
+    let notices = notices
+        .into_iter()
+        .map(|notice| match notice {
+            Notice::Blank => NoticeData {
+                kind: "blank".to_string(),
+                text: String::new(),
+            },
+            Notice::Text(text) => NoticeData {
+                kind: "text".to_string(),
+                text,
+            },
+            Notice::Info(text) => NoticeData {
+                kind: "info".to_string(),
+                text,
+            },
+            Notice::Success(text) => NoticeData {
+                kind: "success".to_string(),
+                text,
+            },
+            Notice::Error(text) => NoticeData {
+                kind: "error".to_string(),
+                text,
+            },
+        })
+        .collect();
+    let base = StepData {
+        notices,
+        ..StepData::default()
+    };
+    match step {
+        Step::Event(event) => StepData {
+            kind: "event".to_string(),
+            title: event.title.clone(),
+            description: event.description.clone(),
+            phase: match event.phase {
+                EventPhase::Jump => "jump".to_string(),
+                EventPhase::Approach => "approach".to_string(),
+            },
+            choices: event
+                .choices
+                .iter()
+                .map(|choice| choice.description.clone())
+                .collect(),
+            ..base
+        },
+        Step::Fight(combat) => StepData {
+            kind: "fight".to_string(),
+            enemy_name: combat.enemy.name.clone(),
+            enemy_hull: combat.enemy.hull,
+            player_hull: combat.player.hull,
+            ..base
+        },
+        Step::Inspection {
+            bribe_cost,
+            can_bribe,
+        } => StepData {
+            kind: "inspection".to_string(),
+            bribe_cost: *bribe_cost,
+            can_bribe: *can_bribe,
+            ..base
+        },
+        Step::Arrived {
+            arrived_at,
+            planned,
+            eventful,
+        } => StepData {
+            kind: "arrived".to_string(),
+            arrived_at: arrived_at.clone(),
+            planned: planned.clone(),
+            eventful: *eventful,
+            ..base
+        },
     }
 }
 
@@ -1028,8 +1254,14 @@ mod tests {
 
     #[test]
     fn accepting_and_abandoning_jobs_moves_them_between_the_board_and_missions() {
-        let game = Game::new("Test".to_string());
-        let board = game.jobs();
+        let (game, board) = (0..40)
+            .map(|seed| Game::with_seed("Test".to_string(), seed))
+            .map(|game| {
+                let board = game.jobs();
+                (game, board)
+            })
+            .find(|(_, board)| board.jobs.iter().any(|j| !j.locked))
+            .unwrap();
         let open = board.jobs.iter().find(|j| !j.locked).unwrap();
 
         let accepted = game.accept_job(open.number);
@@ -1049,7 +1281,7 @@ mod tests {
 
     #[test]
     fn a_locked_job_cannot_be_accepted() {
-        let game = Game::new("Test".to_string());
+        let game = Game::with_seed("Test".to_string(), 5);
         for _ in 0..40 {
             let board = game.jobs();
             if let Some(locked) = board.jobs.iter().find(|j| j.locked) {
@@ -1061,6 +1293,107 @@ mod tests {
             game.state.lock().unwrap().job_board.clear();
         }
         panic!("no locked job appeared");
+    }
+
+    fn play_out(game: &Game, mut step: StepData) -> (StepData, Vec<String>) {
+        let mut kinds = Vec::new();
+        for _ in 0..50 {
+            kinds.push(step.kind.clone());
+            step = match step.kind.as_str() {
+                "event" => game.answer_event(0),
+                "inspection" => game.answer_inspection("hand_over".to_string()),
+                "fight" => game.resolve_fight_automatically(),
+                _ => return (step, kinds),
+            };
+        }
+        panic!("the journey never ended: {:?}", kinds);
+    }
+
+    #[test]
+    fn a_jump_runs_to_arrival_and_spends_fuel() {
+        let game = Game::with_seed("Test".to_string(), 1);
+
+        let first = game.begin_jump("DISO".to_string());
+        assert!(game.journey_in_progress() || first.kind == "arrived");
+        let (last, _) = play_out(&game, first);
+
+        assert_eq!(last.kind, "arrived", "{}", last.message);
+        assert!(!game.journey_in_progress());
+        assert_eq!(last.planned, "DISO");
+        let status = game.status();
+        assert!(status.fuel_current < 7);
+        assert_eq!(status.location, last.arrived_at);
+    }
+
+    #[test]
+    fn events_and_fights_come_up_and_every_journey_still_ends() {
+        let mut seen = std::collections::HashSet::new();
+        for seed in 0..60 {
+            let game = Game::with_seed("Test".to_string(), seed);
+            let first = game.begin_jump("DISO".to_string());
+            let (last, kinds) = play_out(&game, first);
+            assert_eq!(last.kind, "arrived", "seed {}", seed);
+            seen.extend(kinds);
+        }
+        assert!(seen.contains("event"), "{:?}", seen);
+    }
+
+    #[test]
+    fn events_describe_their_choices() {
+        for seed in 0..60 {
+            let game = Game::with_seed("Test".to_string(), seed);
+            let step = game.begin_jump("DISO".to_string());
+            if step.kind == "event" {
+                assert!(!step.title.is_empty());
+                assert!(!step.choices.is_empty());
+                assert!(step.phase == "jump" || step.phase == "approach");
+                return;
+            }
+            play_out(&game, step);
+        }
+        panic!("no event appeared");
+    }
+
+    #[test]
+    fn a_journey_refuses_bad_requests() {
+        let game = Game::with_seed("Test".to_string(), 1);
+
+        assert_eq!(game.begin_jump("LAVE".to_string()).kind, "error");
+        assert_eq!(game.begin_jump("nowhere".to_string()).kind, "error");
+        assert_eq!(game.answer_event(0).kind, "error");
+        assert_eq!(game.answer_inspection("bribe".to_string()).kind, "error");
+        assert_eq!(game.resolve_fight_automatically().kind, "error");
+        assert!(!game.journey_in_progress());
+    }
+
+    #[test]
+    fn a_second_jump_cannot_start_mid_journey() {
+        for seed in 0..60 {
+            let game = Game::with_seed("Test".to_string(), seed);
+            let step = game.begin_jump("DISO".to_string());
+            if step.kind != "arrived" {
+                let again = game.begin_jump("LEESTI".to_string());
+                assert_eq!(again.kind, "error");
+                assert!(again.message.contains("already in progress"));
+                assert!(game
+                    .answer_inspection("nonsense".to_string())
+                    .message
+                    .contains("Unknown"));
+                return;
+            }
+        }
+        panic!("every journey was quiet");
+    }
+
+    #[test]
+    fn the_same_seed_gives_the_same_journey() {
+        let run = |seed| {
+            let game = Game::with_seed("Test".to_string(), seed);
+            let first = game.begin_jump("DISO".to_string());
+            let (last, kinds) = play_out(&game, first);
+            (kinds, last.arrived_at, game.status().credits)
+        };
+        assert_eq!(run(7), run(7));
     }
 
     #[test]
