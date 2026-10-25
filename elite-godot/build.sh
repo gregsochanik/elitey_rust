@@ -17,12 +17,14 @@ case "$(uname -s)" in
         rustup target add "$target"
         cargo build -p elite-godot $flag --target "$target"
       done
+      rm -f "$bin/libelite_godot.macos.dylib"
       lipo -create \
         "target/aarch64-apple-darwin/$profile/libelite_godot.dylib" \
         "target/x86_64-apple-darwin/$profile/libelite_godot.dylib" \
         -output "$bin/libelite_godot.macos.dylib"
     else
       cargo build -p elite-godot $flag
+      rm -f "$bin/libelite_godot.macos.dylib"
       cp "target/$profile/libelite_godot.dylib" "$bin/libelite_godot.macos.dylib"
     fi
     ;;

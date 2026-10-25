@@ -14,8 +14,20 @@ pub fn buy(game: &mut GameState, args: &[String]) -> bool {
     report(game.buy(commodity, quantity))
 }
 
-/// `sell <item> [quantity]`
+/// `sell <item> [quantity]`, `sell <item> all` or `sell all`
 pub fn sell(game: &mut GameState, args: &[String]) -> bool {
+    let is_all = |word: Option<&String>| word.is_some_and(|word| word.eq_ignore_ascii_case("all"));
+    if is_all(args.first()) && args.len() == 1 {
+        return report_all(game.sell_all(None));
+    }
+    if is_all(args.get(1)) {
+        let name = &args[0];
+        let Some(commodity) = game.trading_handler().parse_commodity(name) else {
+            show_error(&format!("Unknown commodity: {}", name));
+            return false;
+        };
+        return report_all(game.sell_all(Some(commodity)));
+    }
     let Some((commodity, quantity)) = parse_trade(game, args, "sell") else {
         return false;
     };
@@ -53,6 +65,21 @@ fn parse_trade(
         _ => {
             show_error("Quantity must be a positive number");
             None
+        }
+    }
+}
+
+fn report_all(result: Result<Vec<TradeReceipt>, elite_core::game::trading::TradeError>) -> bool {
+    match result {
+        Ok(receipts) => {
+            for receipt in &receipts {
+                print_receipt(receipt);
+            }
+            true
+        }
+        Err(error) => {
+            show_error(&error.to_string());
+            false
         }
     }
 }

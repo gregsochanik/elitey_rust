@@ -51,6 +51,16 @@ func _ready() -> void:
 	sell.text = "Sell"
 	sell.pressed.connect(_trade.bind(false))
 	controls.add_child(sell)
+	var sell_all := Button.new()
+	sell_all.text = "Sell all"
+	sell_all.tooltip_text = "Sell everything you hold of the selected commodity"
+	sell_all.pressed.connect(_sell_all)
+	controls.add_child(sell_all)
+	var sell_everything := Button.new()
+	sell_everything.text = "Sell everything"
+	sell_everything.tooltip_text = "Sell your whole hold at this market"
+	sell_everything.pressed.connect(_sell_everything)
+	controls.add_child(sell_everything)
 	add_child(controls)
 	add_child(feedback)
 	refresh()
@@ -96,6 +106,24 @@ func _trade(buying: bool) -> void:
 		return
 	var amount := int(quantity.value)
 	var result: Dictionary = game.buy(id, amount) if buying else game.sell(id, amount)
+	_say(result["message"], result["ok"])
+	refresh()
+	traded.emit()
+
+
+func _sell_all() -> void:
+	var id := _selected_id()
+	if id == "":
+		_say("Select a commodity first", false)
+		return
+	_finish(game.sell_all(id))
+
+
+func _sell_everything() -> void:
+	_finish(game.sell_everything())
+
+
+func _finish(result: Dictionary) -> void:
 	_say(result["message"], result["ok"])
 	refresh()
 	traded.emit()

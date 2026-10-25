@@ -275,6 +275,31 @@ impl GameState {
         )
     }
 
+    /// Sell everything held of one commodity, or the whole hold when `None`; one receipt per commodity
+    pub fn sell_all(
+        &mut self,
+        commodity: Option<CommodityType>,
+    ) -> Result<Vec<TradeReceipt>, TradeError> {
+        let lines: Vec<_> = self
+            .cargo_view()
+            .items
+            .into_iter()
+            .filter(|line| {
+                commodity
+                    .as_ref()
+                    .is_none_or(|wanted| *wanted == line.commodity)
+            })
+            .collect();
+        if lines.is_empty() {
+            return Err(TradeError::NothingToSell);
+        }
+        let mut receipts = Vec::new();
+        for line in lines {
+            receipts.push(self.sell(line.commodity, line.quantity)?);
+        }
+        Ok(receipts)
+    }
+
     /// The market here as a table
     pub fn market_overview(&mut self) -> Option<MarketView> {
         self.trading_handler.market_overview(

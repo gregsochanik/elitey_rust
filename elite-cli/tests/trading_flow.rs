@@ -157,3 +157,22 @@ fn good_standing_pays_less_and_earns_more_on_the_same_market() {
 fn bad_standing_pays_more_and_earns_less_on_the_same_market() {
     standing_adjusts_the_same_market(-30, elite_core::game::commander::Standing::Criminal);
 }
+
+#[test]
+fn sell_all_sells_one_commodity_or_the_whole_hold() {
+    let mut game = new_game(1000);
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("food 2")));
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("textiles 3")));
+
+    assert!(elite_cli::cli::trading::sell(&mut game, &args("food all")));
+    assert_eq!(game.ship.cargo_hold.get_quantity(&CommodityType::Food), 0);
+    assert_eq!(
+        game.ship.cargo_hold.get_quantity(&CommodityType::Textiles),
+        3
+    );
+
+    assert!(elite_cli::cli::trading::sell(&mut game, &args("all")));
+    assert_eq!(game.ship.cargo_hold.current_weight(), 0);
+    assert!(!elite_cli::cli::trading::sell(&mut game, &args("all")));
+    assert!(!elite_cli::cli::trading::sell(&mut game, &args("gold all")));
+}

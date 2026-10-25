@@ -30,6 +30,8 @@ pub enum TradeError {
     NotEnoughCredits { needed: u32, have: u32 },
     #[error("Insufficient cargo. Have {held} tons, trying to sell {requested}")]
     NotEnoughCargo { held: u32, requested: u32 },
+    #[error("You have nothing to sell")]
+    NothingToSell,
 }
 
 /// What a completed buy or sell did
