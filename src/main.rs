@@ -56,7 +56,7 @@ fn main() -> Result<()> {
                 display::show_help();
             }
             "status" => {
-                display::show_status(&game_state);
+                elitey_rust::cli::info::status(&game_state);
             }
 
             "market" => {

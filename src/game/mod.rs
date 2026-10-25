@@ -15,6 +15,7 @@ pub mod trade_log;
 pub mod trading;
 pub mod travel;
 pub mod upgrades;
+pub mod views;
 
 pub use commander::Commander;
 pub use events::{Event, EventManager, EventPhase};

@@ -5,6 +5,7 @@ use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
 use crate::game::upgrades::{UpgradeError, UpgradeReceipt};
+use crate::game::views::{JumpFromHere, StatusView, SystemInfoView, TradeLogView};
 use crate::utils::display::{show_error, show_success};
 use crate::utils::input;
 use colored::*;
@@ -314,17 +315,59 @@ impl GameState {
 
     /// Handle log command
     pub fn handle_log_command(&self, args: &[String]) {
-        let count = match args.first() {
-            None => 10,
-            Some(arg) => match arg.parse::<usize>() {
-                Ok(n) if n > 0 => n,
-                _ => {
-                    show_error("Usage: log [count]");
-                    return;
+        crate::cli::info::log(self, args);
+    }
+
+    /// Recent trades and totals
+    pub fn trade_log_view(&self, count: usize) -> TradeLogView {
+        TradeLogView {
+            recent: self.trade_log.recent(count).into_iter().cloned().collect(),
+            stats: self.trade_log.stats(),
+            best: self.trade_log.best_trade().cloned(),
+        }
+    }
+
+    /// The commander and ship at a glance
+    pub fn status_view(&self) -> StatusView {
+        StatusView {
+            commander_name: self.commander.name().to_string(),
+            credits: self.commander.credits(),
+            location: self.commander.location().to_string(),
+            reputation: self.commander.reputation,
+            standing: self.commander.standing(),
+            ship_name: self.ship.ship_type_name().to_string(),
+            cargo_used: self.ship.cargo_used(),
+            cargo_capacity: self.ship.cargo_capacity(),
+            fuel_current: self.ship.fuel_current(),
+            fuel_capacity: self.ship.fuel_capacity(),
+            hull: self.ship.hull_percentage(),
+            max_hull: self.ship.ship_type.max_hull(),
+            damaged: self.ship.is_damaged(),
+        }
+    }
+
+    /// What is known about a system, with the jump from here
+    pub fn system_info(&self, name: &str) -> Option<SystemInfoView> {
+        let system = self.travel_handler.get_system_info(name)?;
+        let from_here = self
+            .travel_handler
+            .get_system_info(&self.commander.location)
+            .map(|current| {
+                let distance = current.distance_to(system);
+                JumpFromHere {
+                    distance,
+                    fuel: fuel_for_distance(distance),
                 }
-            },
-        };
-        crate::utils::display::show_trade_log(&self.trade_log, count);
+            });
+        Some(SystemInfoView {
+            name: system.name.clone(),
+            economy: system.economy.clone(),
+            government: system.government.clone(),
+            tech_level: system.tech_level,
+            population: system.population.clone(),
+            description: system.description.clone(),
+            from_here,
+        })
     }
 
     /// Handle sell command
@@ -664,72 +707,12 @@ impl GameState {
 
     /// Handle systems command
     pub fn handle_systems_command(&self) {
-        let Some(reachable_systems) = self.reachable_destinations() else {
-            show_error("Unable to determine current location");
-            return;
-        };
-        let current_fuel = self.ship.fuel_current;
-
-        println!();
-        println!("{}", "Available Star Systems".cyan().bold());
-        println!("{}", "=====================".cyan());
-        println!("Current fuel: {} light years", current_fuel);
-        println!();
-
-        if reachable_systems.is_empty() {
-            println!("{}", "No systems reachable with current fuel.".yellow());
-            println!("{}", "Use 'refuel' to top up the tank.".yellow());
-        } else {
-            for destination in reachable_systems {
-                println!(
-                    "{} - {:.1} light years, {} fuel",
-                    destination.name.yellow(),
-                    destination.distance,
-                    destination.fuel
-                );
-            }
-        }
-        println!();
+        crate::cli::info::systems(self);
     }
 
     /// Handle info command
     pub fn handle_info_command(&self, args: &[String]) -> bool {
-        if args.is_empty() {
-            show_error("Usage: info <system_name>");
-            return false;
-        }
-
-        let system_name = &args[0];
-        if let Some(system) = self.travel_handler.get_system_info(system_name) {
-            self.show_system_info(system);
-            true
-        } else {
-            show_error(&format!("System '{}' not found", system_name));
-            false
-        }
-    }
-
-    /// Show detailed system information
-    fn show_system_info(&self, system: &crate::data::systems::StarSystem) {
-        println!();
-        println!("{}", format!("System: {}", system.name).cyan().bold());
-        println!("{}", "=".repeat(30));
-        println!("Economy: {:?}", system.economy);
-        println!("Government: {:?}", system.government);
-        println!("Tech Level: {}", system.tech_level);
-        println!("Population: {}", system.population);
-        println!("Description: {}", system.description);
-
-        // Show distance from current location
-        if let Some(current_system) = self
-            .travel_handler
-            .get_system_info(&self.commander.location)
-        {
-            let distance = current_system.distance_to(system);
-            println!("Distance: {:.1} light years", distance);
-            println!("Fuel required: {} light years", fuel_for_distance(distance));
-        }
-        println!();
+        crate::cli::info::system_info(self, args)
     }
 }
 
