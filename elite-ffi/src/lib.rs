@@ -1,5 +1,8 @@
 use elite_core::data::commodities::CommodityType;
+use elite_core::data::equipment::EquipmentCategory;
+use elite_core::data::ships::ShipType;
 use elite_core::data::systems::EconomyType;
+use elite_core::game::equipment;
 use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
 use elite_core::game::repair::CREDITS_PER_POINT;
 use elite_core::game::trade_log::TradeKind;
@@ -158,6 +161,69 @@ pub struct JumpPlanData {
     pub destination: String,
     pub distance: f64,
     pub fuel_cost: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct EquipmentItemData {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub quality: String,
+    pub price: u32,
+    pub power: u32,
+    pub output: u32,
+    pub effect: String,
+    pub installed: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct EquipmentShopData {
+    pub credits: u32,
+    pub power_used: u32,
+    pub power_capacity: u32,
+    pub items: Vec<EquipmentItemData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct InstalledItemData {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub slots_used: u32,
+    pub slots_capacity: u32,
+    pub power: u32,
+    pub output: u32,
+    pub effect: String,
+    pub refund: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct InstalledData {
+    pub power_used: u32,
+    pub power_capacity: u32,
+    pub cargo_capacity: u32,
+    pub items: Vec<InstalledItemData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ShipData {
+    pub id: String,
+    pub name: String,
+    pub cargo: u32,
+    pub fuel: u32,
+    pub hull: u32,
+    pub cost: u32,
+    pub upgrade_cost: Option<u32>,
+    pub is_current: bool,
+    pub affordable: bool,
+    pub is_upgrade: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct ShipyardData {
+    pub credits: u32,
+    pub current: String,
+    pub ships: Vec<ShipData>,
 }
 
 #[derive(Debug, Clone)]
@@ -370,6 +436,149 @@ impl Game {
                 distance: 0.0,
                 fuel_cost: 0,
             },
+        }
+    }
+
+    pub fn equipment_shop(&self) -> EquipmentShopData {
+        let state = self.state.lock().expect("game state lock");
+        let view = equipment::shop_view(&state.commander, &state.ship);
+        EquipmentShopData {
+            credits: view.credits,
+            power_used: view.power_used,
+            power_capacity: view.power_capacity,
+            items: view
+                .categories
+                .into_iter()
+                .flat_map(|group| {
+                    group.items.into_iter().map(|entry| EquipmentItemData {
+                        id: entry.item.id.clone(),
+                        name: entry.item.name.clone(),
+                        category: entry.item.category.name().to_string(),
+                        quality: entry.item.quality.name().to_string(),
+                        price: entry.item.price,
+                        power: entry.item.power,
+                        output: entry.item.output,
+                        effect: entry.item.effect.clone(),
+                        installed: entry.installed,
+                    })
+                })
+                .collect(),
+        }
+    }
+
+    pub fn installed_equipment(&self) -> InstalledData {
+        let state = self.state.lock().expect("game state lock");
+        let loadout = &state.ship.equipment;
+        let items = EquipmentCategory::ALL
+            .into_iter()
+            .flat_map(|category| {
+                loadout
+                    .installed()
+                    .iter()
+                    .filter(move |installed| installed.item().category == category)
+                    .map(move |installed| {
+                        let item = installed.item();
+                        InstalledItemData {
+                            id: item.id.clone(),
+                            name: item.name.clone(),
+                            category: category.name().to_string(),
+                            slots_used: loadout.slots_used(category) as u32,
+                            slots_capacity: loadout.slots_capacity(category) as u32,
+                            power: item.power,
+                            output: item.output,
+                            effect: item.effect.clone(),
+                            refund: installed.refund(),
+                        }
+                    })
+            })
+            .collect();
+        InstalledData {
+            power_used: loadout.power_used(),
+            power_capacity: loadout.power_capacity(),
+            cargo_capacity: state.ship.cargo_capacity(),
+            items,
+        }
+    }
+
+    pub fn buy_equipment(&self, item_id: String) -> ActionResult {
+        let mut guard = self.state.lock().expect("game state lock");
+        let state = &mut *guard;
+        let item = match equipment::find_item(&item_id) {
+            Ok(item) => item,
+            Err(error) => return failed(error),
+        };
+        match equipment::buy(&mut state.commander, &mut state.ship, item) {
+            Ok(purchase) => ok(match purchase.replaced {
+                Some((old, refund)) => format!(
+                    "Installed {} for {}cr, replacing {} (refund {}cr)",
+                    purchase.name, purchase.price, old, refund
+                ),
+                None => format!("Installed {} for {}cr", purchase.name, purchase.price),
+            }),
+            Err(error) => failed(error),
+        }
+    }
+
+    pub fn sell_equipment(&self, item_id: String) -> ActionResult {
+        let mut guard = self.state.lock().expect("game state lock");
+        let state = &mut *guard;
+        let item = match equipment::find_item(&item_id) {
+            Ok(item) => item,
+            Err(error) => return failed(error),
+        };
+        match equipment::sell(&mut state.commander, &mut state.ship, item) {
+            Ok(sale) => ok(format!("Sold {} for {}cr", sale.name, sale.refund)),
+            Err(error) => failed(error),
+        }
+    }
+
+    pub fn shipyard(&self) -> ShipyardData {
+        let state = self.state.lock().expect("game state lock");
+        let list = state
+            .upgrade_handler
+            .ship_list(&state.commander, &state.ship);
+        ShipyardData {
+            credits: list.credits,
+            current: list.current.display_name().to_string(),
+            ships: list
+                .ships
+                .into_iter()
+                .map(|listing| ShipData {
+                    id: listing.ship.id().to_string(),
+                    name: listing.ship.display_name().to_string(),
+                    cargo: listing.ship.cargo_capacity(),
+                    fuel: listing.ship.fuel_capacity(),
+                    hull: listing.ship.max_hull(),
+                    cost: listing.ship.cost(),
+                    upgrade_cost: listing.upgrade_cost,
+                    is_current: listing.is_current,
+                    affordable: listing.affordable,
+                    is_upgrade: listing.ship.is_upgrade_from(&list.current),
+                })
+                .collect(),
+        }
+    }
+
+    pub fn buy_ship(&self, ship_id: String) -> ActionResult {
+        let Some(ship) = ShipType::from_string(&ship_id) else {
+            return failed(format!("Unknown ship type: {}", ship_id));
+        };
+        let mut state = self.state.lock().expect("game state lock");
+        match state.buy_ship(ship) {
+            Ok(receipt) => {
+                let refund = if receipt.equipment_refund > 0 {
+                    format!(" Your equipment sold for {}cr.", receipt.equipment_refund)
+                } else {
+                    String::new()
+                };
+                ok(format!(
+                    "Bought a {} for {}cr.{}",
+                    receipt.ship.display_name(),
+                    receipt.cost,
+                    refund
+                ))
+            }
+            Err(error) => failed(error),
         }
     }
 
@@ -619,6 +828,70 @@ mod tests {
             .find(|s| !s.reachable && !s.is_current)
             .unwrap();
         assert!(!game.plan_jump(far.name).ok);
+    }
+
+    #[test]
+    fn the_shop_lists_equipment_and_marks_what_is_installed() {
+        let game = Game::new("Test".to_string());
+
+        let shop = game.equipment_shop();
+
+        assert_eq!((shop.power_used, shop.power_capacity), (9, 20));
+        assert!(shop
+            .items
+            .iter()
+            .any(|i| i.id == "basic-reactor" && i.installed));
+        assert!(shop
+            .items
+            .iter()
+            .any(|i| i.id == "elite-reactor" && !i.installed));
+        let installed = game.installed_equipment();
+        assert_eq!(installed.items.len(), 7);
+        assert_eq!(installed.cargo_capacity, 20);
+    }
+
+    #[test]
+    fn buying_equipment_spends_credits_and_selling_refunds_half() {
+        let game = Game::new("Test".to_string());
+
+        let bought = game.buy_equipment("improved-reactor".to_string());
+        assert!(bought.ok, "{}", bought.message);
+        assert_eq!(game.installed_equipment().power_capacity, 28);
+        assert_eq!(game.status().credits, 100 - 60);
+        let refund = game
+            .installed_equipment()
+            .items
+            .iter()
+            .find(|i| i.id == "improved-reactor")
+            .unwrap()
+            .refund;
+        assert_eq!(refund, 30);
+
+        assert!(!game.buy_equipment("elite-reactor".to_string()).ok);
+        assert!(!game.buy_equipment("nothing".to_string()).ok);
+        assert!(!game
+            .sell_equipment("basic-shield".to_string())
+            .message
+            .is_empty());
+        assert!(!game.sell_equipment("improved-reactor".to_string()).ok);
+        assert!(game.buy_equipment("advanced-scanner".to_string()).ok);
+        let sold = game.sell_equipment("advanced-scanner".to_string());
+        assert_eq!(sold.message, "Sold Advanced Scanner for 20cr");
+    }
+
+    #[test]
+    fn the_shipyard_lists_ships_and_refuses_what_cannot_be_afforded() {
+        let game = Game::new("Test".to_string());
+
+        let yard = game.shipyard();
+
+        assert_eq!(yard.current, "Cobra Mk III");
+        assert!(yard.ships.iter().any(|s| s.is_current));
+        assert!(yard.ships.iter().any(|s| s.is_upgrade && !s.affordable));
+        let result = game.buy_ship("python".to_string());
+        assert!(!result.ok);
+        assert!(result.message.contains("Insufficient credits"));
+        assert!(!game.buy_ship("nonsense".to_string()).ok);
     }
 
     #[test]

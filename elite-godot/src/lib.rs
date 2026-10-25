@@ -1,6 +1,7 @@
 use elite_ffi::{
-    ActionResult, CargoData, GalaxyData, Game, JumpPlanData, MarketData, StatusData,
-    SystemDetailData, TradeLogData, TradeRecordData, TradeResult,
+    ActionResult, CargoData, EquipmentShopData, GalaxyData, Game, InstalledData, JumpPlanData,
+    MarketData, ShipyardData, StatusData, SystemDetailData, TradeLogData, TradeRecordData,
+    TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -34,6 +35,38 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    /// The equipment catalogue with `installed` flags, plus credits and power
+    #[func]
+    fn equipment_shop(&self) -> VarDictionary {
+        shop_to_dictionary(self.game.equipment_shop())
+    }
+
+    /// What is fitted, with slots, power and what selling it would refund
+    #[func]
+    fn installed_equipment(&self) -> VarDictionary {
+        installed_to_dictionary(self.game.installed_equipment())
+    }
+
+    #[func]
+    fn buy_equipment(&self, item_id: GString) -> VarDictionary {
+        action_to_dictionary(self.game.buy_equipment(item_id.to_string()))
+    }
+
+    #[func]
+    fn sell_equipment(&self, item_id: GString) -> VarDictionary {
+        action_to_dictionary(self.game.sell_equipment(item_id.to_string()))
+    }
+
+    #[func]
+    fn shipyard(&self) -> VarDictionary {
+        shipyard_to_dictionary(self.game.shipyard())
+    }
+
+    #[func]
+    fn buy_ship(&self, ship_id: GString) -> VarDictionary {
+        action_to_dictionary(self.game.buy_ship(ship_id.to_string()))
     }
 
     /// Every system: `current`, `fuel` and `systems` with position, distance, fuel cost and flags
@@ -273,4 +306,78 @@ fn plan_to_dictionary(plan: JumpPlanData) -> VarDictionary {
         "distance": plan.distance,
         "fuel_cost": plan.fuel_cost,
     }
+}
+
+fn shop_to_dictionary(shop: EquipmentShopData) -> VarDictionary {
+    let mut items = VarArray::new();
+    for item in shop.items {
+        items.push(
+            &vdict! {
+                "id": item.id,
+                "name": item.name,
+                "category": item.category,
+                "quality": item.quality,
+                "price": item.price,
+                "power": item.power,
+                "output": item.output,
+                "effect": item.effect,
+                "installed": item.installed,
+            }
+            .to_variant(),
+        );
+    }
+    vdict! {
+        "credits": shop.credits,
+        "power_used": shop.power_used,
+        "power_capacity": shop.power_capacity,
+        "items": items,
+    }
+}
+
+fn installed_to_dictionary(installed: InstalledData) -> VarDictionary {
+    let mut items = VarArray::new();
+    for item in installed.items {
+        items.push(
+            &vdict! {
+                "id": item.id,
+                "name": item.name,
+                "category": item.category,
+                "slots_used": item.slots_used,
+                "slots_capacity": item.slots_capacity,
+                "power": item.power,
+                "output": item.output,
+                "effect": item.effect,
+                "refund": item.refund,
+            }
+            .to_variant(),
+        );
+    }
+    vdict! {
+        "power_used": installed.power_used,
+        "power_capacity": installed.power_capacity,
+        "cargo_capacity": installed.cargo_capacity,
+        "items": items,
+    }
+}
+
+fn shipyard_to_dictionary(yard: ShipyardData) -> VarDictionary {
+    let mut ships = VarArray::new();
+    for ship in yard.ships {
+        ships.push(
+            &vdict! {
+                "id": ship.id,
+                "name": ship.name,
+                "cargo": ship.cargo,
+                "fuel": ship.fuel,
+                "hull": ship.hull,
+                "cost": ship.cost,
+                "upgrade_cost": ship.upgrade_cost.map_or(-1, i64::from),
+                "is_current": ship.is_current,
+                "affordable": ship.affordable,
+                "is_upgrade": ship.is_upgrade,
+            }
+            .to_variant(),
+        );
+    }
+    vdict! { "credits": yard.credits, "current": yard.current, "ships": ships }
 }
