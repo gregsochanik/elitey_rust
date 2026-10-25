@@ -185,20 +185,20 @@ mod tests {
     #[test]
     fn buy_records_a_transaction() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 15, "LAVE", 0);
+        log.record_buy(FOOD, 5, 15, "Sol", 0);
 
         let t = &log.transactions()[0];
         assert_eq!(t.kind, TradeKind::Buy);
         assert_eq!((t.quantity, t.unit_price, t.total()), (5, 15, 75));
-        assert_eq!(t.location, "LAVE");
+        assert_eq!(t.location, "Sol");
         assert_eq!(t.profit, None);
     }
 
     #[test]
     fn sell_records_profit_against_cost() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 15, "LAVE", 0);
-        let profit = log.record_sell(FOOD, 5, 18, "LEESTI", 5);
+        log.record_buy(FOOD, 5, 15, "Sol", 0);
+        let profit = log.record_sell(FOOD, 5, 18, "Alpha Centauri", 5);
 
         assert_eq!(profit, 15);
         assert_eq!(log.transactions()[1].profit, Some(15));
@@ -207,26 +207,26 @@ mod tests {
     #[test]
     fn profit_uses_average_cost_across_buys() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 10, "LAVE", 0);
-        log.record_buy(FOOD, 5, 20, "LAVE", 5);
+        log.record_buy(FOOD, 5, 10, "Sol", 0);
+        log.record_buy(FOOD, 5, 20, "Sol", 5);
         // average cost 15; sell 10 at 20 -> +50
-        assert_eq!(log.record_sell(FOOD, 10, 20, "LEESTI", 10), 50);
+        assert_eq!(log.record_sell(FOOD, 10, 20, "Alpha Centauri", 10), 50);
     }
 
     #[test]
     fn partial_sell_keeps_average_cost() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 4, 10, "LAVE", 0);
-        assert_eq!(log.record_sell(FOOD, 2, 15, "LEESTI", 4), 10);
-        assert_eq!(log.record_sell(FOOD, 2, 15, "LEESTI", 2), 10);
+        log.record_buy(FOOD, 4, 10, "Sol", 0);
+        assert_eq!(log.record_sell(FOOD, 2, 15, "Alpha Centauri", 4), 10);
+        assert_eq!(log.record_sell(FOOD, 2, 15, "Alpha Centauri", 2), 10);
     }
 
     #[test]
     fn loss_gives_negative_profit_and_lowers_success_rate() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 2, 20, "LAVE", 0);
-        assert_eq!(log.record_sell(FOOD, 1, 25, "LEESTI", 2), 5);
-        assert_eq!(log.record_sell(FOOD, 1, 15, "LEESTI", 1), -5);
+        log.record_buy(FOOD, 2, 20, "Sol", 0);
+        assert_eq!(log.record_sell(FOOD, 1, 25, "Alpha Centauri", 2), 5);
+        assert_eq!(log.record_sell(FOOD, 1, 15, "Alpha Centauri", 1), -5);
 
         let stats = log.stats();
         assert_eq!(stats.net_profit, 0);
@@ -236,30 +236,30 @@ mod tests {
     #[test]
     fn cargo_gained_outside_trading_has_zero_cost() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 10, "LAVE", 0);
+        log.record_buy(FOOD, 5, 10, "Sol", 0);
         // an event added 5 tons: 10 held, average cost 5
-        assert_eq!(log.record_sell(FOOD, 10, 10, "LEESTI", 10), 50);
+        assert_eq!(log.record_sell(FOOD, 10, 10, "Alpha Centauri", 10), 50);
     }
 
     #[test]
     fn cargo_lost_outside_trading_keeps_average_cost() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 10, 10, "LAVE", 0);
+        log.record_buy(FOOD, 10, 10, "Sol", 0);
         // an event removed 5 tons: 5 held, average cost still 10
-        assert_eq!(log.record_sell(FOOD, 5, 12, "LEESTI", 5), 10);
+        assert_eq!(log.record_sell(FOOD, 5, 12, "Alpha Centauri", 5), 10);
     }
 
     #[test]
     fn selling_untracked_cargo_is_all_profit() {
         let mut log = TradeLog::new();
-        assert_eq!(log.record_sell(FOOD, 3, 10, "LAVE", 3), 30);
+        assert_eq!(log.record_sell(FOOD, 3, 10, "Sol", 3), 30);
     }
 
     #[test]
     fn best_trade_ignores_losses() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 2, 20, "LAVE", 0);
-        log.record_sell(FOOD, 2, 15, "LEESTI", 2);
+        log.record_buy(FOOD, 2, 20, "Sol", 0);
+        log.record_sell(FOOD, 2, 15, "Alpha Centauri", 2);
         assert!(log.best_trade().is_none());
     }
 
@@ -281,9 +281,9 @@ mod tests {
     #[test]
     fn stats_count_buys_and_sells_and_find_best_trade() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 10, "LAVE", 0);
-        log.record_sell(FOOD, 2, 20, "LEESTI", 5);
-        log.record_sell(FOOD, 3, 12, "LEESTI", 3);
+        log.record_buy(FOOD, 5, 10, "Sol", 0);
+        log.record_sell(FOOD, 2, 20, "Alpha Centauri", 5);
+        log.record_sell(FOOD, 3, 12, "Alpha Centauri", 3);
 
         let stats = log.stats();
         assert_eq!(stats.total_trades, 3);
@@ -308,19 +308,19 @@ mod tests {
     #[test]
     fn survives_serialization_round_trip() {
         let mut log = TradeLog::new();
-        log.record_buy(FOOD, 5, 10, "LAVE", 0);
+        log.record_buy(FOOD, 5, 10, "Sol", 0);
         let json = serde_json::to_string(&log).unwrap();
         let mut restored: TradeLog = serde_json::from_str(&json).unwrap();
 
         assert_eq!(restored.transactions().len(), 1);
-        assert_eq!(restored.record_sell(FOOD, 5, 12, "LEESTI", 5), 10);
+        assert_eq!(restored.record_sell(FOOD, 5, 12, "Alpha Centauri", 5), 10);
     }
 
     #[test]
     fn average_cost_blends_purchases_and_ignores_free_cargo() {
         let mut log = TradeLog::new();
-        log.record_buy(CommodityType::Food, 2, 20, "LAVE", 0);
-        log.record_buy(CommodityType::Food, 2, 30, "LAVE", 2);
+        log.record_buy(CommodityType::Food, 2, 20, "Sol", 0);
+        log.record_buy(CommodityType::Food, 2, 30, "Sol", 2);
 
         assert_eq!(log.average_cost(&CommodityType::Food, 4), Some(25));
         assert_eq!(log.average_cost(&CommodityType::Food, 0), None);

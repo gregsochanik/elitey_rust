@@ -205,3 +205,5 @@ To force a release, run the Release workflow manually from the Actions tab and p
 ## Acknowledgments
 
 Inspired by the classic Elite series of space trading games.
+
+Star names and positions come from the [HYG star database](https://codeberg.org/astronexus/hyg) by David Nash, licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). `elite-core/galaxies/galaxy1.json` is generated from it by `tools/gen_galaxy.py` and shared under the same licence.

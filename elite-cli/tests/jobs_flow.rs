@@ -93,7 +93,7 @@ fn a_late_job_fails_through_the_game() {
     game.accept_job(courier_index(&game)).unwrap();
     let destination = game.active_jobs[0].job.destination.clone();
     let deadline = game.active_jobs[0].job.deadline_jumps;
-    let elsewhere = ["LAVE", "DISO", "LEESTI", "ZAONCE"]
+    let elsewhere = ["Sol", "Proxima Centauri", "Alpha Centauri", "Lalande 21185"]
         .into_iter()
         .find(|name| *name != destination)
         .unwrap();

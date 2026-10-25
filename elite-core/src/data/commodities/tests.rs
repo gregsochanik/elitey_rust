@@ -88,8 +88,12 @@ fn same_seed_gives_same_prices_and_different_seed_differs() {
 #[test]
 fn best_commodity_on_a_short_trip_usually_profits() {
     let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
-    let from = systems.get_system("LAVE").unwrap().economy.clone();
-    let to = systems.get_system("DISO").unwrap().economy.clone();
+    let from = systems.get_system("Sol").unwrap().economy.clone();
+    let to = systems
+        .get_system("Proxima Centauri")
+        .unwrap()
+        .economy
+        .clone();
     let trading = TradingSystem::new();
 
     let runs = 500u64;
@@ -132,10 +136,10 @@ fn buying_the_cheapest_against_base_beats_buying_blind() {
     let systems = crate::data::systems::SystemManager::new().expect("Failed to load galaxy data");
     let trading = TradingSystem::new();
     let pairs = [
-        ("LAVE", "DISO"),
-        ("DISO", "LAVE"),
-        ("LAVE", "LEESTI"),
-        ("LEESTI", "DISO"),
+        ("Sol", "Proxima Centauri"),
+        ("Proxima Centauri", "Sol"),
+        ("Sol", "Alpha Centauri"),
+        ("Alpha Centauri", "Proxima Centauri"),
     ];
 
     let (mut informed_wins, mut blind_wins, mut runs) = (0, 0, 0);

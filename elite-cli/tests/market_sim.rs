@@ -4,8 +4,8 @@ use common::new_game;
 use elite_core::data::commodities::CommodityType;
 use elite_core::game::commander::Standing;
 
-const A: &str = "LEESTI";
-const B: &str = "RIEDQUAT";
+const A: &str = "Alpha Centauri";
+const B: &str = "Barnard's Star";
 
 /// Trade between two systems with full knowledge of the other end's current prices, buying the
 /// legal commodity that pays best each trip; returns net credits per jump and income per trip

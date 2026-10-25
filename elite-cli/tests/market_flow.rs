@@ -8,8 +8,8 @@ fn the_world_clock_counts_jumps_and_is_saved() {
     let mut game = new_game(100);
     assert_eq!(game.world_clock, 0);
 
-    game.travel_to_system("DISO").unwrap();
-    game.travel_to_system("LAVE").unwrap();
+    game.travel_to_system("Proxima Centauri").unwrap();
+    game.travel_to_system("Sol").unwrap();
     assert_eq!(game.world_clock, 2);
 
     let manager = SaveLoadManager::new().unwrap();
@@ -53,9 +53,9 @@ fn hopping_between_systems_does_not_reroll_prices_or_stock() {
     let mut game = new_game(500);
     let before = game.market_prices().unwrap();
 
-    game.travel_to_system("DISO").unwrap();
+    game.travel_to_system("Proxima Centauri").unwrap();
     game.ship.refuel();
-    game.travel_to_system("LAVE").unwrap();
+    game.travel_to_system("Sol").unwrap();
     let after = game.market_prices().unwrap();
 
     assert_eq!(before.buy_prices, after.buy_prices);
@@ -70,9 +70,9 @@ fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
     assert!(elite_cli::cli::trading::buy(&mut game, &args("food 3")));
     let stock = before.availability[&elite_core::data::commodities::CommodityType::Food];
 
-    game.travel_to_system("DISO").unwrap();
+    game.travel_to_system("Proxima Centauri").unwrap();
     game.ship.refuel();
-    game.travel_to_system("LAVE").unwrap();
+    game.travel_to_system("Sol").unwrap();
     let after = game.market_prices().unwrap();
     assert_eq!(
         after.availability[&elite_core::data::commodities::CommodityType::Food],
@@ -81,8 +81,8 @@ fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
 
     for _ in 0..9 {
         game.ship.refuel();
-        game.travel_to_system("DISO").unwrap();
-        game.travel_to_system("LAVE").unwrap();
+        game.travel_to_system("Proxima Centauri").unwrap();
+        game.travel_to_system("Sol").unwrap();
     }
     let refreshed = game.market_prices().unwrap();
     assert_eq!(game.world_clock, 20);
@@ -101,9 +101,9 @@ fn selling_pushes_the_price_down_and_it_recovers_over_the_next_jumps() {
     let pushed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
     assert!(pushed < undisturbed);
 
-    game.travel_to_system("DISO").unwrap();
+    game.travel_to_system("Proxima Centauri").unwrap();
     game.ship.refuel();
-    game.travel_to_system("LAVE").unwrap();
+    game.travel_to_system("Sol").unwrap();
     let recovering = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
     assert!(recovering > pushed && recovering <= undisturbed);
 }
@@ -136,9 +136,9 @@ fn trading_marks_the_commodity_until_the_market_has_recovered() {
 
     for _ in 0..8 {
         game.ship.refuel();
-        game.travel_to_system("DISO").unwrap();
+        game.travel_to_system("Proxima Centauri").unwrap();
         game.ship.refuel();
-        game.travel_to_system("LAVE").unwrap();
+        game.travel_to_system("Sol").unwrap();
     }
     assert_eq!(game.world_clock, 16);
     assert!(game.pushed_commodities().is_empty());

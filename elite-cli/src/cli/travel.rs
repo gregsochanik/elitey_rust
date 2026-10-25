@@ -12,12 +12,13 @@ use std::io::{self, Write};
 
 /// `jump <system>`: confirm, then play the journey through its events, fights and arrival
 pub fn jump(game: &mut GameState, args: &[String]) -> bool {
-    let Some(destination) = args.first() else {
+    if args.is_empty() {
         show_error("Usage: jump <system_name>");
         return false;
-    };
+    }
+    let destination = args.join(" ");
 
-    let plan = match game.plan_jump(destination) {
+    let plan = match game.plan_jump(&destination) {
         Ok(plan) => plan,
         Err(error) => {
             show_error(&error.to_string());

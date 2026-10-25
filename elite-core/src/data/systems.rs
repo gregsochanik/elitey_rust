@@ -317,9 +317,9 @@ mod tests {
         let manager = SystemManager::new().unwrap();
 
         // Test getting a system
-        let lave = manager.get_system("LAVE");
-        assert!(lave.is_some());
-        assert_eq!(lave.unwrap().name(), "LAVE");
+        let sol = manager.get_system("Sol");
+        assert!(sol.is_some());
+        assert_eq!(sol.unwrap().name(), "Sol");
 
         // Test getting all systems
         let all_systems = manager.get_all_systems();
@@ -330,7 +330,7 @@ mod tests {
     fn test_distance_calculation() {
         let manager = SystemManager::new().unwrap();
 
-        let distance = manager.calculate_distance("LAVE", "LEESTI");
+        let distance = manager.calculate_distance("Sol", "Alpha Centauri");
         assert!(distance.is_some());
         assert!(distance.unwrap() > 0.0); // Should be a positive distance
     }
@@ -340,10 +340,41 @@ mod tests {
         let manager = SystemManager::new().unwrap();
 
         // Test travel with sufficient fuel
-        assert!(manager.can_travel("LAVE", "LEESTI", 20.0));
+        assert!(manager.can_travel("Sol", "Alpha Centauri", 20.0));
 
         // Test travel with insufficient fuel
-        assert!(!manager.can_travel("LAVE", "LEESTI", 1.0));
+        assert!(!manager.can_travel("Sol", "Alpha Centauri", 1.0));
+    }
+
+    #[test]
+    fn the_galaxy_is_real_stars_on_the_grid() {
+        let manager = SystemManager::new().unwrap();
+        let systems = manager.get_all_systems();
+
+        assert_eq!(systems.len(), 256);
+        for name in ["Sol", "Sirius", "Tau Ceti", "Barnard's Star"] {
+            assert!(manager.get_system(name).is_some(), "{}", name);
+        }
+        let positions: std::collections::HashSet<_> =
+            systems.iter().map(|system| (system.x, system.y)).collect();
+        assert_eq!(positions.len(), systems.len());
+        assert!(systems
+            .iter()
+            .all(|system| system.x <= 255 && system.y <= 255));
+    }
+
+    #[test]
+    fn every_system_has_neighbours_within_jump_range() {
+        let manager = SystemManager::new().unwrap();
+        let systems = manager.get_all_systems();
+
+        for system in &systems {
+            let neighbours = systems
+                .iter()
+                .filter(|other| other.name != system.name && system.distance_to(other) <= 7.0)
+                .count();
+            assert!(neighbours >= 2, "{} has {}", system.name, neighbours);
+        }
     }
 
     #[test]

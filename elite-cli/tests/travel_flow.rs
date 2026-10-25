@@ -8,9 +8,12 @@ fn reachable_systems_list_the_fuel_each_jump_costs() {
     let game = new_game(100);
     let destinations = game.reachable_destinations().unwrap();
 
-    let diso = destinations.iter().find(|d| d.name == "DISO").unwrap();
-    assert!(diso.distance > 2.0 && diso.distance < 3.0);
-    assert_eq!(diso.fuel, 3);
+    let proxima = destinations
+        .iter()
+        .find(|d| d.name == "Proxima Centauri")
+        .unwrap();
+    assert!(proxima.distance > 2.0 && proxima.distance < 3.0);
+    assert_eq!(proxima.fuel, 3);
     assert!(destinations
         .windows(2)
         .all(|pair| pair[0].distance <= pair[1].distance));
@@ -24,7 +27,7 @@ fn only_systems_within_fuel_range_are_listed() {
     let destinations = game.reachable_destinations().unwrap();
 
     assert_eq!(destinations.len(), 1);
-    assert_eq!(destinations[0].name, "DISO");
+    assert_eq!(destinations[0].name, "Proxima Centauri");
     assert!(destinations.iter().all(|d| d.fuel <= 3));
 }
 
