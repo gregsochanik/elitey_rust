@@ -44,7 +44,10 @@ fn winning_a_fight_pays_out_and_keeps_the_damage() {
 #[test]
 fn losing_a_fight_strips_the_ship_but_the_game_goes_on() {
     let mut game = new_game(400);
-    game.handle_equipment_command(&["sell".to_string(), "pulse-laser".to_string()]);
+    elitey_rust::cli::equipment::command(
+        &mut game,
+        &["sell".to_string(), "pulse-laser".to_string()],
+    );
     game.ship.hull_percentage = 12;
     game.ship
         .cargo_hold
@@ -83,7 +86,7 @@ fn repair_restores_hull_lost_in_a_fight() {
     assert!(lost > 0);
 
     let credits_before = game.commander.credits;
-    game.handle_repair_command(&[]);
+    elitey_rust::cli::upkeep::repair(&mut game, &[]);
     assert_eq!(game.ship.hull_percentage, 100);
     assert_eq!(game.commander.credits, credits_before - lost * 2);
 }

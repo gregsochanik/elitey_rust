@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -223,14 +223,9 @@ impl SystemManager {
 
         // Convert each system from JSON data to StarSystem
         for (system_id, system_data) in galaxy_systems {
-            match StarSystem::from_galaxy_data(system_data) {
-                Ok(system) => {
-                    systems.insert(system.name.clone(), system);
-                }
-                Err(e) => {
-                    eprintln!("Failed to parse system {}: {}", system_id, e);
-                }
-            }
+            let system = StarSystem::from_galaxy_data(system_data)
+                .with_context(|| format!("Failed to parse system {}", system_id))?;
+            systems.insert(system.name.clone(), system);
         }
 
         Ok(Self { systems })
@@ -349,5 +344,15 @@ mod tests {
 
         // Test travel with insufficient fuel
         assert!(!manager.can_travel("LAVE", "LEESTI", 1.0));
+    }
+
+    #[test]
+    fn every_system_in_the_galaxy_file_loads() {
+        let in_file: HashMap<String, serde_json::Value> =
+            serde_json::from_str(include_str!("../../galaxies/galaxy1.json")).unwrap();
+        assert_eq!(
+            SystemManager::new().unwrap().get_all_systems().len(),
+            in_file.len()
+        );
     }
 }

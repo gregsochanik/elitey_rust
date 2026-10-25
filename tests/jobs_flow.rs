@@ -146,7 +146,10 @@ fn freight_takes_room_cannot_be_sold_and_pays_on_delivery() {
     assert_eq!(game.ship.cargo_used(), job.tons);
 
     // contract cargo is not goods: it cannot be sold at any market
-    assert!(!game.handle_sell_command(&args(&format!("{} 1", commodity.id()))));
+    assert!(!elitey_rust::cli::trading::sell(
+        &mut game,
+        &args(&format!("{} 1", commodity.id()))
+    ));
     assert_eq!(game.ship.cargo_hold().reserved, job.tons);
 
     game.commander.location = job.destination.clone();

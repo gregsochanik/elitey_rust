@@ -36,14 +36,13 @@ Prefer one small command/outcome surface over many `handle_*` methods:
 ## Phases
 
 ### Phase 1: Core refactor (in place, single crate)
-Do this first and on its own.
-- Areas migrated so far (typed API in the core, text in `src/cli/`): trading, refuel, repair, equipment, ship upgrades, save/load, status, system info and trade log views, new-game start-up, and travel as a step machine (`plan_jump`, `start_jump`, `advance_journey`; events, fights and job arrival are `Step`s answered with `Input`s; `cli/fight.rs` is the terminal driver) (`GameState::new(name)`, `SaveLoadHandler::with_directory`).
-- [ ] Introduce the action/outcome/error/view types above and migrate one area at a time: trading, refuel, repair, equipment, upgrades/ships, save/load, trade log, travel and events, combat entry.
-- [ ] Keep each existing command working through a thin CLI layer that calls the new API and prints. The CLI's visible output may only change where the old text was wrong.
-- [ ] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.
+Done. Typed actions, outcomes, errors and views live in `src/game`; all text, prompts and the terminal fight driver live in `src/cli`. Travel is a step machine (`plan_jump`, `start_jump`, `advance_journey`: events, fights and job arrival are `Step`s answered with `Input`s). Market rolls derive from a world seed, and `tests/core_layering.rs` fails if `src/game` or `src/data` use terminal I/O.
+- [x] Introduce the action/outcome/error/view types above and migrate one area at a time: trading, refuel, repair, equipment, upgrades/ships, save/load, trade log, travel and events, combat entry.
+- [x] Keep each existing command working through a thin CLI layer that calls the new API and prints. The CLI's visible output may only change where the old text was wrong.
+- [x] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.
 - [x] Make `main.rs` use the library (`use elitey_rust::...`), not duplicate `mod` declarations.
-- [ ] Inject randomness (travel events, market fluctuation, combat rolls) so core tests can be deterministic.
-- [ ] Existing `tests/*` still pass. Rule and state tests may move to the core API, but keep representative CLI tests (command parsing, output formatting, prompts, error messages) so the "CLI unchanged" requirement is actually checked.
+- [x] Inject randomness (travel events, market fluctuation, combat rolls) so core tests can be deterministic.
+- [x] Existing `tests/*` still pass. Rule and state tests may move to the core API, but keep representative CLI tests (command parsing, output formatting, prompts, error messages) so the "CLI unchanged" requirement is actually checked.
 
 ### Phase 2: Workspace split
 - [ ] Convert to a Cargo workspace: `elite-core`, `elite-cli` (binary, keeps the `elitey_rust` binary name or documents the rename), later `elite-gui`.

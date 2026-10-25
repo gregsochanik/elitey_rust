@@ -53,7 +53,10 @@ fn route_trader(capital: u32, jumps: u32) -> (f64, Vec<f64>) {
 
         if let Some((profit, c, tons)) = best {
             if profit > 0 && tons > 0 {
-                game.handle_buy_command(&[c.name().to_lowercase(), tons.to_string()]);
+                elitey_rust::cli::trading::buy(
+                    &mut game,
+                    &[c.name().to_lowercase(), tons.to_string()],
+                );
             }
         }
         game.ship.refuel();
@@ -67,7 +70,7 @@ fn route_trader(capital: u32, jumps: u32) -> (f64, Vec<f64>) {
             .map(|i| (i.commodity.clone(), i.quantity))
             .collect();
         for (c, q) in cargo {
-            game.handle_sell_command(&[c.name().to_lowercase(), q.to_string()]);
+            elitey_rust::cli::trading::sell(&mut game, &[c.name().to_lowercase(), q.to_string()]);
         }
         let now = f64::from(game.commander.credits());
         per_trip.push(now - last);

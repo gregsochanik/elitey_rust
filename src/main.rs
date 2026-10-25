@@ -1,8 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use colored::*;
 use std::io::{self, Write};
 
+use colored::*;
+use elitey_rust::cli::commands::{self, Control};
 use elitey_rust::utils::display;
 use elitey_rust::utils::input;
 
@@ -51,173 +52,15 @@ fn main() -> Result<()> {
             command_parts[0].to_lowercase()
         };
 
-        match command.as_str() {
-            "help" => {
-                display::show_help();
-            }
-            "status" => {
-                elitey_rust::cli::info::status(&game_state);
-            }
-
-            "market" => {
-                game_state.handle_market_command();
-            }
-            "buy" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_buy_command(&args);
-            }
-            "sell" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_sell_command(&args);
-            }
-            "cargo" => {
-                game_state.handle_cargo_command();
-            }
-            "equipment" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_equipment_command(&args);
-            }
-            "jobs" => {
-                game_state.handle_jobs_command();
-            }
-            "accept" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_accept_command(&args);
-            }
-            "missions" => {
-                game_state.handle_missions_command();
-            }
-            "abandon" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_abandon_command(&args);
-            }
-            "refuel" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_refuel_command(&args);
-            }
-            "repair" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_repair_command(&args);
-            }
-            "log" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_log_command(&args);
-            }
-            "upgrade" => {
-                if command_parts.len() == 1 {
-                    game_state.handle_upgrade_command();
-                } else {
-                    let args: Vec<String> = command_parts
-                        .iter()
-                        .skip(1)
-                        .map(|s| s.to_string())
-                        .collect();
-                    game_state.handle_upgrade_purchase_command(&args);
-                }
-            }
-            "ships" => {
-                game_state.handle_ships_command();
-            }
-            "save" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_save_command(&args);
-            }
-            "load" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                match game_state.handle_load_command(&args) {
-                    Ok(Some(new_game_state)) => {
-                        game_state = new_game_state;
-                    }
-                    Ok(None) => {
-                        // Load was cancelled or failed, continue with current game
-                    }
-                    Err(e) => {
-                        println!("{}", format!("Load error: {}", e).red());
-                    }
-                }
-            }
-            "saves" => {
-                game_state.handle_list_saves_command();
-            }
-            "delete" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_delete_save_command(&args);
-            }
-            "jump" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_jump_command(&args);
-            }
-            "systems" => {
-                game_state.handle_systems_command();
-            }
-            "info" => {
-                let args: Vec<String> = command_parts
-                    .iter()
-                    .skip(1)
-                    .map(|s| s.to_string())
-                    .collect();
-                game_state.handle_info_command(&args);
-            }
-            "quit" | "exit" => {
-                // Auto-save before quitting
-                game_state.handle_auto_save();
-                display::print_goodbye(&game_state.commander.name);
-                break;
-            }
-            _ => {
-                println!(
-                    "{}",
-                    "Unknown command. Type 'help' for available commands.".red()
-                );
-            }
+        let args: Vec<String> = command_parts
+            .iter()
+            .skip(1)
+            .map(|s| s.to_string())
+            .collect();
+        match commands::execute(&mut game_state, &command, &args) {
+            Control::Continue => {}
+            Control::Replace(loaded) => game_state = *loaded,
+            Control::Quit => break,
         }
     }
 

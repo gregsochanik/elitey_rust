@@ -244,7 +244,7 @@ fn apply(state: &SystemMarket) -> MarketPrices {
 
 #[test]
 fn selling_lowers_the_sell_price_by_one_and_a_half_percent_per_ton() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.record_sell(&CommodityType::Food, 10);
 
     let after = apply(&state);
@@ -254,7 +254,7 @@ fn selling_lowers_the_sell_price_by_one_and_a_half_percent_per_ton() {
 
 #[test]
 fn buying_raises_the_buy_price_and_lowers_stock() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.record_buy(&CommodityType::Food, 10);
 
     let after = apply(&state);
@@ -265,7 +265,7 @@ fn buying_raises_the_buy_price_and_lowers_stock() {
 
 #[test]
 fn impact_is_capped_at_forty_percent() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.record_sell(&CommodityType::Food, 200);
     state.record_buy(&CommodityType::Food, 200);
 
@@ -276,7 +276,7 @@ fn impact_is_capped_at_forty_percent() {
 
 #[test]
 fn impact_and_stock_recover_ten_percent_of_the_gap_per_jump() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.record_sell(&CommodityType::Food, 20);
     state.record_buy(&CommodityType::Food, 20);
 
@@ -334,7 +334,7 @@ fn old_markets_without_impact_fields_load_untouched() {
 
 #[test]
 fn markers_show_for_sixteen_jumps_after_trading() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.recover(2);
     state.record_sell(&CommodityType::Food, 5);
     state.record_buy(&CommodityType::Textiles, 5);
@@ -362,7 +362,7 @@ fn markers_show_for_sixteen_jumps_after_trading() {
 
 #[test]
 fn a_commodity_both_bought_and_sold_shows_both_markers() {
-    let mut state = SystemMarket::rolled(0);
+    let mut state = SystemMarket::rolled(1, 0);
     state.record_buy(&CommodityType::Food, 1);
     state.record_sell(&CommodityType::Food, 1);
 
@@ -513,4 +513,28 @@ fn the_cargo_view_totals_the_hold() {
     assert_eq!(view.capacity, 20);
     assert_eq!(view.items.len(), 1);
     assert_eq!(view.total_value, 3 * CommodityType::Food.base_price());
+}
+
+#[test]
+fn a_seeded_handler_rolls_the_same_markets_every_time() {
+    let economy = EconomyType::RichIndustrial;
+    let mut first = TradingHandler::with_seed(7);
+    let mut second = TradingHandler::with_seed(7);
+    let mut other = TradingHandler::with_seed(8);
+
+    let a = first.market_for("LAVE", &economy, 0);
+    assert_eq!(
+        a.buy_prices,
+        second.market_for("LAVE", &economy, 0).buy_prices
+    );
+    assert_ne!(
+        a.buy_prices,
+        other.market_for("LAVE", &economy, 0).buy_prices
+    );
+    assert_ne!(
+        first
+            .market_for("LAVE", &economy, MARKET_REFRESH_JUMPS)
+            .buy_prices,
+        a.buy_prices
+    );
 }

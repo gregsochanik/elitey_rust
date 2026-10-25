@@ -4,6 +4,11 @@ use crate::game::{Commander, Ship};
 use crate::utils::display::{show_error, show_success};
 use colored::*;
 
+/// `equipment ...` on a game
+pub fn command(game: &mut crate::game::GameState, args: &[String]) -> bool {
+    handle(args, &mut game.commander, &mut game.ship)
+}
+
 /// `equipment [buy <item> | sell <item> | installed]`
 pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
     match args.first().map(|a| a.to_lowercase()).as_deref() {
