@@ -1,6 +1,7 @@
 use crate::utils::display::{
     bar, credits, economy_icon, government_icon, header, icon, show_error, system_name, Fill, Icon,
 };
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::views::{StatusView, SystemInfoView, TradeLogView};
@@ -41,18 +42,31 @@ pub fn systems(game: &GameState) {
         println!("{}", "No systems reachable with current fuel.".yellow());
         println!("{}", "Use 'refuel' to top up the tank.".yellow());
     } else {
+        let mut table = Table::new(&[
+            ("System", LEFT),
+            ("Distance", RIGHT),
+            ("Fuel", RIGHT),
+            ("Economy", LEFT),
+            ("Government", LEFT),
+        ]);
         for destination in reachable {
-            println!(
-                "{} - {:.1} light years, {} fuel - {}{} - {}{}",
-                system_name(&destination.name, false),
-                destination.distance,
-                destination.fuel,
-                economy_icon(&destination.economy),
-                destination.economy.display_name(),
-                government_icon(&destination.government),
-                destination.government.display_name()
-            );
+            table.row([
+                system_name(&destination.name, false).to_string(),
+                format!("{:.1} ly", destination.distance),
+                destination.fuel.to_string(),
+                format!(
+                    "{}{}",
+                    economy_icon(&destination.economy),
+                    destination.economy.display_name()
+                ),
+                format!(
+                    "{}{}",
+                    government_icon(&destination.government),
+                    destination.government.display_name()
+                ),
+            ]);
         }
+        table.print();
     }
     println!();
 }
@@ -193,34 +207,40 @@ fn print_trade_log(view: &TradeLogView) {
     }
 
     println!("Recent Transactions:");
+    let mut table = Table::new(&[
+        ("Trade", LEFT),
+        ("Qty", RIGHT),
+        ("Commodity", LEFT),
+        ("Location", LEFT),
+        ("Total", RIGHT),
+        ("Profit", RIGHT),
+    ]);
     for t in &view.recent {
-        let name = t.commodity.name();
-        match (t.kind, t.profit) {
+        let (kind, profit) = match (t.kind, t.profit) {
             (TradeKind::Sell, Some(profit)) => {
-                let profit_str = format!("{:+}cr profit", profit);
-                let coloured = if profit >= 0 {
-                    profit_str.green()
-                } else {
-                    profit_str.red()
-                };
-                println!(
-                    "- Sold {} {} at {} for {}cr ({})",
-                    t.quantity,
-                    name,
-                    t.location,
-                    t.total(),
-                    coloured
-                );
+                let text = format!("{:+}cr", profit);
+                (
+                    "Sold",
+                    if profit >= 0 {
+                        text.green().to_string()
+                    } else {
+                        text.red().to_string()
+                    },
+                )
             }
-            _ => println!(
-                "- Bought {} {} at {} for {}cr",
-                t.quantity,
-                name,
-                t.location,
-                t.total()
-            ),
-        }
+            (TradeKind::Sell, None) => ("Sold", String::new()),
+            _ => ("Bought", String::new()),
+        };
+        table.row([
+            kind.to_string(),
+            t.quantity.to_string(),
+            t.commodity.name().to_string(),
+            t.location.clone(),
+            format!("{}cr", t.total()),
+            profit,
+        ]);
     }
+    table.print();
 
     println!("\nStatistics:");
     println!("- Total Trades: {}", view.stats.total_trades);
