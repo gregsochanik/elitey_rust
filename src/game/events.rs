@@ -200,8 +200,8 @@ pub(crate) fn apply_cargo_gain(ship: &mut Ship, gain: &CargoGain) -> u32 {
 
 const MIN_CREDITS_ROLL: f64 = 0.6;
 const MAX_CREDITS_ROLL: f64 = 1.4;
-const WINDFALL_BASE: i32 = 400;
-const WINDFALL_CAP_FLOOR: u32 = 200;
+const WINDFALL_BASE: i32 = 200;
+const WINDFALL_CAP_FLOOR: u32 = 100;
 
 /// Roll an outcome's credits and cargo tons within their ranges and fill in the message
 pub(crate) fn roll_outcome<R: Rng>(
@@ -506,7 +506,7 @@ impl EventManager {
                     description: "Investigate the anomaly".to_string(),
                     outcome: EventOutcome {
                         description: "You investigate and find rare materials".to_string(),
-                        credits_change: 500,
+                        credits_change: 200,
                         cargo_loss: None,
                         cargo_gain: Some(CargoGain {
                             commodity: CommodityType::Computers,
@@ -594,7 +594,7 @@ impl EventManager {
                     description: "Salvage the debris".to_string(),
                     outcome: EventOutcome {
                         description: "You salvage valuable materials".to_string(),
-                        credits_change: 200,
+                        credits_change: 100,
                         cargo_loss: None,
                         cargo_gain: Some(CargoGain {
                             commodity: CommodityType::Minerals,
@@ -639,7 +639,7 @@ impl EventManager {
                     description: "Attempt communication".to_string(),
                     outcome: EventOutcome {
                         description: "You successfully communicate with the aliens".to_string(),
-                        credits_change: 300,
+                        credits_change: 150,
                         cargo_loss: None,
                         cargo_gain: None,
                         hull_damage: 0,
@@ -670,7 +670,7 @@ impl EventManager {
                     description: "Fight".to_string(),
                     outcome: EventOutcome {
                         description: "You engage in combat with the aliens".to_string(),
-                        credits_change: 400,
+                        credits_change: 200,
                         cargo_loss: None,
                         cargo_gain: None,
                         hull_damage: -8,
@@ -756,7 +756,7 @@ impl EventManager {
                     description: "Investigate the signal".to_string(),
                     outcome: EventOutcome {
                         description: "You investigate and find a genuine distress call".to_string(),
-                        credits_change: 400,
+                        credits_change: 200,
                         cargo_loss: None,
                         cargo_gain: Some(CargoGain {
                             commodity: CommodityType::Luxury,
@@ -891,7 +891,7 @@ impl EventManager {
                     description: "Engage the patrol".to_string(),
                     outcome: EventOutcome {
                         description: "You engage in combat with the military patrol".to_string(),
-                        credits_change: 800,
+                        credits_change: 300,
                         cargo_loss: None,
                         cargo_gain: None,
                         hull_damage: -15,

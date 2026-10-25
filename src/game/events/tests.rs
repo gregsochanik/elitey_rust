@@ -485,8 +485,8 @@ fn credit_gains_are_rolled_within_the_range() {
     let rolls: Vec<i32> = (0..300)
         .map(|seed| rolled_credits(EventType::AlienEncounter, 0, 10_000, seed))
         .collect();
-    assert!(rolls.iter().all(|credits| (180..=420).contains(credits)));
-    assert!(rolls.iter().min() < Some(&220) && rolls.iter().max() > Some(&380));
+    assert!(rolls.iter().all(|credits| (90..=210).contains(credits)));
+    assert!(rolls.iter().min() < Some(&110) && rolls.iter().max() > Some(&190));
 }
 
 #[test]
@@ -501,13 +501,13 @@ fn fines_are_rolled_within_the_range() {
 #[test]
 fn windfalls_are_capped_for_poor_commanders() {
     for seed in 0..300 {
-        assert!(rolled_credits(EventType::HyperspaceAnomaly, 0, 100, seed) <= 250);
+        assert!(rolled_credits(EventType::HyperspaceAnomaly, 0, 100, seed) <= 150);
     }
     let rich_max = (0..300)
         .map(|seed| rolled_credits(EventType::HyperspaceAnomaly, 0, 10_000, seed))
         .max()
         .unwrap();
-    assert!(rich_max > 600);
+    assert!(rich_max > 240);
 }
 
 #[test]
@@ -578,4 +578,52 @@ fn every_outcome_message_placeholder_is_filled() {
             assert!(!rolled.message.contains('{'), "{}", choice.outcome.message);
         }
     }
+}
+
+fn mean_event_credits_per_jump(held: u32) -> f64 {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    let systems = crate::data::systems::SystemManager::new().unwrap();
+    let mut rng = StdRng::seed_from_u64(1);
+    let (mut total, mut jumps) = (0.0, 0.0);
+    for destination in systems.get_all_systems() {
+        for _ in 0..400 {
+            for phase in [EventPhase::Jump, EventPhase::Approach] {
+                let base = match phase {
+                    EventPhase::Jump => 0.10,
+                    EventPhase::Approach => 0.12,
+                };
+                let chance = base * manager.calculate_contextual_modifier(destination);
+                if rng.gen_bool(chance) {
+                    let event = manager
+                        .pick_event(&phase, destination, Standing::Neutral, &mut rng)
+                        .unwrap();
+                    let best = event
+                        .choices
+                        .iter()
+                        .filter(|choice| !choice.outcome.starts_combat)
+                        .map(|choice| {
+                            let outcome = roll_outcome(&choice.outcome, held, &mut rng);
+                            outcome.credits_change - 2 * outcome.hull_damage.abs()
+                        })
+                        .max()
+                        .unwrap();
+                    total += f64::from(best);
+                }
+            }
+            jumps += 1.0;
+        }
+    }
+    total / jumps
+}
+
+#[test]
+fn events_add_a_modest_income_next_to_trading() {
+    let poor = mean_event_credits_per_jump(100);
+    let mid = mean_event_credits_per_jump(500);
+    let rich = mean_event_credits_per_jump(2000);
+    assert!((5.0..=30.0).contains(&mid), "500cr: {mid:.1}");
+    assert!(poor <= mid, "100cr: {poor:.1}");
+    assert!(rich <= 38.0, "2000cr: {rich:.1}");
 }
