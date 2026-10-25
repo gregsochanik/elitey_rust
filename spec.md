@@ -36,6 +36,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end (Godot, Featu
 | 21 | Locked jobs (v1: the board shows jobs the commander cannot take yet, with the reason) | Done (v1) | 16, 18, 20 |
 | 22 | Real star systems (v1: 256 real stars from HYG, star classes) | Done (v1) | 02, 05 |
 | 23 | GUI ship visuals (ship models as data; wireframe, hidden-line, flat, textured styles) | Spec only | 15, 22 |
+| 24 | Encounters and NPC behaviour (decision function, behaviour data, encounter tables) | Spec only | 06, 07, 08, 10, 15, 18, 20 |
 
 ## Roadmap
 
@@ -44,6 +45,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end (Godot, Featu
 3. **Trading log (11).** Transaction history and profit/loss. Independent of 07, so it can be done in parallel or first as a low-risk win.
 4. **Reputation (10).** Standing, illegal-trade penalty and price modifiers (v1); criminal record and event outcomes later. Hooks into trading, events and combat, so it comes after them.
 5. **UI improvements (13).** Colour, table alignment and status indicators using existing crates (`colored`, `crossterm`). Can land at any point; doing it last avoids reworking output for new commands.
+6. **Encounters and NPC behaviour (24).** Enemies decide to attack, flee or surrender from data-driven profiles; encounter tables by government, economy and standing; optional route planning. Combat balance is re-simulated when thresholds turn on.
 
 ## Open decisions
 
