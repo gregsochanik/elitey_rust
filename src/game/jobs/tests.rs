@@ -11,7 +11,20 @@ fn board_for(
     rng: &mut impl Rng,
     standing: Standing,
 ) -> Vec<Job> {
-    generate_board_for(origin, systems, rng, standing, HOLD)
+    board_for_hold(origin, systems, rng, standing, HOLD)
+}
+
+fn board_for_hold(
+    origin: &StarSystem,
+    systems: &[&StarSystem],
+    rng: &mut impl Rng,
+    standing: Standing,
+    hold: u32,
+) -> Vec<Job> {
+    generate_board_for(origin, systems, rng, hold)
+        .into_iter()
+        .filter(|job| job.kind.track().open_to(standing))
+        .collect()
 }
 
 fn settle(active: &mut Vec<ActiveJob>, commander: &mut Commander, arrived_at: &str) -> Arrival {
@@ -24,7 +37,33 @@ fn accept_on_a_fresh_ship(
     location: &str,
     number: usize,
 ) -> Result<Job, String> {
-    accept(board, active, &mut Ship::new_cobra_mk3(), location, number)
+    accept_as(
+        board,
+        active,
+        location,
+        Standing::Trusted,
+        CombatRating::Elite,
+        number,
+    )
+}
+
+fn accept_as(
+    board: &mut JobBoard,
+    active: &mut Vec<ActiveJob>,
+    location: &str,
+    standing: Standing,
+    rating: CombatRating,
+    number: usize,
+) -> Result<Job, String> {
+    accept(
+        board,
+        active,
+        &mut Ship::new_cobra_mk3(),
+        location,
+        standing,
+        rating,
+        number,
+    )
 }
 
 fn abandon_on_a_fresh_ship(
@@ -67,7 +106,6 @@ fn about_thirty_percent_of_jobs_are_bounties_when_enabled() {
             &systems,
             &mut StdRng::seed_from_u64(seed),
             0.3,
-            JobAccess::for_standing_at(Standing::Neutral, &origin.government),
             HOLD,
         );
         for job in &board {
@@ -214,12 +252,7 @@ fn boards_have_three_to_five_reachable_jobs_with_valid_numbers() {
     let origin = galaxy.get_system("LAVE").unwrap();
 
     for seed in 0..200u64 {
-        let board = board_for(
-            origin,
-            &systems,
-            &mut StdRng::seed_from_u64(seed),
-            Standing::Neutral,
-        );
+        let board = generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(seed), HOLD);
         assert!(
             (3..=5).contains(&board.len()),
             "seed {} gave {}",
@@ -241,10 +274,10 @@ fn boards_have_three_to_five_reachable_jobs_with_valid_numbers() {
                 JobKind::Courier => 20.0 + 7.0 * f64::from(job.fuel_cost),
                 JobKind::Bounty => 80.0 + 10.0 * f64::from(job.fuel_cost),
                 JobKind::Freight => {
-                    (20.0 + 7.0 * f64::from(job.fuel_cost)) * (1.0 + f64::from(job.tons) / 20.0)
+                    (20.0 + 7.0 * f64::from(job.fuel_cost)) * (1.0 + f64::from(job.tons) / 30.0)
                 }
                 JobKind::Smuggling => {
-                    3.0 * (20.0 + 7.0 * f64::from(job.fuel_cost)) + 6.0 * f64::from(job.tons)
+                    2.5 * (20.0 + 7.0 * f64::from(job.fuel_cost)) + 5.0 * f64::from(job.tons)
                 }
                 JobKind::BlackCourier => 1.5 * (20.0 + 7.0 * f64::from(job.fuel_cost)),
             };
@@ -264,12 +297,7 @@ fn sparse_systems_offer_what_is_in_range() {
             .iter()
             .filter(|other| other.name != origin.name && origin.distance_to(other) <= MAX_JOB_RANGE)
             .count();
-        let board = board_for(
-            origin,
-            &systems,
-            &mut StdRng::seed_from_u64(5),
-            Standing::Neutral,
-        );
+        let board = generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(5), HOLD);
         assert!(
             board.len() <= in_range.min(MAX_BOARD_SIZE),
             "{}",
@@ -331,13 +359,7 @@ fn board_with_jobs() -> (JobBoard, Vec<ActiveJob>) {
     let systems = galaxy.get_all_systems();
     let lave = galaxy.get_system("LAVE").unwrap();
     let mut board = JobBoard::new();
-    board.jobs_at(
-        lave,
-        &systems,
-        &mut StdRng::seed_from_u64(2),
-        Standing::Neutral,
-        HOLD,
-    );
+    board.jobs_at(lave, &systems, &mut StdRng::seed_from_u64(2), HOLD);
     (board, Vec::new())
 }
 
@@ -380,6 +402,7 @@ fn active_job(destination: &str, reward: u32, jumps_left: u32) -> ActiveJob {
             fuel_cost: 3,
             reward,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left,
     }
@@ -483,18 +506,12 @@ fn the_board_is_stable_while_docked_and_rerolls_after_leaving() {
     let mut board = JobBoard::new();
     let mut rng = StdRng::seed_from_u64(1);
 
-    let first = board
-        .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
-        .to_vec();
-    let again = board
-        .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
-        .to_vec();
+    let first = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
+    let again = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
     assert_eq!(first, again);
 
     board.clear();
-    let rerolled = board
-        .jobs_at(lave, &systems, &mut rng, Standing::Neutral, HOLD)
-        .to_vec();
+    let rerolled = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
     assert_ne!(first, rerolled);
 }
 
@@ -520,62 +537,192 @@ fn only_anarchy_and_feudal_systems_are_lawless() {
 }
 
 #[test]
-fn lawful_contracts_need_a_good_standing_and_a_lawful_system() {
+fn lawful_contracts_are_posted_by_lawful_systems_and_open_to_good_standing() {
     for government in governments() {
-        for standing in [Standing::Trusted, Standing::Respected] {
-            let access = JobAccess::for_standing_at(standing, &government);
-            assert_eq!(access.lawful, government.is_lawful(), "{:?}", government);
-            assert!(!access.criminal && !access.gateway);
-        }
+        assert_eq!(Track::Lawful.posted_by(&government), government.is_lawful());
+    }
+    for (standing, open) in all_standings(&[Standing::Trusted, Standing::Respected]) {
+        assert_eq!(Track::Lawful.open_to(standing), open, "{:?}", standing);
     }
 }
 
 #[test]
-fn criminal_contracts_need_a_bad_standing_and_a_lawless_system() {
+fn criminal_contracts_are_posted_by_lawless_systems_and_open_to_bad_standing() {
     for government in governments() {
-        for standing in [Standing::Disreputable, Standing::Criminal] {
-            let access = JobAccess::for_standing_at(standing, &government);
-            assert_eq!(access.criminal, !government.is_lawful(), "{:?}", government);
-            assert!(!access.lawful && !access.gateway);
-        }
+        assert_eq!(
+            Track::Criminal.posted_by(&government),
+            !government.is_lawful()
+        );
+    }
+    for (standing, open) in all_standings(&[Standing::Disreputable, Standing::Criminal]) {
+        assert_eq!(Track::Criminal.open_to(standing), open, "{:?}", standing);
     }
 }
 
 #[test]
-fn neutral_commanders_see_only_the_gateway_and_only_in_lawless_systems() {
+fn the_gateway_is_posted_by_lawless_systems_and_open_to_neutral_standing() {
     for government in governments() {
-        let access = JobAccess::for_standing_at(Standing::Neutral, &government);
-        assert_eq!(access.gateway, !government.is_lawful(), "{:?}", government);
-        assert!(!access.lawful && !access.criminal);
+        assert_eq!(
+            Track::Gateway.posted_by(&government),
+            !government.is_lawful()
+        );
+    }
+    for (standing, open) in all_standings(&[Standing::Neutral]) {
+        assert_eq!(Track::Gateway.open_to(standing), open, "{:?}", standing);
     }
 }
 
 #[test]
 fn ordinary_jobs_are_open_to_everyone() {
     for government in governments() {
-        for standing in [
-            Standing::Criminal,
-            Standing::Disreputable,
-            Standing::Neutral,
-            Standing::Trusted,
-            Standing::Respected,
-        ] {
-            let access = JobAccess::for_standing_at(standing, &government);
-            assert!(access.allows(JobKind::Courier.track()));
-            assert!(access.allows(JobKind::Bounty.track()));
-        }
+        assert!(Track::Ordinary.posted_by(&government));
+    }
+    for (standing, _) in all_standings(&[]) {
+        assert!(Track::Ordinary.open_to(standing));
+        assert!(Track::Ordinary.open_to(standing));
+    }
+}
+
+fn all_standings(open: &[Standing]) -> Vec<(Standing, bool)> {
+    [
+        Standing::Criminal,
+        Standing::Disreputable,
+        Standing::Neutral,
+        Standing::Trusted,
+        Standing::Respected,
+    ]
+    .into_iter()
+    .map(|standing| (standing, open.contains(&standing)))
+    .collect()
+}
+
+fn job_of(kind: JobKind, fuel_cost: u32) -> Job {
+    Job {
+        kind,
+        tons: 0,
+        commodity: None,
+        destination: "DISO".to_string(),
+        distance: f64::from(fuel_cost),
+        fuel_cost,
+        reward: 100,
+        deadline_jumps: 3,
+        min_rating: if kind == JobKind::Bounty {
+            bounty_min_rating(fuel_cost)
+        } else {
+            CombatRating::Harmless
+        },
     }
 }
 
 #[test]
-fn every_standing_still_gets_a_board_at_every_system() {
+fn a_job_is_locked_for_standing_before_rating() {
+    let freight = job_of(JobKind::Freight, 3);
+    assert_eq!(
+        freight.lock(Standing::Neutral, CombatRating::Harmless),
+        Some(JobLock::Standing(Track::Lawful))
+    );
+    assert_eq!(
+        freight.lock(Standing::Trusted, CombatRating::Harmless),
+        None
+    );
+
+    let black = job_of(JobKind::BlackCourier, 3);
+    assert_eq!(
+        black.lock(Standing::Trusted, CombatRating::Elite),
+        Some(JobLock::Standing(Track::Gateway))
+    );
+    assert_eq!(black.lock(Standing::Neutral, CombatRating::Harmless), None);
+
+    let smuggling = job_of(JobKind::Smuggling, 3);
+    assert!(smuggling
+        .lock(Standing::Neutral, CombatRating::Elite)
+        .is_some());
+    assert_eq!(
+        smuggling.lock(Standing::Criminal, CombatRating::Harmless),
+        None
+    );
+}
+
+#[test]
+fn long_bounties_need_a_combat_rating() {
+    let short = job_of(JobKind::Bounty, 3);
+    let middling = job_of(JobKind::Bounty, 5);
+    let long = job_of(JobKind::Bounty, 7);
+
+    assert_eq!(short.lock(Standing::Neutral, CombatRating::Harmless), None);
+    assert_eq!(
+        middling.lock(Standing::Neutral, CombatRating::Harmless),
+        Some(JobLock::Rating(CombatRating::MostlyHarmless))
+    );
+    assert_eq!(
+        middling.lock(Standing::Neutral, CombatRating::MostlyHarmless),
+        None
+    );
+    assert_eq!(
+        long.lock(Standing::Neutral, CombatRating::MostlyHarmless),
+        Some(JobLock::Rating(CombatRating::Poor))
+    );
+    assert_eq!(long.lock(Standing::Neutral, CombatRating::Poor), None);
+}
+
+#[test]
+fn couriers_are_never_locked() {
+    let courier = job_of(JobKind::Courier, 7);
+    for (standing, _) in all_standings(&[]) {
+        assert_eq!(courier.lock(standing, CombatRating::Harmless), None);
+    }
+}
+
+#[test]
+fn locks_say_what_is_needed() {
+    assert_eq!(
+        JobLock::Standing(Track::Lawful).describe(),
+        "needs standing Trusted or better"
+    );
+    assert_eq!(
+        JobLock::Rating(CombatRating::Poor).describe(),
+        "needs combat rating Poor"
+    );
+}
+
+#[test]
+fn accepting_a_locked_job_is_refused_and_changes_nothing() {
+    let (mut board, mut active) = board_with_jobs();
+    board.jobs[0] = job_of(JobKind::Freight, 3);
+    let location = board.location.clone();
+
+    let refused = accept_as(
+        &mut board,
+        &mut active,
+        &location,
+        Standing::Neutral,
+        CombatRating::Harmless,
+        1,
+    );
+
+    assert_eq!(
+        refused,
+        Err("Locked: needs standing Trusted or better.".to_string())
+    );
+    assert!(active.is_empty());
+    let accepted = accept_as(
+        &mut board,
+        &mut active,
+        &location,
+        Standing::Trusted,
+        CombatRating::Harmless,
+        1,
+    );
+    assert!(accepted.is_ok());
+}
+
+#[test]
+fn every_system_posts_a_board() {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
     for origin in &systems {
-        for standing in [Standing::Criminal, Standing::Neutral, Standing::Respected] {
-            let board = board_for(origin, &systems, &mut StdRng::seed_from_u64(3), standing);
-            assert!(!board.is_empty(), "{} for {:?}", origin.name, standing);
-        }
+        let board = generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(3), HOLD);
+        assert!(!board.is_empty(), "{}", origin.name);
     }
 }
 
@@ -598,6 +745,7 @@ fn freight(destination: &str, tons: u32, reward: u32, jumps_left: u32) -> Active
             fuel_cost: 3,
             reward,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left,
     }
@@ -619,7 +767,7 @@ fn freight_is_only_offered_to_good_standing_at_lawful_systems() {
 
     let freight_seen = |standing| {
         (0..100u64).any(|seed| {
-            generate_board_for(
+            board_for_hold(
                 origin,
                 &systems,
                 &mut StdRng::seed_from_u64(seed),
@@ -645,7 +793,7 @@ fn freight_loads_are_legal_and_fit_the_hold() {
 
     for (hold, seeds) in [(20u32, 200u64), (60, 200)] {
         for seed in 0..seeds {
-            for job in generate_board_for(
+            for job in board_for_hold(
                 origin,
                 &systems,
                 &mut StdRng::seed_from_u64(seed),
@@ -678,7 +826,16 @@ fn accepting_freight_reserves_hold_room_and_a_full_hold_refuses_it() {
     let (mut board, mut active, location) = board_with_freight(15);
     let mut ship = Ship::new_cobra_mk3();
 
-    accept(&mut board, &mut active, &mut ship, &location, 1).unwrap();
+    accept(
+        &mut board,
+        &mut active,
+        &mut ship,
+        &location,
+        Standing::Respected,
+        CombatRating::Elite,
+        1,
+    )
+    .unwrap();
     assert_eq!(ship.cargo_hold.reserved, 15);
     assert_eq!(ship.cargo_available(), 5);
 
@@ -686,7 +843,16 @@ fn accepting_freight_reserves_hold_room_and_a_full_hold_refuses_it() {
     let mut ship = Ship::new_cobra_mk3();
     ship.add_cargo(CommodityType::Food, 10);
     let before = board.jobs.len();
-    assert!(accept(&mut board, &mut active, &mut ship, &location, 1).is_err());
+    assert!(accept(
+        &mut board,
+        &mut active,
+        &mut ship,
+        &location,
+        Standing::Respected,
+        CombatRating::Elite,
+        1
+    )
+    .is_err());
     assert!(active.is_empty());
     assert_eq!(board.jobs.len(), before);
     assert_eq!(ship.cargo_hold.reserved, 0);
@@ -806,7 +972,7 @@ fn smuggling_is_only_offered_to_bad_standing_at_lawless_systems_with_lawful_dest
     let boards = |origin: &StarSystem, standing| {
         (0..200u64)
             .flat_map(|seed| {
-                generate_board_for(
+                board_for_hold(
                     origin,
                     &systems,
                     &mut StdRng::seed_from_u64(seed),
@@ -858,11 +1024,29 @@ fn smuggling_needs_hold_room_to_accept_and_frees_it_when_it_ends() {
     let location = board.location.clone();
     let mut ship = Ship::new_cobra_mk3();
     ship.add_cargo(CommodityType::Food, 15);
-    assert!(accept(&mut board, &mut active, &mut ship, &location, 1).is_err());
+    assert!(accept(
+        &mut board,
+        &mut active,
+        &mut ship,
+        &location,
+        Standing::Criminal,
+        CombatRating::Elite,
+        1
+    )
+    .is_err());
     assert_eq!(ship.cargo_hold.reserved, 0);
 
     let mut ship = Ship::new_cobra_mk3();
-    accept(&mut board, &mut active, &mut ship, &location, 1).unwrap();
+    accept(
+        &mut board,
+        &mut active,
+        &mut ship,
+        &location,
+        Standing::Criminal,
+        CombatRating::Elite,
+        1,
+    )
+    .unwrap();
     assert_eq!(ship.cargo_hold.reserved, 8);
 
     let mut commander = Commander::new("Test".to_string());
@@ -915,7 +1099,7 @@ fn the_gateway_job_is_offered_only_to_neutral_commanders_at_lawless_systems() {
 
     let offered = |origin: &StarSystem, standing| {
         (0..200u64).any(|seed| {
-            generate_board_for(
+            board_for_hold(
                 origin,
                 &systems,
                 &mut StdRng::seed_from_u64(seed),
@@ -932,7 +1116,7 @@ fn the_gateway_job_is_offered_only_to_neutral_commanders_at_lawless_systems() {
         Standing::Criminal,
         Standing::Disreputable,
         Standing::Trusted,
-        Standing::Respected,
+        Standing::Criminal,
     ] {
         assert!(!offered(lawless, standing), "{:?}", standing);
     }
@@ -946,13 +1130,7 @@ fn the_gateway_job_is_occasional_not_the_whole_board() {
 
     let (mut gateway, mut total) = (0, 0);
     for seed in 0..300u64 {
-        for job in generate_board_for(
-            origin,
-            &systems,
-            &mut StdRng::seed_from_u64(seed),
-            Standing::Neutral,
-            20,
-        ) {
+        for job in generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(seed), 20) {
             total += 1;
             gateway += i32::from(job.kind == JobKind::BlackCourier);
         }
@@ -988,6 +1166,6 @@ fn a_few_black_courier_deliveries_lead_to_the_criminal_track() {
         settle(&mut active, &mut commander, "DISO");
     }
     assert_eq!(commander.standing(), Standing::Disreputable);
-    let access = JobAccess::for_standing_at(commander.standing(), &GovernmentType::Anarchy);
-    assert!(access.criminal && !access.gateway);
+    assert!(Track::Criminal.open_to(commander.standing()));
+    assert!(!Track::Gateway.open_to(commander.standing()));
 }

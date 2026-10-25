@@ -7,11 +7,18 @@ use crate::game::travel::fuel_for_distance;
 use crate::game::upgrades::{UpgradeError, UpgradeReceipt};
 use crate::game::views::{JumpFromHere, StatusView, SystemInfoView, TradeLogView};
 
-use super::jobs::{self, ActiveJob, Job};
+use super::jobs::{self, ActiveJob, Job, JobLock};
 use super::{
     Commander, EventManager, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
 };
+
+/// A job on the board and what stops the commander taking it
+#[derive(Debug, Clone, PartialEq)]
+pub struct JobListing {
+    pub job: Job,
+    pub lock: Option<JobLock>,
+}
 
 /// Represents the complete game state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -370,21 +377,22 @@ impl GameState {
     }
 
     /// The jobs on offer here, rolled with the given randomness on first sight
-    pub fn jobs_here(&mut self, rng: &mut impl rand::Rng) -> Option<Vec<Job>> {
+    pub fn jobs_here(&mut self, rng: &mut impl rand::Rng) -> Option<Vec<JobListing>> {
         let origin = self
             .travel_handler
             .get_system_info(&self.commander.location)?;
         let systems = self.travel_handler.get_available_systems();
+        let standing = self.commander.standing();
+        let rating = self.commander.combat_rating();
         Some(
             self.job_board
-                .jobs_at(
-                    origin,
-                    &systems,
-                    rng,
-                    self.commander.standing(),
-                    self.ship.cargo_capacity(),
-                )
-                .to_vec(),
+                .jobs_at(origin, &systems, rng, self.ship.cargo_capacity())
+                .iter()
+                .map(|job| JobListing {
+                    lock: job.lock(standing, rating),
+                    job: job.clone(),
+                })
+                .collect(),
         )
     }
 
@@ -400,6 +408,8 @@ impl GameState {
             &mut self.active_jobs,
             &mut self.ship,
             &self.commander.location,
+            self.commander.standing(),
+            self.commander.combat_rating(),
             number,
         )
     }
