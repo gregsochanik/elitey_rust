@@ -4,7 +4,7 @@ use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 #[test]
 fn test_event_manager_creation() {
     let manager = EventManager::new();
-    assert_eq!(manager.events.len(), 10); // 10 event types
+    assert_eq!(manager.events.len(), 11); // 11 event types
 }
 
 #[test]
@@ -15,7 +15,7 @@ fn test_phase_event_filtering() {
     let approach_events = manager.get_available_events(&EventPhase::Approach);
 
     assert_eq!(jump_events.len(), 4); // 4 jump events
-    assert_eq!(approach_events.len(), 6); // 6 approach events
+    assert_eq!(approach_events.len(), 7); // 7 approach events
 }
 
 #[test]
@@ -350,6 +350,12 @@ fn every_event_stays_possible_everywhere() {
         let destination = system(government, EconomyType::RichIndustrial);
         for phase in [EventPhase::Jump, EventPhase::Approach] {
             for event in manager.get_available_events(&phase) {
+                if event.event_type == EventType::BountyHunter {
+                    assert!(
+                        event_weight(&event.event_type, &destination, Standing::Criminal) > 0.0
+                    );
+                    continue;
+                }
                 assert!(event_weight(&event.event_type, &destination, Standing::Neutral) > 0.0);
             }
         }
@@ -384,6 +390,7 @@ fn only_fighting_pirates_patrols_and_convoys_starts_combat() {
     assert_eq!(
         starters,
         vec![
+            (EventType::BountyHunter, "Fight the hunter".to_string()),
             (EventType::MilitaryPatrol, "Engage the patrol".to_string()),
             (EventType::PirateAttack, "Fight the pirates".to_string()),
             (EventType::TraderConvoy, "Rob the convoy".to_string()),
@@ -425,9 +432,10 @@ fn law_enforcement_share(destination: &StarSystem, standing: Standing) -> f64 {
 #[test]
 fn infamy_brings_more_patrols_and_inspections_in_lawful_systems() {
     let lawful = system(GovernmentType::Democracy, EconomyType::RichIndustrial);
-    let neutral = law_enforcement_share(&lawful, Standing::Neutral);
-    let disreputable = law_enforcement_share(&lawful, Standing::Disreputable);
-    let criminal = law_enforcement_share(&lawful, Standing::Criminal);
+    let patrols = |standing| event_weight(&EventType::MilitaryPatrol, &lawful, standing);
+    let neutral = patrols(Standing::Neutral);
+    let disreputable = patrols(Standing::Disreputable);
+    let criminal = patrols(Standing::Criminal);
 
     assert!(neutral < disreputable && disreputable < criminal);
     assert!(criminal > 1.3 * neutral, "{} vs {}", criminal, neutral);
@@ -463,10 +471,20 @@ fn standing_leaves_every_other_event_alone() {
         EventType::Wormhole,
     ] {
         for standing in [Standing::Criminal, Standing::Respected] {
-            assert_eq!(
-                standing_weight(&event_type, standing, &GovernmentType::Democracy),
-                1.0
-            );
+            let here = StarSystem {
+                name: "Test".to_string(),
+                x: 0,
+                y: 0,
+                economy: EconomyType::AverageIndustrial,
+                government: GovernmentType::Democracy,
+                tech_level: 5,
+                turnover: 0,
+                radius: 0,
+                population: String::new(),
+                description: String::new(),
+                star_class: String::new(),
+            };
+            assert_eq!(event_weight(&event_type, &here, standing), 1.0);
         }
     }
 }

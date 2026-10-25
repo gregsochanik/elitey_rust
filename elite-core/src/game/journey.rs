@@ -2,7 +2,8 @@ use crate::data::enemies::find_enemy;
 use crate::data::systems::StarSystem;
 use crate::game::aftermath::Foe;
 use crate::game::combat::{Combat, Combatant, Outcome};
-use crate::game::events::{Event, EventPhase, EventReport};
+use crate::game::commander::Standing;
+use crate::game::events::{Event, EventPhase, EventReport, EventType};
 use crate::game::jobs::{self, ActiveJob};
 use crate::game::smuggling::{self, Answer, Inspection, InspectionChoice};
 use crate::game::travel::{redirect_target, JumpPlan, TravelError};
@@ -59,6 +60,8 @@ pub enum JourneyError {
     #[error("The journey is over")]
     Finished,
 }
+
+const PATROL_SALUTE_REPUTATION: i32 = 2;
 
 #[derive(Debug, Clone)]
 enum Stage {
@@ -157,12 +160,11 @@ impl GameState {
                     let planned = self.system_named(&journey.plan.destination);
                     journey.stage = Stage::Fuel;
                     if let Some(event) = self.roll_event(&EventPhase::Jump, &planned, rng) {
-                        journey.eventful = true;
-                        journey.stage = Stage::AwaitEvent {
-                            event: event.clone(),
-                            phase: EventPhase::Jump,
-                        };
-                        return Ok(Step::Event(event));
+                        if let Some(step) =
+                            self.open_event(journey, event, EventPhase::Jump, &planned)
+                        {
+                            return Ok(step);
+                        }
                     }
                 }
                 Stage::AwaitEvent { event, phase } => {
@@ -233,12 +235,11 @@ impl GameState {
                         .system_named(journey.landed.as_ref().unwrap_or(&journey.plan.destination));
                     journey.stage = Stage::Arrive;
                     if let Some(event) = self.roll_event(&EventPhase::Approach, &arrival, rng) {
-                        journey.eventful = true;
-                        journey.stage = Stage::AwaitEvent {
-                            event: event.clone(),
-                            phase: EventPhase::Approach,
-                        };
-                        return Ok(Step::Event(event));
+                        if let Some(step) =
+                            self.open_event(journey, event, EventPhase::Approach, &arrival)
+                        {
+                            return Ok(step);
+                        }
                     }
                 }
                 Stage::Arrive => {
@@ -370,6 +371,44 @@ impl GameState {
         self.event_manager
             .pick_event(phase, destination, self.commander.standing(), rng)
             .cloned()
+    }
+
+    /// Present a rolled event, unless a patrol knows who the commander is: a wanted commander is
+    /// attacked on sight and a respected one is waved through. `None` means carry on.
+    fn open_event(
+        &mut self,
+        journey: &mut Journey,
+        event: Event,
+        phase: EventPhase,
+        system: &StarSystem,
+    ) -> Option<Step> {
+        journey.eventful = true;
+        if event.event_type == EventType::MilitaryPatrol && system.government.is_lawful() {
+            match self.commander.standing() {
+                Standing::Criminal => {
+                    journey.notices.push(Notice::Error(
+                        "The patrol recognises you and opens fire!".to_string(),
+                    ));
+                    let foe = Foe::Police;
+                    journey.stage = Stage::AwaitEventFight { phase, foe };
+                    return Some(Step::Fight(self.fight_against(foe.enemy_id())));
+                }
+                Standing::Respected => {
+                    self.commander.change_reputation(PATROL_SALUTE_REPUTATION);
+                    journey.notices.push(Notice::Success(
+                        "The patrol recognises you and waves you through.".to_string(),
+                    ));
+                    journey.stage = after_event(&phase);
+                    return None;
+                }
+                _ => {}
+            }
+        }
+        journey.stage = Stage::AwaitEvent {
+            event: event.clone(),
+            phase,
+        };
+        Some(Step::Event(event))
     }
 
     fn fight_against(&self, enemy_id: &str) -> Combat {

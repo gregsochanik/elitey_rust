@@ -1,0 +1,29 @@
+{
+  "rules": [
+    {"events": ["TraderConvoy"], "weight": 0.6},
+    {"events": ["PirateAttack"], "government": ["Anarchy"], "weight": 2.5},
+    {"events": ["GovernmentInspection"], "government": ["Anarchy"], "weight": 0.2},
+    {"events": ["MilitaryPatrol"], "government": ["Anarchy"], "weight": 0.3},
+    {"events": ["GovernmentInspection"], "government": ["Communist"], "weight": 2.5},
+    {"events": ["MilitaryPatrol"], "government": ["Communist"], "weight": 1.5},
+    {"events": ["PirateAttack"], "government": ["Communist"], "weight": 0.6},
+    {"events": ["MilitaryPatrol"], "government": ["Dictatorship"], "weight": 2.5},
+    {"events": ["GovernmentInspection"], "government": ["Dictatorship"], "weight": 1.5},
+    {"events": ["PirateAttack"], "government": ["Dictatorship"], "weight": 0.7},
+    {"events": ["GovernmentInspection"], "government": ["Corporate State"], "weight": 1.5},
+    {"events": ["PirateAttack"], "government": ["Corporate State"], "weight": 0.5},
+    {"events": ["PirateAttack", "RescueSignal"], "economy": ["Poor Agri", "Poor Ind"], "weight": 1.5},
+    {"events": ["PirateAttack"], "economy": ["Rich Ind", "Rich Agri"], "weight": 0.6},
+    {"events": ["SpaceDebris"], "economy": ["Mainly Ind"], "weight": 1.5},
+    {"events": ["RescueSignal"], "economy": ["Mainly Agri"], "weight": 1.3},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Criminal"], "lawful": true, "weight": 2.0},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Criminal"], "lawful": false, "weight": 0.5},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Disreputable"], "lawful": true, "weight": 1.5},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Disreputable"], "lawful": false, "weight": 0.75},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Trusted"], "weight": 0.75},
+    {"events": ["MilitaryPatrol", "GovernmentInspection"], "standing": ["Respected"], "weight": 0.5},
+    {"events": ["BountyHunter"], "standing": ["Criminal"], "weight": 2.0},
+    {"events": ["BountyHunter"], "standing": ["Disreputable"], "weight": 0.6},
+    {"events": ["BountyHunter"], "standing": ["Neutral", "Trusted", "Respected"], "weight": 0.0}
+  ]
+}

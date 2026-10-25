@@ -1,6 +1,7 @@
 use crate::data::commodities::CommodityType;
 use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 use crate::game::commander::Standing;
+use crate::game::encounters;
 use crate::game::{Commander, Ship};
 use rand::Rng;
 use std::collections::HashMap;
@@ -28,6 +29,7 @@ pub enum EventType {
     GovernmentInspection,
     MilitaryPatrol,
     TraderConvoy,
+    BountyHunter,
 }
 
 /// Cargo an event takes from the hold
@@ -113,72 +115,7 @@ impl Default for EventManager {
 
 /// How much more or less likely an event is at this destination (1.0 is normal)
 fn event_weight(event_type: &EventType, destination: &StarSystem, standing: Standing) -> f64 {
-    base_weight(event_type)
-        * government_weight(event_type, &destination.government)
-        * economy_weight(event_type, &destination.economy)
-        * standing_weight(event_type, standing, &destination.government)
-}
-
-fn base_weight(event_type: &EventType) -> f64 {
-    match event_type {
-        EventType::TraderConvoy => 0.6,
-        _ => 1.0,
-    }
-}
-
-/// Law enforcement notices who you are: the infamous are stopped more in lawful systems and
-/// less in lawless ones, and the respected are stopped less
-fn standing_weight(event_type: &EventType, standing: Standing, government: &GovernmentType) -> f64 {
-    if !matches!(
-        event_type,
-        EventType::MilitaryPatrol | EventType::GovernmentInspection
-    ) {
-        return 1.0;
-    }
-    let lawful = government.is_lawful();
-    match standing {
-        Standing::Criminal if lawful => 2.0,
-        Standing::Criminal => 0.5,
-        Standing::Disreputable if lawful => 1.5,
-        Standing::Disreputable => 0.75,
-        Standing::Neutral => 1.0,
-        Standing::Trusted => 0.75,
-        Standing::Respected => 0.5,
-    }
-}
-
-fn government_weight(event_type: &EventType, government: &GovernmentType) -> f64 {
-    match (government, event_type) {
-        (GovernmentType::Anarchy, EventType::PirateAttack) => 2.5,
-        (GovernmentType::Anarchy, EventType::GovernmentInspection) => 0.2,
-        (GovernmentType::Anarchy, EventType::MilitaryPatrol) => 0.3,
-        (GovernmentType::Communist, EventType::GovernmentInspection) => 2.5,
-        (GovernmentType::Communist, EventType::MilitaryPatrol) => 1.5,
-        (GovernmentType::Communist, EventType::PirateAttack) => 0.6,
-        (GovernmentType::Dictatorship, EventType::MilitaryPatrol) => 2.5,
-        (GovernmentType::Dictatorship, EventType::GovernmentInspection) => 1.5,
-        (GovernmentType::Dictatorship, EventType::PirateAttack) => 0.7,
-        (GovernmentType::CorporateState, EventType::GovernmentInspection) => 1.5,
-        (GovernmentType::CorporateState, EventType::PirateAttack) => 0.5,
-        _ => 1.0,
-    }
-}
-
-fn economy_weight(event_type: &EventType, economy: &EconomyType) -> f64 {
-    match (economy, event_type) {
-        (EconomyType::PoorAgricultural | EconomyType::PoorIndustrial, EventType::PirateAttack) => {
-            1.5
-        }
-        (EconomyType::PoorAgricultural | EconomyType::PoorIndustrial, EventType::RescueSignal) => {
-            1.5
-        }
-        (EconomyType::RichIndustrial | EconomyType::RichAgricultural, EventType::PirateAttack) => {
-            0.6
-        }
-        (EconomyType::MainlyIndustrial, EventType::SpaceDebris) => 1.5,
-        (EconomyType::MainlyAgricultural, EventType::RescueSignal) => 1.3,
-        _ => 1.0,
-    }
+    encounters::weight(event_type, destination, standing)
 }
 
 /// Remove cargo from the hold and return what was taken
@@ -304,6 +241,7 @@ impl EventManager {
             Self::create_military_patrol_event(),
         );
         events.insert(EventType::TraderConvoy, Self::create_trader_convoy_event());
+        events.insert(EventType::BountyHunter, Self::create_bounty_hunter_event());
 
         Self { events }
     }
@@ -1005,6 +943,59 @@ impl EventManager {
                         "You wave and fly on",
                         "The convoy wishes you a safe journey.",
                     ),
+                },
+            ],
+        }
+    }
+
+    fn create_bounty_hunter_event() -> Event {
+        let outcome = |description: &str, message: &str| EventOutcome {
+            description: description.to_string(),
+            credits_change: 0,
+            cargo_loss: None,
+            cargo_gain: None,
+            hull_damage: 0,
+            fuel_change: 0,
+            reputation_change: 0,
+            starts_combat: false,
+            redirect: None,
+            message: message.to_string(),
+        };
+        Event {
+            event_type: EventType::BountyHunter,
+            phase: EventPhase::Approach,
+            title: "🎯 Bounty Hunter".to_string(),
+            description:
+                "A bounty hunter has locked onto your ship. Your reputation has caught up with you."
+                    .to_string(),
+            choices: vec![
+                EventChoice {
+                    description: "Fight the hunter".to_string(),
+                    outcome: EventOutcome {
+                        starts_combat: true,
+                        ..outcome("You turn to face the hunter", "You turn and open fire.")
+                    },
+                },
+                EventChoice {
+                    description: "Pay them to look the other way".to_string(),
+                    outcome: EventOutcome {
+                        credits_change: -250,
+                        ..outcome(
+                            "You pay the hunter off",
+                            "The hunter takes {credits} credits and lets you go.",
+                        )
+                    },
+                },
+                EventChoice {
+                    description: "Try to outrun them".to_string(),
+                    outcome: EventOutcome {
+                        hull_damage: -10,
+                        fuel_change: -2,
+                        ..outcome(
+                            "You push the engines",
+                            "You shake the hunter but take hits and burn extra fuel.",
+                        )
+                    },
                 },
             ],
         }

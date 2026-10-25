@@ -1,6 +1,7 @@
 pub mod aftermath;
 pub mod combat;
 pub mod commander;
+pub mod encounters;
 pub mod equipment;
 pub mod events;
 

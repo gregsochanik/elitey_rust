@@ -144,3 +144,28 @@ fn pirates_sometimes_run_or_yield_but_most_still_die() {
         share(yielded)
     );
 }
+
+#[test]
+fn a_bounty_hunter_is_a_real_threat_to_the_starting_ship() {
+    let ship = ship_with(&[]);
+    let hunter = elite_core::data::enemies::find_enemy("bounty-hunter").unwrap();
+    let (mut won, mut lost) = (0u64, 0u64);
+    for seed in 0..FIGHTS {
+        let mut combat = Combat::against(Combatant::from_ship(&ship), hunter);
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut roll = || rng.gen::<f64>();
+        for _ in 0..500 {
+            match combat.resolve_round(Action::Attack, &mut roll) {
+                Ok(Outcome::Ongoing) => continue,
+                Ok(Outcome::Victory | Outcome::EnemySurrendered) => won += 1,
+                Ok(Outcome::Defeat) => lost += 1,
+                _ => {}
+            }
+            break;
+        }
+    }
+
+    let win_rate = won as f64 / FIGHTS as f64;
+    assert!((0.25..=0.65).contains(&win_rate), "won {}", win_rate);
+    assert!(lost > 0);
+}
