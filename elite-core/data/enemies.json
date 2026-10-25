@@ -1,0 +1,34 @@
+[
+  {
+    "id": "pirate-raider",
+    "name": "Pirate Raider",
+    "hull": 70,
+    "shield": 25,
+    "recharge": 4,
+    "weapons": [{ "damage": 14, "accuracy": 0.65 }],
+    "behaviour": {
+      "aggression": 1.0,
+      "flee_below_hull": 0.0,
+      "flee_odds": 0.0,
+      "flee_chance": 0.5,
+      "surrender_below_hull": 0.0,
+      "surrender_chance": 0.5
+    }
+  },
+  {
+    "id": "patrol-vessel",
+    "name": "Patrol Vessel",
+    "hull": 70,
+    "shield": 25,
+    "recharge": 4,
+    "weapons": [{ "damage": 14, "accuracy": 0.65 }],
+    "behaviour": {
+      "aggression": 1.0,
+      "flee_below_hull": 0.0,
+      "flee_odds": 0.0,
+      "flee_chance": 0.5,
+      "surrender_below_hull": 0.0,
+      "surrender_chance": 0.5
+    }
+  }
+]
