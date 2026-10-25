@@ -1,4 +1,5 @@
 use super::*;
+use crate::data::systems::GovernmentType;
 use crate::game::combat::{Action, Weapon};
 use crate::game::commander::CombatRating;
 use crate::game::events::EventType;
@@ -384,5 +385,60 @@ fn engaging_a_patrol_or_robbing_a_convoy_starts_the_matching_fight() {
             panic!("{choice} starts a fight");
         };
         assert_eq!(combat.enemy.name, enemy);
+    }
+}
+
+fn open_a_patrol(
+    standing_score: i32,
+    government: GovernmentType,
+) -> (GameState, Journey, Option<Step>) {
+    let mut game = game();
+    game.commander.reputation = standing_score;
+    let event = game
+        .event_manager
+        .get_available_events(&EventPhase::Approach)
+        .into_iter()
+        .find(|event| event.event_type == EventType::MilitaryPatrol)
+        .unwrap()
+        .clone();
+    let plan = game.plan_jump("Proxima Centauri").unwrap();
+    let mut journey = Journey::new(plan, Stage::Start);
+    let mut system = game.get_system_info("Proxima Centauri").unwrap().clone();
+    system.government = government;
+    let step = game.open_event(&mut journey, event, EventPhase::Approach, &system);
+    (game, journey, step)
+}
+
+#[test]
+fn a_wanted_commander_is_attacked_on_sight_in_a_lawful_system() {
+    let (_, _, step) = open_a_patrol(-250, GovernmentType::Democracy);
+
+    let Some(Step::Fight(combat)) = step else {
+        panic!("the patrol opens fire");
+    };
+    assert_eq!(combat.enemy.name, "Patrol Vessel");
+}
+
+#[test]
+fn a_respected_commander_is_waved_through() {
+    let (game, mut journey, step) = open_a_patrol(90, GovernmentType::Democracy);
+
+    assert!(step.is_none());
+    assert_eq!(game.commander.reputation, 92);
+    assert!(journey.take_notices().iter().any(
+        |notice| matches!(notice, Notice::Success(text) if text.contains("waves you through"))
+    ));
+}
+
+#[test]
+fn everyone_else_gets_the_patrol_event_and_lawless_systems_do_not_care() {
+    for (score, government) in [
+        (0, GovernmentType::Democracy),
+        (-250, GovernmentType::Anarchy),
+        (90, GovernmentType::Feudal),
+    ] {
+        let (_, _, step) = open_a_patrol(score, government);
+
+        assert!(matches!(step, Some(Step::Event(_))), "{score}");
     }
 }

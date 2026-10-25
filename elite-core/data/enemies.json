@@ -62,5 +62,21 @@
       "surrender_below_hull": 0.5,
       "surrender_chance": 0.4
     }
+  },
+  {
+    "id": "bounty-hunter",
+    "name": "Bounty Hunter",
+    "hull": 90,
+    "shield": 35,
+    "recharge": 5,
+    "weapons": [{ "damage": 14, "accuracy": 0.65 }, { "damage": 8, "accuracy": 0.6 }],
+    "behaviour": {
+      "aggression": 0.9,
+      "flee_below_hull": 0.0,
+      "flee_odds": 0.0,
+      "flee_chance": 0.5,
+      "surrender_below_hull": 0.1,
+      "surrender_chance": 0.3
+    }
   }
 ]

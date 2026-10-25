@@ -5,7 +5,7 @@ pub const MIN_REPUTATION: i32 = -100;
 pub const MAX_REPUTATION: i32 = 100;
 
 /// How the galaxy sees the commander, derived from the reputation score
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Standing {
     Criminal,
     Disreputable,

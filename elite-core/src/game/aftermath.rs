@@ -31,6 +31,7 @@ pub enum Foe {
     Pirate,
     Police,
     Trader,
+    BountyHunter,
 }
 
 impl Foe {
@@ -38,6 +39,7 @@ impl Foe {
         match event_type {
             EventType::MilitaryPatrol => Foe::Police,
             EventType::TraderConvoy => Foe::Trader,
+            EventType::BountyHunter => Foe::BountyHunter,
             _ => Foe::Pirate,
         }
     }
@@ -48,6 +50,7 @@ impl Foe {
             Foe::Pirate => "pirate-raider",
             Foe::Police => "patrol-vessel",
             Foe::Trader => "trader",
+            Foe::BountyHunter => "bounty-hunter",
         }
     }
 }
