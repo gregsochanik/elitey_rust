@@ -1,6 +1,6 @@
-use crate::utils::display::{show_error, show_success};
+use crate::utils::display::{self, show_error, show_success};
 use colored::*;
-use elite_core::data::equipment::{Equipment, EquipmentCategory};
+use elite_core::data::equipment::Equipment;
 use elite_core::game::equipment::{self, InstalledView, ShopView};
 use elite_core::game::{Commander, Ship};
 
@@ -105,10 +105,6 @@ fn power_line(used: u32, capacity: u32) -> String {
     )
 }
 
-fn category_name(category: EquipmentCategory) -> ColoredString {
-    category.name().yellow()
-}
-
 fn print_shop(view: &ShopView) {
     println!("\n{}", "Equipment Shop".cyan().bold());
     println!("{}", "==============".cyan());
@@ -116,7 +112,7 @@ fn print_shop(view: &ShopView) {
     println!("{}", power_line(view.power_used, view.power_capacity));
 
     for group in &view.categories {
-        println!("\n{}", category_name(group.category));
+        println!("\n{}", display::category_name(group.category));
         for entry in &group.items {
             let item = entry.item;
             println!(
@@ -145,7 +141,7 @@ fn print_installed(view: &InstalledView) {
     for group in &view.categories {
         println!(
             "\n{} ({}/{} slots)",
-            category_name(group.category),
+            display::category_name(group.category),
             group.slots_used,
             group.slots_capacity
         );
