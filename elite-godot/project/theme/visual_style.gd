@@ -1,5 +1,5 @@
 extends RefCounted
-## How 3D things are drawn. Models and the game stay the same; the style decides colours, glow and what node a model id becomes.
+## How 3D things are drawn. Models and the game stay the same; the style decides colours, glow, light and what node a model id becomes.
 
 const ModelLoader := preload("res://models/model_loader.gd")
 const Events := preload("res://theme/visual_style_events.gd")
@@ -7,22 +7,25 @@ const Events := preload("res://theme/visual_style_events.gd")
 const PREFERENCES := "user://preferences.cfg"
 const DEFAULT := "wireframe"
 
-const STYLES := {
-	"wireframe": {
-		"colours": {
-			"player": Color(0.35, 1.0, 0.85),
-			"enemy": Color(1.0, 0.35, 0.3),
-			"station": Color(0.35, 1.0, 0.85),
-			"stars": Color(0.8, 0.9, 1.0),
-			"beam_player": Color(0.5, 1.0, 0.9),
-			"beam_enemy": Color(1.0, 0.45, 0.3),
-			"shield": Color(0.4, 0.7, 1.0),
-			"explosion": Color(1.0, 0.7, 0.3),
-		},
-		"glow_intensity": 2.0,
-		"glow_bloom": 0.15,
-	},
+const COLOURS := {
+	"player": Color(0.35, 1.0, 0.85),
+	"enemy": Color(1.0, 0.35, 0.3),
+	"station": Color(0.35, 1.0, 0.85),
+	"stars": Color(0.8, 0.9, 1.0),
+	"beam_player": Color(0.5, 1.0, 0.9),
+	"beam_enemy": Color(1.0, 0.45, 0.3),
+	"shield": Color(0.4, 0.7, 1.0),
+	"explosion": Color(1.0, 0.7, 0.3),
 }
+
+## `draws` is how a model is drawn: lines, lines over a black fill that hides the far edges, or a lit fill.
+const STYLES := {
+	"wireframe": {"draws": "lines", "glow_intensity": 2.0, "glow_bloom": 0.15},
+	"hidden-line": {"draws": "hidden_line", "glow_intensity": 2.0, "glow_bloom": 0.15},
+	"flat": {"draws": "flat", "glow_intensity": 0.4, "glow_bloom": 0.05, "ambient": Color(0.22, 0.27, 0.34)},
+}
+
+const HIDDEN_LINE_FILL_SCALE := 0.994
 
 static var events := Events.new()
 static var current_name := ""
@@ -51,7 +54,7 @@ static func use(name: String) -> void:
 
 
 static func colour(role: String) -> Color:
-	return _settings()["colours"][role]
+	return COLOURS[role]
 
 
 static func environment() -> Environment:
@@ -62,7 +65,24 @@ static func environment() -> Environment:
 	environment.glow_enabled = true
 	environment.glow_intensity = settings["glow_intensity"]
 	environment.glow_bloom = settings["glow_bloom"]
+	if settings.has("ambient"):
+		environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		environment.ambient_light_color = settings["ambient"]
 	return environment
+
+
+## Lights the style needs in a scene; none for unlit styles. Add them to the scene that draws models.
+static func lights() -> Array:
+	if _settings()["draws"] != "flat":
+		return []
+	var key := DirectionalLight3D.new()
+	key.rotation_degrees = Vector3(-40, -35, 0)
+	key.light_energy = 1.4
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-10, 145, 0)
+	fill.light_energy = 0.45
+	fill.light_color = Color(0.6, 0.75, 1.0)
+	return [key, fill]
 
 
 static func material(role: String, fading := false) -> StandardMaterial3D:
@@ -77,15 +97,41 @@ static func material(role: String, fading := false) -> StandardMaterial3D:
 ## The node that draws a model id in the current style.
 static func model_node(model_id: String, role: String) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
-	node.mesh = ModelLoader.line_mesh(model_id)
-	node.material_override = material(role)
+	restyle(node, model_id, role)
 	return node
 
 
-## Redraw an existing node after the style changes.
+## Redraw an existing node after the style changes. A style that needs faces falls back to lines for a model without them.
 static func restyle(node: MeshInstance3D, model_id: String, role: String) -> void:
+	for child in node.get_children():
+		child.queue_free()
+	var draws: String = _settings()["draws"]
+	var solid: ArrayMesh = ModelLoader.solid_mesh(model_id) if draws != "lines" else null
+	if solid == null:
+		draws = "lines"
 	node.mesh = ModelLoader.line_mesh(model_id)
 	node.material_override = material(role)
+	match draws:
+		"hidden_line":
+			var fill := MeshInstance3D.new()
+			fill.mesh = solid
+			fill.scale = Vector3.ONE * HIDDEN_LINE_FILL_SCALE
+			fill.material_override = _fill_material(Color.BLACK, true)
+			node.add_child(fill)
+		"flat":
+			node.mesh = solid
+			node.material_override = _fill_material(colour(role).darkened(0.35), false)
+
+
+static func _fill_material(colour: Color, unshaded: bool) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.albedo_color = colour
+	if unshaded:
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	else:
+		material.roughness = 0.8
+	return material
 
 
 static func _settings() -> Dictionary:

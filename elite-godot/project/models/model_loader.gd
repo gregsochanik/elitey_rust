@@ -30,7 +30,12 @@ static func load_model(id: String) -> Dictionary:
 			return {}
 		edges.append(edge[0])
 		edges.append(edge[1])
-	return {"id": id, "vertices": vertices, "edges": edges}
+	var faces := PackedInt32Array()
+	for face in data.get("faces", []):
+		if face[0] >= vertices.size() or face[1] >= vertices.size() or face[2] >= vertices.size():
+			return {}
+		faces.append_array(PackedInt32Array([face[0], face[1], face[2]]))
+	return {"id": id, "vertices": vertices, "edges": edges, "faces": faces}
 
 
 ## A model's own mesh, or the fallback ship's when no file exists for the id.
@@ -47,4 +52,29 @@ static func line_mesh(id: String) -> ArrayMesh:
 	arrays[Mesh.ARRAY_VERTEX] = points
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
+	return mesh
+
+
+## Filled triangles with a normal per face, or null when the model has no faces.
+static func solid_mesh(id: String) -> ArrayMesh:
+	var model := load_model(id)
+	if model.is_empty() or model["faces"].is_empty():
+		return null
+	var vertices: PackedVector3Array = model["vertices"]
+	var points := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var faces: PackedInt32Array = model["faces"]
+	for i in range(0, faces.size(), 3):
+		var a := vertices[faces[i]]
+		var b := vertices[faces[i + 1]]
+		var c := vertices[faces[i + 2]]
+		var normal := (b - a).cross(c - a).normalized()
+		points.append_array(PackedVector3Array([a, b, c]))
+		normals.append_array(PackedVector3Array([normal, normal, normal]))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = points
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh

@@ -17,6 +17,7 @@ const ENEMY_ENCOUNTER := Vector3(4.4, 0.9, -15.0)
 var ship: MeshInstance3D
 var enemy: MeshInstance3D
 var world := WorldEnvironment.new()
+var lights := []
 var in_encounter := false
 var stars := MeshInstance3D.new()
 var star_mesh := ImmediateMesh.new()
@@ -46,11 +47,22 @@ func _ready() -> void:
 	add_child(stars)
 	for i in STAR_COUNT:
 		star_positions.append(_random_star(true))
+	_relight()
+	_relight()
 	Style.events.changed.connect(_restyle)
+
+
+func _relight() -> void:
+	for light in lights:
+		light.queue_free()
+	lights = Style.lights()
+	for light in lights:
+		add_child(light)
 
 
 func _restyle() -> void:
 	world.environment = Style.environment()
+	_relight()
 	Style.restyle(ship, PLAYER_MODEL, "player")
 	Style.restyle(enemy, ENEMY_MODEL, "enemy")
 	stars.material_override = Style.material("stars")
