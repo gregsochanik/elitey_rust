@@ -230,14 +230,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "elitey_rust"
+name = "elite-cli"
+version = "0.0.0-dev"
+dependencies = [
+ "anyhow",
+ "clap",
+ "colored",
+ "crossterm",
+ "elite-core",
+ "rand",
+ "serde_json",
+]
+
+[[package]]
+name = "elite-core"
 version = "0.0.0-dev"
 dependencies = [
  "anyhow",
  "chrono",
- "clap",
- "colored",
- "crossterm",
  "dirs",
  "rand",
  "serde",

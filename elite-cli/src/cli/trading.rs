@@ -1,9 +1,9 @@
-use crate::game::commander::Standing;
-use crate::game::trade_log::TradeKind;
-use crate::game::trading::{CargoView, MarketView, Pushed, TradeReceipt};
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
+use elite_core::game::commander::Standing;
+use elite_core::game::trade_log::TradeKind;
+use elite_core::game::trading::{CargoView, MarketView, Pushed, TradeReceipt};
+use elite_core::game::GameState;
 
 /// `buy <item> [quantity]`
 pub fn buy(game: &mut GameState, args: &[String]) -> bool {
@@ -36,7 +36,7 @@ fn parse_trade(
     game: &GameState,
     args: &[String],
     verb: &str,
-) -> Option<(crate::data::commodities::CommodityType, u32)> {
+) -> Option<(elite_core::data::commodities::CommodityType, u32)> {
     if args.is_empty() {
         show_error(&format!("Usage: {} <item> [quantity]", verb));
         return None;
@@ -56,7 +56,7 @@ fn parse_trade(
     }
 }
 
-fn report(result: Result<TradeReceipt, crate::game::trading::TradeError>) -> bool {
+fn report(result: Result<TradeReceipt, elite_core::game::trading::TradeError>) -> bool {
     match result {
         Ok(receipt) => {
             print_receipt(&receipt);

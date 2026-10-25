@@ -1,8 +1,8 @@
-use crate::game::trade_log::TradeKind;
-use crate::game::views::{StatusView, SystemInfoView, TradeLogView};
-use crate::game::GameState;
 use crate::utils::display::show_error;
 use colored::*;
+use elite_core::game::trade_log::TradeKind;
+use elite_core::game::views::{StatusView, SystemInfoView, TradeLogView};
+use elite_core::game::GameState;
 
 /// `status`
 pub fn status(game: &GameState) {
@@ -227,7 +227,7 @@ mod tests {
         let mut game = GameState::new("Test".to_string());
         game.commander.credits = 1_000;
         for _ in 0..3 {
-            game.buy(crate::data::commodities::CommodityType::Food, 1)
+            game.buy(elite_core::data::commodities::CommodityType::Food, 1)
                 .unwrap();
         }
 

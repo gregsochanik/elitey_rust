@@ -1,8 +1,8 @@
 mod common;
 
 use common::new_game;
-use elitey_rust::data::commodities::CommodityType;
-use elitey_rust::game::commander::Standing;
+use elite_core::data::commodities::CommodityType;
+use elite_core::game::commander::Standing;
 
 const A: &str = "LEESTI";
 const B: &str = "RIEDQUAT";
@@ -53,7 +53,7 @@ fn route_trader(capital: u32, jumps: u32) -> (f64, Vec<f64>) {
 
         if let Some((profit, c, tons)) = best {
             if profit > 0 && tons > 0 {
-                elitey_rust::cli::trading::buy(
+                elite_cli::cli::trading::buy(
                     &mut game,
                     &[c.name().to_lowercase(), tons.to_string()],
                 );
@@ -70,7 +70,7 @@ fn route_trader(capital: u32, jumps: u32) -> (f64, Vec<f64>) {
             .map(|i| (i.commodity.clone(), i.quantity))
             .collect();
         for (c, q) in cargo {
-            elitey_rust::cli::trading::sell(&mut game, &[c.name().to_lowercase(), q.to_string()]);
+            elite_cli::cli::trading::sell(&mut game, &[c.name().to_lowercase(), q.to_string()]);
         }
         let now = f64::from(game.commander.credits());
         per_trip.push(now - last);

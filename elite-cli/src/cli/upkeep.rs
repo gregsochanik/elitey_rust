@@ -1,6 +1,6 @@
-use crate::game::refuel::{RefuelError, RefuelOutcome};
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
+use elite_core::game::refuel::{RefuelError, RefuelOutcome};
+use elite_core::game::GameState;
 
 /// A single optional positive number: `None` for no argument, `Err` for anything else
 fn parse_amount(args: &[String]) -> Result<Option<u32>, ()> {
@@ -74,7 +74,7 @@ pub fn repair(game: &mut GameState, args: &[String]) -> bool {
             ));
             true
         }
-        Err(error @ crate::game::repair::RepairError::HullFull) => {
+        Err(error @ elite_core::game::repair::RepairError::HullFull) => {
             show_info(&error.to_string());
             false
         }

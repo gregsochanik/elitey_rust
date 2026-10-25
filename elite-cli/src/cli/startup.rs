@@ -1,7 +1,7 @@
-use crate::game::{GameState, SaveLoadHandler};
 use crate::utils::display::show_error;
 use crate::utils::input;
 use colored::*;
+use elite_core::game::{GameState, SaveLoadHandler};
 use std::io::Write;
 
 /// Start a new game, asking before replacing an existing autosave

@@ -1,5 +1,5 @@
-use elitey_rust::game::combat::{Action, Combat, CombatError, Combatant, Outcome};
-use elitey_rust::game::{Commander, Ship};
+use elite_core::game::combat::{Action, Combat, CombatError, Combatant, Outcome};
+use elite_core::game::{Commander, Ship};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
@@ -17,7 +17,7 @@ fn ship_with(commands: &[&str]) -> Ship {
     for command in commands {
         let args: Vec<String> = command.split_whitespace().map(String::from).collect();
         assert!(
-            elitey_rust::cli::equipment::handle(&args, &mut commander, &mut ship),
+            elite_cli::cli::equipment::handle(&args, &mut commander, &mut ship),
             "{}",
             command
         );

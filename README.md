@@ -119,31 +119,20 @@ Hull: [Current]/[Max]
 
 ### Project Structure
 ```
-src/
-├── main.rs              # Entry point and game loop
-├── game/                # Core game logic
-│   ├── mod.rs
-│   ├── commander.rs     # Player data and operations
-│   ├── ship.rs          # Ship management and stats
-│   ├── game_state.rs    # Overall game state
-│   ├── trading.rs       # Market and cargo
-│   ├── travel.rs        # Jump and system navigation
-│   ├── events.rs        # Dynamic travel events (two-phase)
-│   ├── upgrades.rs      # Ship and equipment upgrades
-│   └── save_load.rs     # Save/load game state
-├── data/                # Static and persisted data
-│   ├── systems.rs       # Star systems and galaxy
-│   ├── commodities.rs   # Commodities and markets, loaded from data/commodities.json
-│   ├── ships.rs         # Ship types, loaded from data/ships.json
-│   └── save_load.rs     # Save file I/O
-└── utils/
-    ├── mod.rs
-    ├── display.rs       # Terminal output and formatting
-    └── input.rs         # Input processing and validation
-data/                    # Game data as JSON, embedded at build time (ships.json, equipment.json, commodities.json)
-galaxies/                # Star system data (galaxy1.json)
+```
+Cargo.toml               # Workspace: elite-core and elite-cli
+elite-core/              # Rules, data and state; no terminal I/O
+├── src/game/            # Commander, ship, trading, travel, events, jobs, combat, upgrades
+├── src/data/            # Star systems, commodities, ships, equipment catalogue, save file I/O
+├── data/                # Game data as JSON, embedded at build time
+├── galaxies/            # Star system data (galaxy1.json)
+└── tests/               # Rules and balance tests
+elite-cli/               # The terminal game (binary: elitey_rust)
+├── src/main.rs          # Entry point and game loop
+├── src/cli/             # Command handlers and text
+├── src/utils/           # Terminal output and input helpers
+└── tests/               # Command-level and play-through tests
 features/                # Feature specs (see AGENTS.md)
-tests/                   # Integration / BDD-style tests
 ```
 
 ### Makefile Targets

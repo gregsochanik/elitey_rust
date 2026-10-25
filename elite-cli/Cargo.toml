@@ -1,0 +1,22 @@
+[package]
+name = "elite-cli"
+description = "Elite-style terminal trading game in Rust"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+name = "elite_cli"
+
+[[bin]]
+name = "elitey_rust"
+path = "src/main.rs"
+
+[dependencies]
+elite-core = { path = "../elite-core" }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+crossterm = "0.27"
+rand = "0.8"
+anyhow = "1.0"
+colored = "2.0"

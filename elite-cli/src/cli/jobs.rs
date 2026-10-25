@@ -1,8 +1,8 @@
-use crate::game::game_state::JobListing;
-use crate::game::jobs::{self, ActiveJob};
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
+use elite_core::game::game_state::JobListing;
+use elite_core::game::jobs::{self, ActiveJob};
+use elite_core::game::GameState;
 
 /// `jobs`: the board here
 pub fn board(game: &mut GameState) {

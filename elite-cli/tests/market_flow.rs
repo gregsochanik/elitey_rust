@@ -1,7 +1,7 @@
 mod common;
 
 use common::{args, new_game};
-use elitey_rust::data::save_load::SaveLoadManager;
+use elite_core::data::save_load::SaveLoadManager;
 
 #[test]
 fn the_world_clock_counts_jumps_and_is_saved() {
@@ -23,7 +23,7 @@ fn old_saves_without_a_clock_start_at_zero() {
     let mut value = serde_json::to_value(&game).unwrap();
     value.as_object_mut().unwrap().remove("world_clock");
 
-    let loaded: elitey_rust::game::GameState = serde_json::from_value(value).unwrap();
+    let loaded: elite_core::game::GameState = serde_json::from_value(value).unwrap();
 
     assert_eq!(loaded.world_clock, 0);
 }
@@ -31,8 +31,8 @@ fn old_saves_without_a_clock_start_at_zero() {
 #[test]
 fn markets_still_trade_after_the_state_change() {
     let mut game = new_game(500);
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 2")));
-    assert!(elitey_rust::cli::trading::sell(&mut game, &args("food 2")));
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("food 2")));
+    assert!(elite_cli::cli::trading::sell(&mut game, &args("food 2")));
 }
 
 #[test]
@@ -67,15 +67,15 @@ fn hopping_between_systems_does_not_reroll_prices_or_stock() {
 fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
     let mut game = new_game(500);
     let before = game.market_prices().unwrap();
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 3")));
-    let stock = before.availability[&elitey_rust::data::commodities::CommodityType::Food];
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("food 3")));
+    let stock = before.availability[&elite_core::data::commodities::CommodityType::Food];
 
     game.travel_to_system("DISO").unwrap();
     game.ship.refuel();
     game.travel_to_system("LAVE").unwrap();
     let after = game.market_prices().unwrap();
     assert_eq!(
-        after.availability[&elitey_rust::data::commodities::CommodityType::Food],
+        after.availability[&elite_core::data::commodities::CommodityType::Food],
         stock - 2
     );
 
@@ -91,16 +91,13 @@ fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
 
 #[test]
 fn selling_pushes_the_price_down_and_it_recovers_over_the_next_jumps() {
-    use elitey_rust::data::commodities::CommodityType;
+    use elite_core::data::commodities::CommodityType;
 
     let mut game = new_game(2_000);
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("luxury 5")));
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("luxury 5")));
     let undisturbed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
 
-    assert!(elitey_rust::cli::trading::sell(
-        &mut game,
-        &args("luxury 5")
-    ));
+    assert!(elite_cli::cli::trading::sell(&mut game, &args("luxury 5")));
     let pushed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
     assert!(pushed < undisturbed);
 
@@ -113,11 +110,11 @@ fn selling_pushes_the_price_down_and_it_recovers_over_the_next_jumps() {
 
 #[test]
 fn buying_raises_the_buy_price_for_the_next_purchase() {
-    use elitey_rust::data::commodities::CommodityType;
+    use elite_core::data::commodities::CommodityType;
 
     let mut game = new_game(2_000);
     let before = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 5")));
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("food 5")));
     let after = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
 
     assert!(after > before);
@@ -125,16 +122,13 @@ fn buying_raises_the_buy_price_for_the_next_purchase() {
 
 #[test]
 fn trading_marks_the_commodity_until_the_market_has_recovered() {
-    use elitey_rust::data::commodities::CommodityType;
+    use elite_core::data::commodities::CommodityType;
 
     let mut game = new_game(5_000);
     assert!(game.pushed_commodities().is_empty());
 
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("luxury 5")));
-    assert!(elitey_rust::cli::trading::sell(
-        &mut game,
-        &args("luxury 5")
-    ));
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("luxury 5")));
+    assert!(elite_cli::cli::trading::sell(&mut game, &args("luxury 5")));
     let pushed = game.pushed_commodities();
     assert_eq!(pushed.len(), 1);
     let luxury = pushed[&CommodityType::Luxury];
