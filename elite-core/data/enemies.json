@@ -7,6 +7,22 @@
     "recharge": 4,
     "weapons": [{ "damage": 14, "accuracy": 0.65 }],
     "behaviour": {
+      "aggression": 0.5,
+      "flee_below_hull": 0.35,
+      "flee_odds": 0.0,
+      "flee_chance": 0.3,
+      "surrender_below_hull": 0.15,
+      "surrender_chance": 0.3
+    }
+  },
+  {
+    "id": "patrol-vessel",
+    "name": "Patrol Vessel",
+    "hull": 70,
+    "shield": 25,
+    "recharge": 4,
+    "weapons": [{ "damage": 14, "accuracy": 0.65 }],
+    "behaviour": {
       "aggression": 1.0,
       "flee_below_hull": 0.0,
       "flee_odds": 0.0,
@@ -16,8 +32,8 @@
     }
   },
   {
-    "id": "patrol-vessel",
-    "name": "Patrol Vessel",
+    "id": "bounty-target",
+    "name": "Pirate Raider",
     "hull": 70,
     "shield": 25,
     "recharge": 4,

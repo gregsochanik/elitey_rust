@@ -246,6 +246,10 @@ func _animate_line(line: String, player_name: String) -> void:
 		journey.fire_beam(from_player, hit)
 		if hit:
 			journey.flash_shield(not from_player)
+	elif "breaks off and escapes" in line:
+		journey.enemy_leaves()
+	elif "surrenders!" in line and not line.begins_with("You"):
+		journey.enemy_yields()
 	elif "is destroyed" in line:
 		journey.explode(false)
 	elif "crippled" in line:
@@ -267,6 +271,12 @@ func _end_fight(fight: Dictionary) -> void:
 		"escaped":
 			title = "💨  Escaped"
 			text = "You get away from the %s." % enemy_name
+		"enemy_fled":
+			title = "💨  It got away"
+			text = "The %s breaks off and escapes." % enemy_name
+		"enemy_surrendered":
+			title = "🏳️  It surrenders"
+			text = "The %s gives in. You take what it offers." % enemy_name
 		_:
 			title = "🏳️  Surrendered"
 			text = "You give in to the %s." % enemy_name
