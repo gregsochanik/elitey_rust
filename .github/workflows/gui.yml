@@ -73,9 +73,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p elite-godot/dist
-          "$GODOT" --headless --path elite-godot/project --import
-          "$GODOT" --headless --path elite-godot/project --export-release "${{ matrix.preset }}" "../dist/${{ matrix.output }}"
+          # Godot can abort while shutting down the editor after importing, so judge the result by the exported file
+          "$GODOT" --headless --path elite-godot/project --import || echo "import exited with $?"
+          "$GODOT" --headless --path elite-godot/project --export-release "${{ matrix.preset }}" "../dist/${{ matrix.output }}" || echo "export exited with $?"
           ls -la elite-godot/dist
+          test -s "elite-godot/dist/${{ matrix.output }}"
       - uses: actions/upload-artifact@v7
         with:
           name: elite-gui-${{ matrix.preset }}
