@@ -55,12 +55,6 @@ GENITIVE = {
 
 OVERRIDES = {"Rigil Kentaurus": "Alpha Centauri"}
 
-CLASS_NAMES = {
-    "O": "blue", "B": "blue-white", "A": "white", "F": "yellow-white",
-    "G": "yellow", "K": "orange", "M": "red",
-}
-
-
 def bayer_name(bf, con):
     rest = bf.strip()
     if con and rest.endswith(con):
@@ -90,14 +84,80 @@ def star_name(row):
     )
 
 
-def description(row):
+STAR = {
+    "O": ["A furious blue giant lights this system with hard ultraviolet.", "A blue-white furnace burns here; ships dock behind heavy radiation shields."],
+    "B": ["A blue-white giant floods the system with fierce light.", "A young, blazing star scorches the inner worlds."],
+    "A": ["A brilliant white star bathes the system in glare.", "A white star shines here, bright enough to read by from the outer docks."],
+    "F": ["A bright yellow-white star warms a busy system.", "A restless yellow-white star lights the lanes."],
+    "G": ["A steady yellow star keeps the lanes bright.", "A sun much like Earth's warms the docks here."],
+    "K": ["A copper-orange star glows over a quiet system.", "An orange dwarf burns slow and steady here.", "A warm orange sun hangs low over the stations."],
+    "M": ["A dim red dwarf casts a ruddy twilight.", "A faint red sun leaves the system in perpetual dusk.", "A small red star flickers sullenly over the docks.", "A flare-prone red dwarf keeps pilots watching their shields."],
+    "D": ["A cooling white dwarf, the dead heart of an old star, lights the system.", "The pale ember of a white dwarf is all the light there is."],
+    "L": ["A failed star, a brown dwarf, glows a dull red in the dark.", "No true sun here, only a brown dwarf's faint heat."],
+}
+STAR_FALLBACK = ["A faint, little-charted star holds the system together.", "A dim star few pilots have bothered to chart."]
+
+ECONOMY = {
+    "Rich Ind": ["Vast orbital factories turn out machinery night and day.", "Refineries and assembly yards make this one of the richest industrial hubs."],
+    "Average Ind": ["Busy foundries and shipyards keep the traffic moving.", "Steady industry hums across the system's stations."],
+    "Mainly Ind": ["Smoke-stacked stations and shipyards crowd the orbits.", "Heavy industry dominates, and so does the noise."],
+    "Poor Ind": ["Ageing plants limp along on spares and stubbornness.", "Rusting factory decks still turn out a little something."],
+    "Rich Agri": ["Lush farm worlds feed half the sector.", "Golden harvests and exotic vintages make this a gourmet's stop."],
+    "Average Agri": ["Terraced farm stations ship grain and livestock to hungry neighbours.", "Farming settlements keep a quiet, honest trade."],
+    "Mainly Agri": ["Endless fields stretch beneath the orbital docks.", "Almost everything here grows, and everything else is eaten."],
+    "Poor Agri": ["Thin soil and tired crops make for hard living.", "Failed harvests have the farmers eyeing every passing freighter."],
+}
+
+GOVERNMENT = {
+    "Anarchy": ["No one rules here, and pilots dock at their own risk.", "Warlords and gangs run the stations by turns."],
+    "Communist": ["The collective runs everything, and the paperwork runs the collective.", "Shared stores and long queues at the dock office."],
+    "Confederacy": ["A loose league of stations argues its way through each day.", "Rival stations share a flag and little else."],
+    "Corporate State": ["Company logos cover every bulkhead; the shareholders always win.", "The board owns the docks, the air, and the fine print."],
+    "Democracy": ["Lively elections keep the station councils on their toes.", "Citizens vote on everything, from tariffs to the docking queue."],
+    "Dictatorship": ["A strongman's portrait watches every docking bay.", "One ruler holds the system, and loyalty is not optional."],
+    "Feudal": ["Noble houses hold the stations and guard their honour jealously.", "Sworn lords tax each ship that passes their keeps."],
+    "Multi-Government": ["Rival factions share the system in an uneasy peace.", "Several governments trade, bicker and spy on one another here."],
+}
+
+FAMOUS = {
+    "Sol": "The cradle of humanity. Earth's oceans glitter beneath a crowd of orbital docks, and every trade route seems to start here.",
+    "Proxima Centauri": "The nearest star to Sol, a small red dwarf prone to violent flares. Its stations hug the one temperate world and keep their shields up.",
+    "Alpha Centauri": "A bright pair of suns circling each other, the first stop beyond home. Every traveller remembers the double sunrise.",
+    "Barnard's Star": "A swift, faint red dwarf racing across the sky. Prospectors work its cold worlds hoping for a lucky strike.",
+    "Wolf 359": "A tiny, flickering red dwarf with a bad reputation and worse flares. Only the stubborn stay.",
+    "Sirius": "The brightest star in the sky, blazing white and bold, with a ghostly white dwarf companion. Traders flock to its glittering docks.",
+    "Procyon": "A bright yellow-white star trailing a faint white dwarf. A sharp, ambitious port town on the edge of the lanes.",
+    "Tau Ceti": "A calm, Sun-like star in a quiet sector, long dreamed of as a second home. Patient settlers have made it one.",
+    "Ran": "A young orange star ringed by dusty belts. Prospectors and pirates both love the cover the debris gives them.",
+    "61 Cygni": "A pair of orange dwarfs, the first star ever to have its distance measured. Surveyors still come here on pilgrimage.",
+    "Epsilon Indi": "A wandering orange star, trailed by a pair of brown dwarfs. Few lights burn out here, and every dock is glad of visitors.",
+    "Kapteyn's Star": "An ancient red dwarf from the galaxy's old halo, hurtling through at breakneck speed. Settlers here feel like they are always passing through.",
+    "Kruger 60": "Two dim red stars locked in a slow dance, lighting a dusty system with a brooding glow.",
+    "Van Maanen's Star": "A lonely white dwarf, the pale remnant of a dead sun. Its cold stations are a haunt for scavengers.",
+    "Gliese 65": "A pair of flare stars that can double their brightness in seconds. Traders time their arrivals carefully.",
+    "Lalande 21185": "A bright red dwarf with a famous record in the star catalogues. Surveyors, astronomers and smugglers all like the peace.",
+    "Luyten's Star": "A quiet red dwarf with a handful of temperate worlds. A good place for those who prefer being left alone.",
+    "Groombridge 34": "Two red dwarfs on a long, lazy orbit. The sector's lanes meet here and so does its gossip.",
+}
+
+
+def star_line(row, rng):
     spect = row["spect"].strip()
-    colour = CLASS_NAMES.get(spect[:1])
-    if row["proper"] == "Sol":
-        return "The home system: a yellow class G star."
-    if not colour:
-        return "A star of unknown class."
-    return f"A {colour} class {spect[0]} star."
+    letter = spect[:1].upper()
+    if spect.lower().startswith("sd"):
+        letter = spect[2:3].upper()
+    return rng.choice(STAR.get(letter, STAR_FALLBACK))
+
+
+def description(name, row, entry):
+    if name in FAMOUS:
+        return FAMOUS[name]
+    rng = random.Random(f"{SEED}:{name}")
+    return " ".join([
+        star_line(row, rng),
+        rng.choice(ECONOMY[entry["economy"]["name"]]),
+        rng.choice(GOVERNMENT[entry["government"]["name"]]),
+    ])
 
 
 def main(path):
@@ -122,7 +182,7 @@ def main(path):
     for index, ((name, row), (x, y)) in enumerate(zip(stars, positions)):
         entry = traits["start"] if index == 0 else pool.pop()
         galaxy[name] = {"name": name, "x": x, "y": y, **entry,
-                        "description": description(row)}
+                        "description": description(name, row, entry)}
     json.dump(galaxy, sys.stdout, indent=1, ensure_ascii=False)
     print()
 

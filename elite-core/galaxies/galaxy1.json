@@ -15,7 +15,7 @@
   "turnover": 7000,
   "radius": 4116,
   "population": "25 Billion",
-  "description": "The home system: a yellow class G star."
+  "description": "The cradle of humanity. Earth's oceans glitter beneath a crowd of orbital docks, and every trade route seems to start here."
  },
  "Proxima Centauri": {
   "name": "Proxima Centauri",
@@ -33,7 +33,7 @@
   "turnover": 17920,
   "radius": 5454,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "The nearest star to Sol, a small red dwarf prone to violent flares. Its stations hug the one temperate world and keep their shields up."
  },
  "Alpha Centauri": {
   "name": "Alpha Centauri",
@@ -51,7 +51,7 @@
   "turnover": 17280,
   "radius": 3942,
   "population": "40 Billion",
-  "description": "A yellow class G star."
+  "description": "A bright pair of suns circling each other, the first stop beyond home. Every traveller remembers the double sunrise."
  },
  "Barnard's Star": {
   "name": "Barnard's Star",
@@ -69,7 +69,7 @@
   "turnover": 10360,
   "radius": 3679,
   "population": "37 Billion",
-  "description": "A star of unknown class."
+  "description": "A swift, faint red dwarf racing across the sky. Prospectors work its cold worlds hoping for a lucky strike."
  },
  "Wolf 359": {
   "name": "Wolf 359",
@@ -87,7 +87,7 @@
   "turnover": 21560,
   "radius": 5003,
   "population": "49 Billion",
-  "description": "A red class M star."
+  "description": "A tiny, flickering red dwarf with a bad reputation and worse flares. Only the stubborn stay."
  },
  "Lalande 21185": {
   "name": "Lalande 21185",
@@ -105,7 +105,7 @@
   "turnover": 21120,
   "radius": 3572,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "A bright red dwarf with a famous record in the star catalogues. Surveyors, astronomers and smugglers all like the peace."
  },
  "Gliese 65": {
   "name": "Gliese 65",
@@ -123,7 +123,7 @@
   "turnover": 33120,
   "radius": 3036,
   "population": "46 Billion",
-  "description": "A star of unknown class."
+  "description": "A pair of flare stars that can double their brightness in seconds. Traders time their arrivals carefully."
  },
  "Sirius": {
   "name": "Sirius",
@@ -141,7 +141,7 @@
   "turnover": 4536,
   "radius": 3746,
   "population": "27 Billion",
-  "description": "A white class A star."
+  "description": "The brightest star in the sky, blazing white and bold, with a ghostly white dwarf companion. Traders flock to its glittering docks."
  },
  "Ross 154": {
   "name": "Ross 154",
@@ -159,7 +159,7 @@
   "turnover": 2040,
   "radius": 3833,
   "population": "17 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Failed harvests have the farmers eyeing every passing freighter. Noble houses hold the stations and guard their honour jealously."
  },
  "Ross 248": {
   "name": "Ross 248",
@@ -177,7 +177,7 @@
   "turnover": 20640,
   "radius": 4026,
   "population": "43 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Refineries and assembly yards make this one of the richest industrial hubs. Several governments trade, bicker and spy on one another here."
  },
  "Ran": {
   "name": "Ran",
@@ -195,7 +195,7 @@
   "turnover": 14336,
   "radius": 6652,
   "population": "32 Billion",
-  "description": "A orange class K star."
+  "description": "A young orange star ringed by dusty belts. Prospectors and pirates both love the cover the debris gives them."
  },
  "Lacaille 9352": {
   "name": "Lacaille 9352",
@@ -213,7 +213,7 @@
   "turnover": 33120,
   "radius": 5860,
   "population": "46 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Vast orbital factories turn out machinery night and day. A loose league of stations argues its way through each day."
  },
  "Ross 128": {
   "name": "Ross 128",
@@ -231,7 +231,7 @@
   "turnover": 36000,
   "radius": 4585,
   "population": "50 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Vast orbital factories turn out machinery night and day. A loose league of stations argues its way through each day."
  },
  "EZ Aqr": {
   "name": "EZ Aqr",
@@ -249,7 +249,7 @@
   "turnover": 22560,
   "radius": 6087,
   "population": "47 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Refineries and assembly yards make this one of the richest industrial hubs. Several governments trade, bicker and spy on one another here."
  },
  "61 Cygni": {
   "name": "61 Cygni",
@@ -267,7 +267,7 @@
   "turnover": 11840,
   "radius": 6662,
   "population": "37 Billion",
-  "description": "A orange class K star."
+  "description": "A pair of orange dwarfs, the first star ever to have its distance measured. Surveyors still come here on pilgrimage."
  },
  "Procyon": {
   "name": "Procyon",
@@ -285,7 +285,7 @@
   "turnover": 1560,
   "radius": 5032,
   "population": "13 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A bright yellow-white star trailing a faint white dwarf. A sharp, ambitious port town on the edge of the lanes."
  },
  "Struve 2398": {
   "name": "Struve 2398",
@@ -303,7 +303,7 @@
   "turnover": 23520,
   "radius": 6393,
   "population": "42 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Smoke-stacked stations and shipyards crowd the orbits. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Groombridge 34": {
   "name": "Groombridge 34",
@@ -321,7 +321,7 @@
   "turnover": 9240,
   "radius": 4858,
   "population": "33 Billion",
-  "description": "A red class M star."
+  "description": "Two red dwarfs on a long, lazy orbit. The sector's lanes meet here and so does its gossip."
  },
  "Epsilon Indi": {
   "name": "Epsilon Indi",
@@ -339,7 +339,7 @@
   "turnover": 24696,
   "radius": 4867,
   "population": "49 Billion",
-  "description": "A orange class K star."
+  "description": "A wandering orange star, trailed by a pair of brown dwarfs. Few lights burn out here, and every dock is glad of visitors."
  },
  "GJ 1111": {
   "name": "GJ 1111",
@@ -357,7 +357,7 @@
   "turnover": 16800,
   "radius": 6740,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Endless fields stretch beneath the orbital docks. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Tau Ceti": {
   "name": "Tau Ceti",
@@ -375,7 +375,7 @@
   "turnover": 12800,
   "radius": 4712,
   "population": "32 Billion",
-  "description": "A yellow class G star."
+  "description": "A calm, Sun-like star in a quiet sector, long dreamed of as a second home. Patient settlers have made it one."
  },
  "Gliese 54.1": {
   "name": "Gliese 54.1",
@@ -393,7 +393,7 @@
   "turnover": 17920,
   "radius": 4742,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Smoke-stacked stations and shipyards crowd the orbits. Shared stores and long queues at the dock office."
  },
  "Luyten's Star": {
   "name": "Luyten's Star",
@@ -411,7 +411,7 @@
   "turnover": 11136,
   "radius": 3168,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A quiet red dwarf with a handful of temperate worlds. A good place for those who prefer being left alone."
  },
  "Kapteyn's Star": {
   "name": "Kapteyn's Star",
@@ -429,7 +429,7 @@
   "turnover": 8120,
   "radius": 5809,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "An ancient red dwarf from the galaxy's old halo, hurtling through at breakneck speed. Settlers here feel like they are always passing through."
  },
  "Lacaille 8760": {
   "name": "Lacaille 8760",
@@ -447,7 +447,7 @@
   "turnover": 15552,
   "radius": 6221,
   "population": "36 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Steady industry hums across the system's stations. Rival factions share the system in an uneasy peace."
  },
  "Kruger 60": {
   "name": "Kruger 60",
@@ -465,7 +465,7 @@
   "turnover": 15288,
   "radius": 3298,
   "population": "39 Billion",
-  "description": "A red class M star."
+  "description": "Two dim red stars locked in a slow dance, lighting a dusty system with a brooding glow."
  },
  "Ross 614": {
   "name": "Ross 614",
@@ -483,7 +483,7 @@
   "turnover": 45760,
   "radius": 3380,
   "population": "52 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Refineries and assembly yards make this one of the richest industrial hubs. The board owns the docks, the air, and the fine print."
  },
  "Van Maanen's Star": {
   "name": "Van Maanen's Star",
@@ -501,7 +501,7 @@
   "turnover": 1536,
   "radius": 3558,
   "population": "16 Billion",
-  "description": "A star of unknown class."
+  "description": "A lonely white dwarf, the pale remnant of a dead sun. Its cold stations are a haunt for scavengers."
  },
  "GJ 1061": {
   "name": "GJ 1061",
@@ -519,7 +519,7 @@
   "turnover": 28952,
   "radius": 6701,
   "population": "47 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Heavy industry dominates, and so does the noise. Company logos cover every bulkhead; the shareholders always win."
  },
  "Wolf 1061": {
   "name": "Wolf 1061",
@@ -537,7 +537,7 @@
   "turnover": 3840,
   "radius": 3886,
   "population": "24 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Farming settlements keep a quiet, honest trade. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 473": {
   "name": "Gliese 473",
@@ -555,7 +555,7 @@
   "turnover": 20664,
   "radius": 4949,
   "population": "41 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Smoke-stacked stations and shipyards crowd the orbits. A loose league of stations argues its way through each day."
  },
  "Gliese 1": {
   "name": "Gliese 1",
@@ -573,7 +573,7 @@
   "turnover": 28800,
   "radius": 4457,
   "population": "45 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Vast orbital factories turn out machinery night and day. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 3522": {
   "name": "GJ 3522",
@@ -591,7 +591,7 @@
   "turnover": 33120,
   "radius": 3996,
   "population": "46 Billion",
-  "description": "A star of unknown class."
+  "description": "An orange dwarf burns slow and steady here. Refineries and assembly yards make this one of the richest industrial hubs. A loose league of stations argues its way through each day."
  },
  "Gliese 83.1": {
   "name": "Gliese 83.1",
@@ -609,7 +609,7 @@
   "turnover": 1560,
   "radius": 3608,
   "population": "13 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Thin soil and tired crops make for hard living. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 3618": {
   "name": "GJ 3618",
@@ -627,7 +627,7 @@
   "turnover": 3168,
   "radius": 5146,
   "population": "22 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Failed harvests have the farmers eyeing every passing freighter. Rival factions share the system in an uneasy peace."
  },
  "GJ 3622": {
   "name": "GJ 3622",
@@ -645,7 +645,7 @@
   "turnover": 27864,
   "radius": 5592,
   "population": "43 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Busy foundries and shipyards keep the traffic moving. A loose league of stations argues its way through each day."
  },
  "Gliese 687": {
   "name": "Gliese 687",
@@ -663,7 +663,7 @@
   "turnover": 27456,
   "radius": 4507,
   "population": "52 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Almost everything here grows, and everything else is eaten. The board owns the docks, the air, and the fine print."
  },
  "Gliese 674": {
   "name": "Gliese 674",
@@ -681,7 +681,7 @@
   "turnover": 16800,
   "radius": 6816,
   "population": "35 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Endless fields stretch beneath the orbital docks. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Gliese 440": {
   "name": "Gliese 440",
@@ -699,7 +699,7 @@
   "turnover": 22560,
   "radius": 3755,
   "population": "47 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Refineries and assembly yards make this one of the richest industrial hubs. Rival factions share the system in an uneasy peace."
  },
  "Gliese 876": {
   "name": "Gliese 876",
@@ -717,7 +717,7 @@
   "turnover": 10240,
   "radius": 6261,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Rusting factory decks still turn out a little something. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 1002": {
   "name": "GJ 1002",
@@ -735,7 +735,7 @@
   "turnover": 16800,
   "radius": 3960,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Refineries and assembly yards make this one of the richest industrial hubs. Rival factions share the system in an uneasy peace."
  },
  "GJ 1245": {
   "name": "GJ 1245",
@@ -753,7 +753,7 @@
   "turnover": 5568,
   "radius": 5195,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Farming settlements keep a quiet, honest trade. Rival factions share the system in an uneasy peace."
  },
  "Gliese 412": {
   "name": "Gliese 412",
@@ -771,7 +771,7 @@
   "turnover": 4480,
   "radius": 3564,
   "population": "20 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Smoke-stacked stations and shipyards crowd the orbits. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 380": {
   "name": "Gliese 380",
@@ -789,7 +789,7 @@
   "turnover": 6264,
   "radius": 6589,
   "population": "29 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Failed harvests have the farmers eyeing every passing freighter. Rival stations share a flag and little else."
  },
  "Gliese 388": {
   "name": "Gliese 388",
@@ -807,7 +807,7 @@
   "turnover": 33920,
   "radius": 6871,
   "population": "53 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Rusting factory decks still turn out a little something. Lively elections keep the station councils on their toes."
  },
  "Gliese 832": {
   "name": "Gliese 832",
@@ -825,7 +825,7 @@
   "turnover": 7992,
   "radius": 6191,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. Rival stations share a flag and little else."
  },
  "Keid": {
   "name": "Keid",
@@ -843,7 +843,7 @@
   "turnover": 4032,
   "radius": 3633,
   "population": "21 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Terraced farm stations ship grain and livestock to hungry neighbours. Several governments trade, bicker and spy on one another here."
  },
  "GJ 1005": {
   "name": "GJ 1005",
@@ -861,7 +861,7 @@
   "turnover": 28952,
   "radius": 6909,
   "population": "47 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Smoke-stacked stations and shipyards crowd the orbits. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 682": {
   "name": "Gliese 682",
@@ -879,7 +879,7 @@
   "turnover": 13440,
   "radius": 4859,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Endless fields stretch beneath the orbital docks. A strongman's portrait watches every docking bay."
  },
  "70 Ophiuchi": {
   "name": "70 Ophiuchi",
@@ -897,7 +897,7 @@
   "turnover": 2040,
   "radius": 3293,
   "population": "17 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Thin soil and tired crops make for hard living. Sworn lords tax each ship that passes their keeps."
  },
  "Gliese 873": {
   "name": "Gliese 873",
@@ -915,7 +915,7 @@
   "turnover": 16192,
   "radius": 4043,
   "population": "46 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Farming settlements keep a quiet, honest trade. Company logos cover every bulkhead; the shareholders always win."
  },
  "Altair": {
   "name": "Altair",
@@ -933,7 +933,7 @@
   "turnover": 3000,
   "radius": 3019,
   "population": "25 Billion",
-  "description": "A white class A star."
+  "description": "A brilliant white star bathes the system in glare. Thin soil and tired crops make for hard living. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 1116": {
   "name": "GJ 1116",
@@ -951,7 +951,7 @@
   "turnover": 7776,
   "radius": 3433,
   "population": "27 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Almost everything here grows, and everything else is eaten. Rival factions share the system in an uneasy peace."
  },
  "Gliese 445": {
   "name": "Gliese 445",
@@ -969,7 +969,7 @@
   "turnover": 16800,
   "radius": 5420,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Refineries and assembly yards make this one of the richest industrial hubs. Several governments trade, bicker and spy on one another here."
  },
  "GJ 3379": {
   "name": "GJ 3379",
@@ -987,7 +987,7 @@
   "turnover": 8064,
   "radius": 4572,
   "population": "28 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Terraced farm stations ship grain and livestock to hungry neighbours. Rival stations share a flag and little else."
  },
  "Gliese 526": {
   "name": "Gliese 526",
@@ -1005,7 +1005,7 @@
   "turnover": 26880,
   "radius": 5866,
   "population": "48 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Refineries and assembly yards make this one of the richest industrial hubs. A strongman's portrait watches every docking bay."
  },
  "Gliese 169.1": {
   "name": "Gliese 169.1",
@@ -1023,7 +1023,7 @@
   "turnover": 7000,
   "radius": 6248,
   "population": "25 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim star few pilots have bothered to chart. Golden harvests and exotic vintages make this a gourmet's stop. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 251": {
   "name": "Gliese 251",
@@ -1041,7 +1041,7 @@
   "turnover": 1536,
   "radius": 4562,
   "population": "16 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Failed harvests have the farmers eyeing every passing freighter. Warlords and gangs run the stations by turns."
  },
  "Gliese 205": {
   "name": "Gliese 205",
@@ -1059,7 +1059,7 @@
   "turnover": 27864,
   "radius": 3012,
   "population": "43 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Busy foundries and shipyards keep the traffic moving. Rival stations share a flag and little else."
  },
  "Gliese 754": {
   "name": "Gliese 754",
@@ -1077,7 +1077,7 @@
   "turnover": 28800,
   "radius": 3419,
   "population": "50 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Busy foundries and shipyards keep the traffic moving. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 229": {
   "name": "Gliese 229",
@@ -1095,7 +1095,7 @@
   "turnover": 18648,
   "radius": 5792,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Busy foundries and shipyards keep the traffic moving. One ruler holds the system, and loyalty is not optional."
  },
  "Alsafi": {
   "name": "Alsafi",
@@ -1113,7 +1113,7 @@
   "turnover": 7000,
   "radius": 5508,
   "population": "25 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Heavy industry dominates, and so does the noise. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 338": {
   "name": "Gliese 338",
@@ -1131,7 +1131,7 @@
   "turnover": 5208,
   "radius": 6419,
   "population": "31 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Failed harvests have the farmers eyeing every passing freighter. A strongman's portrait watches every docking bay."
  },
  "Gliese 213": {
   "name": "Gliese 213",
@@ -1149,7 +1149,7 @@
   "turnover": 47200,
   "radius": 4835,
   "population": "59 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Vast orbital factories turn out machinery night and day. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Gliese 693": {
   "name": "Gliese 693",
@@ -1167,7 +1167,7 @@
   "turnover": 20664,
   "radius": 5313,
   "population": "41 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Steady industry hums across the system's stations. A strongman's portrait watches every docking bay."
  },
  "Gliese 570": {
   "name": "Gliese 570",
@@ -1185,7 +1185,7 @@
   "turnover": 12672,
   "radius": 5293,
   "population": "33 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Almost everything here grows, and everything else is eaten. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 752": {
   "name": "Gliese 752",
@@ -1203,7 +1203,7 @@
   "turnover": 25344,
   "radius": 6061,
   "population": "44 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Rusting factory decks still turn out a little something. Rival stations share a flag and little else."
  },
  "Gliese 300": {
   "name": "Gliese 300",
@@ -1221,7 +1221,7 @@
   "turnover": 15288,
   "radius": 3298,
   "population": "39 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Smoke-stacked stations and shipyards crowd the orbits. A strongman's portrait watches every docking bay."
  },
  "Gliese 588": {
   "name": "Gliese 588",
@@ -1239,7 +1239,7 @@
   "turnover": 31360,
   "radius": 6074,
   "population": "49 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Ageing plants limp along on spares and stubbornness. Lively elections keep the station councils on their toes."
  },
  "Guniibuu": {
   "name": "Guniibuu",
@@ -1257,7 +1257,7 @@
   "turnover": 28800,
   "radius": 3549,
   "population": "45 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Rusting factory decks still turn out a little something. Lively elections keep the station councils on their toes."
  },
  "Achird": {
   "name": "Achird",
@@ -1275,7 +1275,7 @@
   "turnover": 16416,
   "radius": 4597,
   "population": "38 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Endless fields stretch beneath the orbital docks. A loose league of stations argues its way through each day."
  },
  "Gliese 285": {
   "name": "Gliese 285",
@@ -1293,7 +1293,7 @@
   "turnover": 10296,
   "radius": 5126,
   "population": "39 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Thin soil and tired crops make for hard living. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 664": {
   "name": "Gliese 664",
@@ -1311,7 +1311,7 @@
   "turnover": 4608,
   "radius": 4165,
   "population": "24 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Failed harvests have the farmers eyeing every passing freighter. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 661": {
   "name": "Gliese 661",
@@ -1329,7 +1329,7 @@
   "turnover": 10880,
   "radius": 5178,
   "population": "34 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Golden harvests and exotic vintages make this a gourmet's stop. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 908": {
   "name": "Gliese 908",
@@ -1347,7 +1347,7 @@
   "turnover": 3192,
   "radius": 6092,
   "population": "19 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Failed harvests have the farmers eyeing every passing freighter. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 783": {
   "name": "Gliese 783",
@@ -1365,7 +1365,7 @@
   "turnover": 24696,
   "radius": 5031,
   "population": "49 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Busy foundries and shipyards keep the traffic moving. One ruler holds the system, and loyalty is not optional."
  },
  "82 G. Eri": {
   "name": "82 G. Eri",
@@ -1383,7 +1383,7 @@
   "turnover": 9120,
   "radius": 6747,
   "population": "38 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Failed harvests have the farmers eyeing every passing freighter. Lively elections keep the station councils on their toes."
  },
  "Gliese 555": {
   "name": "Gliese 555",
@@ -1401,7 +1401,7 @@
   "turnover": 25760,
   "radius": 5522,
   "population": "46 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Smoke-stacked stations and shipyards crowd the orbits. Lively elections keep the station councils on their toes."
  },
  "Delta Pavonis": {
   "name": "Delta Pavonis",
@@ -1419,7 +1419,7 @@
   "turnover": 5760,
   "radius": 3413,
   "population": "24 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Golden harvests and exotic vintages make this a gourmet's stop. Several governments trade, bicker and spy on one another here."
  },
  "GJ 3323": {
   "name": "GJ 3323",
@@ -1437,7 +1437,7 @@
   "turnover": 12152,
   "radius": 4492,
   "population": "31 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Heavy industry dominates, and so does the noise. One ruler holds the system, and loyalty is not optional."
  },
  "GJ 1221": {
   "name": "GJ 1221",
@@ -1455,7 +1455,7 @@
   "turnover": 8960,
   "radius": 3851,
   "population": "35 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Rusting factory decks still turn out a little something. Warlords and gangs run the stations by turns."
  },
  "GJ 3454": {
   "name": "GJ 3454",
@@ -1473,7 +1473,7 @@
   "turnover": 7936,
   "radius": 3406,
   "population": "31 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Farming settlements keep a quiet, honest trade. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 896": {
   "name": "Gliese 896",
@@ -1491,7 +1491,7 @@
   "turnover": 27648,
   "radius": 5310,
   "population": "48 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Ageing plants limp along on spares and stubbornness. Rival stations share a flag and little else."
  },
  "Gliese 644": {
   "name": "Gliese 644",
@@ -1509,7 +1509,7 @@
   "turnover": 40832,
   "radius": 3427,
   "population": "58 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Ageing plants limp along on spares and stubbornness. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 784": {
   "name": "Gliese 784",
@@ -1527,7 +1527,7 @@
   "turnover": 40832,
   "radius": 6447,
   "population": "58 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Ageing plants limp along on spares and stubbornness. The board owns the docks, the air, and the fine print."
  },
  "GJ 1128": {
   "name": "GJ 1128",
@@ -1545,7 +1545,7 @@
   "turnover": 8120,
   "radius": 5825,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Lush farm worlds feed half the sector. A strongman's portrait watches every docking bay."
  },
  "GJ 3877": {
   "name": "GJ 3877",
@@ -1563,7 +1563,7 @@
   "turnover": 2520,
   "radius": 5514,
   "population": "21 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Failed harvests have the farmers eyeing every passing freighter. Sworn lords tax each ship that passes their keeps."
  },
  "Gliese 581": {
   "name": "Gliese 581",
@@ -1581,7 +1581,7 @@
   "turnover": 14336,
   "radius": 3508,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Heavy industry dominates, and so does the noise. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 268": {
   "name": "Gliese 268",
@@ -1599,7 +1599,7 @@
   "turnover": 10880,
   "radius": 6426,
   "population": "34 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Golden harvests and exotic vintages make this a gourmet's stop. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 2097": {
   "name": "GJ 2097",
@@ -1617,7 +1617,7 @@
   "turnover": 25344,
   "radius": 3697,
   "population": "44 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Ageing plants limp along on spares and stubbornness. A loose league of stations argues its way through each day."
  },
  "Gliese 223.2": {
   "name": "Gliese 223.2",
@@ -1635,7 +1635,7 @@
   "turnover": 20664,
   "radius": 3497,
   "population": "41 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Heavy industry dominates, and so does the noise. Rival stations share a flag and little else."
  },
  "Gliese 625": {
   "name": "Gliese 625",
@@ -1653,7 +1653,7 @@
   "turnover": 9600,
   "radius": 3013,
   "population": "30 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Lush farm worlds feed half the sector. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 1156": {
   "name": "GJ 1156",
@@ -1671,7 +1671,7 @@
   "turnover": 8960,
   "radius": 4192,
   "population": "28 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Ageing plants limp along on spares and stubbornness. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 892": {
   "name": "Gliese 892",
@@ -1689,7 +1689,7 @@
   "turnover": 8960,
   "radius": 5783,
   "population": "35 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Ageing plants limp along on spares and stubbornness. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 408": {
   "name": "Gliese 408",
@@ -1707,7 +1707,7 @@
   "turnover": 35200,
   "radius": 3085,
   "population": "50 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Rusting factory decks still turn out a little something. The board owns the docks, the air, and the fine print."
  },
  "Gliese 829": {
   "name": "Gliese 829",
@@ -1725,7 +1725,7 @@
   "turnover": 9408,
   "radius": 4720,
   "population": "28 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Almost everything here grows, and everything else is eaten. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 566": {
   "name": "Gliese 566",
@@ -1743,7 +1743,7 @@
   "turnover": 5888,
   "radius": 4972,
   "population": "23 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Farming settlements keep a quiet, honest trade. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 643": {
   "name": "Gliese 643",
@@ -1761,7 +1761,7 @@
   "turnover": 8960,
   "radius": 5831,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Terraced farm stations ship grain and livestock to hungry neighbours. The collective runs everything, and the paperwork runs the collective."
  },
  "Gliese 299": {
   "name": "Gliese 299",
@@ -1779,7 +1779,7 @@
   "turnover": 5568,
   "radius": 6559,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Farming settlements keep a quiet, honest trade. Rival factions share the system in an uneasy peace."
  },
  "Gliese 402": {
   "name": "Gliese 402",
@@ -1797,7 +1797,7 @@
   "turnover": 21888,
   "radius": 3740,
   "population": "38 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Busy foundries and shipyards keep the traffic moving. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 4285": {
   "name": "GJ 4285",
@@ -1815,7 +1815,7 @@
   "turnover": 9240,
   "radius": 5326,
   "population": "33 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Smoke-stacked stations and shipyards crowd the orbits. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 667": {
   "name": "Gliese 667",
@@ -1833,7 +1833,7 @@
   "turnover": 13120,
   "radius": 6155,
   "population": "41 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "Gliese 880": {
   "name": "Gliese 880",
@@ -1851,7 +1851,7 @@
   "turnover": 1408,
   "radius": 4524,
   "population": "11 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Farming settlements keep a quiet, honest trade. Warlords and gangs run the stations by turns."
  },
  "Gliese 293": {
   "name": "Gliese 293",
@@ -1869,7 +1869,7 @@
   "turnover": 15552,
   "radius": 3909,
   "population": "36 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Busy foundries and shipyards keep the traffic moving. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 809": {
   "name": "Gliese 809",
@@ -1887,7 +1887,7 @@
   "turnover": 17280,
   "radius": 5142,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Steady industry hums across the system's stations. Rival factions share the system in an uneasy peace."
  },
  "Gliese 393": {
   "name": "Gliese 393",
@@ -1905,7 +1905,7 @@
   "turnover": 18648,
   "radius": 4004,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Smoke-stacked stations and shipyards crowd the orbits. Rival stations share a flag and little else."
  },
  "268 G. Cet": {
   "name": "268 G. Cet",
@@ -1923,7 +1923,7 @@
   "turnover": 5888,
   "radius": 4432,
   "population": "23 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Farming settlements keep a quiet, honest trade. Shared stores and long queues at the dock office."
  },
  "GJ 3737": {
   "name": "GJ 3737",
@@ -1941,7 +1941,7 @@
   "turnover": 24192,
   "radius": 6493,
   "population": "42 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Busy foundries and shipyards keep the traffic moving. Shared stores and long queues at the dock office."
  },
  "GJ 1286": {
   "name": "GJ 1286",
@@ -1959,7 +1959,7 @@
   "turnover": 10560,
   "radius": 6497,
   "population": "33 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "GJ 4053": {
   "name": "GJ 4053",
@@ -1977,7 +1977,7 @@
   "turnover": 14208,
   "radius": 5454,
   "population": "37 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Endless fields stretch beneath the orbital docks. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 1230": {
   "name": "GJ 1230",
@@ -1995,7 +1995,7 @@
   "turnover": 7200,
   "radius": 4961,
   "population": "30 Billion",
-  "description": "A star of unknown class."
+  "description": "An orange dwarf burns slow and steady here. Failed harvests have the farmers eyeing every passing freighter. Citizens vote on everything, from tariffs to the docking queue."
  },
  "GJ 3991": {
   "name": "GJ 3991",
@@ -2013,7 +2013,7 @@
   "turnover": 38016,
   "radius": 4682,
   "population": "54 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Ageing plants limp along on spares and stubbornness. The board owns the docks, the air, and the fine print."
  },
  "96 G. Psc": {
   "name": "96 G. Psc",
@@ -2031,7 +2031,7 @@
   "turnover": 10240,
   "radius": 6737,
   "population": "32 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Ageing plants limp along on spares and stubbornness. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 4274": {
   "name": "GJ 4274",
@@ -2049,7 +2049,7 @@
   "turnover": 11840,
   "radius": 4810,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Beta Hydri": {
   "name": "Beta Hydri",
@@ -2067,7 +2067,7 @@
   "turnover": 8960,
   "radius": 3375,
   "population": "35 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Ageing plants limp along on spares and stubbornness. Warlords and gangs run the stations by turns."
  },
  "Gliese 109": {
   "name": "Gliese 109",
@@ -2085,7 +2085,7 @@
   "turnover": 4480,
   "radius": 5212,
   "population": "20 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Heavy industry dominates, and so does the noise. Warlords and gangs run the stations by turns."
  },
  "GJ 2005": {
   "name": "GJ 2005",
@@ -2103,7 +2103,7 @@
   "turnover": 10240,
   "radius": 5205,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Rusting factory decks still turn out a little something. Sworn lords tax each ship that passes their keeps."
  },
  "107 Piscium": {
   "name": "107 Piscium",
@@ -2121,7 +2121,7 @@
   "turnover": 20640,
   "radius": 4102,
   "population": "43 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Vast orbital factories turn out machinery night and day. Several governments trade, bicker and spy on one another here."
  },
  "GJ 1224": {
   "name": "GJ 1224",
@@ -2139,7 +2139,7 @@
   "turnover": 16192,
   "radius": 6123,
   "population": "46 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Terraced farm stations ship grain and livestock to hungry neighbours. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 53": {
   "name": "Gliese 53",
@@ -2157,7 +2157,7 @@
   "turnover": 10296,
   "radius": 6102,
   "population": "39 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Thin soil and tired crops make for hard living. Company logos cover every bulkhead; the shareholders always win."
  },
  "GJ 3378": {
   "name": "GJ 3378",
@@ -2175,7 +2175,7 @@
   "turnover": 1920,
   "radius": 4731,
   "population": "20 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Failed harvests have the farmers eyeing every passing freighter. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 879": {
   "name": "Gliese 879",
@@ -2193,7 +2193,7 @@
   "turnover": 45760,
   "radius": 4076,
   "population": "52 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Vast orbital factories turn out machinery night and day. Company logos cover every bulkhead; the shareholders always win."
  },
  "GJ 3193": {
   "name": "GJ 3193",
@@ -2211,7 +2211,7 @@
   "turnover": 41760,
   "radius": 3399,
   "population": "58 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Refineries and assembly yards make this one of the richest industrial hubs. A loose league of stations argues its way through each day."
  },
  "GJ 3192": {
   "name": "GJ 3192",
@@ -2229,7 +2229,7 @@
   "turnover": 13120,
   "radius": 6879,
   "population": "41 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. Lively elections keep the station councils on their toes."
  },
  "Gliese 514": {
   "name": "Gliese 514",
@@ -2247,7 +2247,7 @@
   "turnover": 11160,
   "radius": 3076,
   "population": "31 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Lush farm worlds feed half the sector. Rival stations share a flag and little else."
  },
  "Vega": {
   "name": "Vega",
@@ -2265,7 +2265,7 @@
   "turnover": 17024,
   "radius": 6257,
   "population": "38 Billion",
-  "description": "A white class A star."
+  "description": "A white star shines here, bright enough to read by from the outer docks. Ageing plants limp along on spares and stubbornness. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 673": {
   "name": "Gliese 673",
@@ -2283,7 +2283,7 @@
   "turnover": 11520,
   "radius": 6455,
   "population": "40 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Terraced farm stations ship grain and livestock to hungry neighbours. A loose league of stations argues its way through each day."
  },
  "Fomalhaut": {
   "name": "Fomalhaut",
@@ -2301,7 +2301,7 @@
   "turnover": 9280,
   "radius": 6308,
   "population": "29 Billion",
-  "description": "A white class A star."
+  "description": "A white star shines here, bright enough to read by from the outer docks. Farming settlements keep a quiet, honest trade. Lively elections keep the station councils on their toes."
  },
  "GJ 3417": {
   "name": "GJ 3417",
@@ -2319,7 +2319,7 @@
   "turnover": 10560,
   "radius": 5933,
   "population": "33 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "GJ 1093": {
   "name": "GJ 1093",
@@ -2337,7 +2337,7 @@
   "turnover": 7000,
   "radius": 5132,
   "population": "25 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Heavy industry dominates, and so does the noise. Sworn lords tax each ship that passes their keeps."
  },
  "Gliese 701": {
   "name": "Gliese 701",
@@ -2355,7 +2355,7 @@
   "turnover": 8960,
   "radius": 6575,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Rusting factory decks still turn out a little something. Warlords and gangs run the stations by turns."
  },
  "Gliese 480.1": {
   "name": "Gliese 480.1",
@@ -2373,7 +2373,7 @@
   "turnover": 6264,
   "radius": 3889,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. Rival stations share a flag and little else."
  },
  "Gliese 915": {
   "name": "Gliese 915",
@@ -2391,7 +2391,7 @@
   "turnover": 25344,
   "radius": 4449,
   "population": "44 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Rusting factory decks still turn out a little something. Rival stations share a flag and little else."
  },
  "Gliese 66": {
   "name": "Gliese 66",
@@ -2409,7 +2409,7 @@
   "turnover": 1920,
   "radius": 2955,
   "population": "20 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Thin soil and tired crops make for hard living. Warlords and gangs run the stations by turns."
  },
  "Gliese 382": {
   "name": "Gliese 382",
@@ -2427,7 +2427,7 @@
   "turnover": 21120,
   "radius": 5540,
   "population": "40 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Endless fields stretch beneath the orbital docks. Company logos cover every bulkhead; the shareholders always win."
  },
  "GJ 3789": {
   "name": "GJ 3789",
@@ -2445,7 +2445,7 @@
   "turnover": 1560,
   "radius": 6156,
   "population": "13 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Thin soil and tired crops make for hard living. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 1087": {
   "name": "GJ 1087",
@@ -2463,7 +2463,7 @@
   "turnover": 15552,
   "radius": 5357,
   "population": "36 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Steady industry hums across the system's stations. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 793": {
   "name": "Gliese 793",
@@ -2481,7 +2481,7 @@
   "turnover": 37440,
   "radius": 5398,
   "population": "52 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Busy foundries and shipyards keep the traffic moving. Lively elections keep the station councils on their toes."
  },
  "Gliese 257": {
   "name": "Gliese 257",
@@ -2499,7 +2499,7 @@
   "turnover": 5888,
   "radius": 2964,
   "population": "23 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Rusting factory decks still turn out a little something. Warlords and gangs run the stations by turns."
  },
  "GJ 1276": {
   "name": "GJ 1276",
@@ -2517,7 +2517,7 @@
   "turnover": 38880,
   "radius": 2894,
   "population": "54 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Vast orbital factories turn out machinery night and day. A loose league of stations argues its way through each day."
  },
  "Gliese 623": {
   "name": "Gliese 623",
@@ -2535,7 +2535,7 @@
   "turnover": 3192,
   "radius": 3952,
   "population": "19 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. One ruler holds the system, and loyalty is not optional."
  },
  "Chi Draconis": {
   "name": "Chi Draconis",
@@ -2553,7 +2553,7 @@
   "turnover": 26240,
   "radius": 4780,
   "population": "41 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A restless yellow-white star lights the lanes. Vast orbital factories turn out machinery night and day. Shared stores and long queues at the dock office."
  },
  "GJ 4063": {
   "name": "GJ 4063",
@@ -2571,7 +2571,7 @@
   "turnover": 31360,
   "radius": 6794,
   "population": "49 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Vast orbital factories turn out machinery night and day. The collective runs everything, and the paperwork runs the collective."
  },
  "Tabit": {
   "name": "Tabit",
@@ -2589,7 +2589,7 @@
   "turnover": 5376,
   "radius": 6685,
   "population": "24 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A restless yellow-white star lights the lanes. Heavy industry dominates, and so does the noise. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 686": {
   "name": "Gliese 686",
@@ -2607,7 +2607,7 @@
   "turnover": 16280,
   "radius": 5528,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Lush farm worlds feed half the sector. The board owns the docks, the air, and the fine print."
  },
  "GJ 2034": {
   "name": "GJ 2034",
@@ -2625,7 +2625,7 @@
   "turnover": 10360,
   "radius": 3127,
   "population": "37 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Lush farm worlds feed half the sector. One ruler holds the system, and loyalty is not optional."
  },
  "GJ 1123": {
   "name": "GJ 1123",
@@ -2643,7 +2643,7 @@
   "turnover": 24640,
   "radius": 3545,
   "population": "44 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Vast orbital factories turn out machinery night and day. A strongman's portrait watches every docking bay."
  },
  "GJ 1289": {
   "name": "GJ 1289",
@@ -2661,7 +2661,7 @@
   "turnover": 18648,
   "radius": 6432,
   "population": "37 Billion",
-  "description": "A star of unknown class."
+  "description": "A warm orange sun hangs low over the stations. Busy foundries and shipyards keep the traffic moving. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 493.1": {
   "name": "Gliese 493.1",
@@ -2679,7 +2679,7 @@
   "turnover": 52800,
   "radius": 5970,
   "population": "60 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Refineries and assembly yards make this one of the richest industrial hubs. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 747": {
   "name": "Gliese 747",
@@ -2697,7 +2697,7 @@
   "turnover": 18720,
   "radius": 5657,
   "population": "39 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Refineries and assembly yards make this one of the richest industrial hubs. Rival factions share the system in an uneasy peace."
  },
  "Gliese 518": {
   "name": "Gliese 518",
@@ -2715,7 +2715,7 @@
   "turnover": 12768,
   "radius": 5183,
   "population": "38 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Heavy industry dominates, and so does the noise. Rival factions share the system in an uneasy peace."
  },
  "Gliese 54": {
   "name": "Gliese 54",
@@ -2733,7 +2733,7 @@
   "turnover": 20640,
   "radius": 3474,
   "population": "43 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Vast orbital factories turn out machinery night and day. Several governments trade, bicker and spy on one another here."
  },
  "GJ 1151": {
   "name": "GJ 1151",
@@ -2751,7 +2751,7 @@
   "turnover": 6272,
   "radius": 4290,
   "population": "28 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Heavy industry dominates, and so does the noise. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 884": {
   "name": "Gliese 884",
@@ -2769,7 +2769,7 @@
   "turnover": 41976,
   "radius": 3873,
   "population": "53 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Steady industry hums across the system's stations. The board owns the docks, the air, and the fine print."
  },
  "Gliese 48": {
   "name": "Gliese 48",
@@ -2787,7 +2787,7 @@
   "turnover": 768,
   "radius": 5612,
   "population": "8 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. Warlords and gangs run the stations by turns."
  },
  "GJ 1227": {
   "name": "GJ 1227",
@@ -2805,7 +2805,7 @@
   "turnover": 9280,
   "radius": 3792,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "Gliese 831": {
   "name": "Gliese 831",
@@ -2823,7 +2823,7 @@
   "turnover": 9280,
   "radius": 2924,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. Lively elections keep the station councils on their toes."
  },
  "Gliese 695": {
   "name": "Gliese 695",
@@ -2841,7 +2841,7 @@
   "turnover": 15232,
   "radius": 6452,
   "population": "34 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Rusting factory decks still turn out a little something. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 232": {
   "name": "Gliese 232",
@@ -2859,7 +2859,7 @@
   "turnover": 18144,
   "radius": 6578,
   "population": "42 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Almost everything here grows, and everything else is eaten. A loose league of stations argues its way through each day."
  },
  "Gliese 618": {
   "name": "Gliese 618",
@@ -2877,7 +2877,7 @@
   "turnover": 9600,
   "radius": 6549,
   "population": "30 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Golden harvests and exotic vintages make this a gourmet's stop. Shared stores and long queues at the dock office."
  },
  "Gar": {
   "name": "Gar",
@@ -2895,7 +2895,7 @@
   "turnover": 6720,
   "radius": 3734,
   "population": "30 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Terraced farm stations ship grain and livestock to hungry neighbours. A strongman's portrait watches every docking bay."
  },
  "Gliese 438": {
   "name": "Gliese 438",
@@ -2913,7 +2913,7 @@
   "turnover": 6720,
   "radius": 2846,
   "population": "30 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Terraced farm stations ship grain and livestock to hungry neighbours. A strongman's portrait watches every docking bay."
  },
  "Chara": {
   "name": "Chara",
@@ -2931,7 +2931,7 @@
   "turnover": 41976,
   "radius": 4945,
   "population": "53 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Busy foundries and shipyards keep the traffic moving. Company logos cover every bulkhead; the shareholders always win."
  },
  "GJ 3146": {
   "name": "GJ 3146",
@@ -2949,7 +2949,7 @@
   "turnover": 2944,
   "radius": 6395,
   "population": "23 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Terraced farm stations ship grain and livestock to hungry neighbours. Warlords and gangs run the stations by turns."
  },
  "GJ 1154": {
   "name": "GJ 1154",
@@ -2967,7 +2967,7 @@
   "turnover": 3000,
   "radius": 5743,
   "population": "25 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Thin soil and tired crops make for hard living. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 1057": {
   "name": "GJ 1057",
@@ -2985,7 +2985,7 @@
   "turnover": 5568,
   "radius": 4743,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Farming settlements keep a quiet, honest trade. Several governments trade, bicker and spy on one another here."
  },
  "GJ 3076": {
   "name": "GJ 3076",
@@ -3003,7 +3003,7 @@
   "turnover": 9280,
   "radius": 6568,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "Gliese 745": {
   "name": "Gliese 745",
@@ -3021,7 +3021,7 @@
   "turnover": 3864,
   "radius": 2933,
   "population": "23 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Failed harvests have the farmers eyeing every passing freighter. One ruler holds the system, and loyalty is not optional."
  },
  "61 Virginis": {
   "name": "61 Virginis",
@@ -3039,7 +3039,7 @@
   "turnover": 5824,
   "radius": 6865,
   "population": "26 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Terraced farm stations ship grain and livestock to hungry neighbours. One ruler holds the system, and loyalty is not optional."
  },
  "GJ 3517": {
   "name": "GJ 3517",
@@ -3057,7 +3057,7 @@
   "turnover": 27456,
   "radius": 4331,
   "population": "52 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Endless fields stretch beneath the orbital docks. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 185": {
   "name": "Gliese 185",
@@ -3075,7 +3075,7 @@
   "turnover": 9600,
   "radius": 5957,
   "population": "30 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Lush farm worlds feed half the sector. Shared stores and long queues at the dock office."
  },
  "Gliese 450": {
   "name": "Gliese 450",
@@ -3093,7 +3093,7 @@
   "turnover": 10360,
   "radius": 3727,
   "population": "37 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Smoke-stacked stations and shipyards crowd the orbits. Sworn lords tax each ship that passes their keeps."
  },
  "Zeta Tucanae": {
   "name": "Zeta Tucanae",
@@ -3111,7 +3111,7 @@
   "turnover": 12600,
   "radius": 5737,
   "population": "35 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A bright yellow-white star warms a busy system. Golden harvests and exotic vintages make this a gourmet's stop. A loose league of stations argues its way through each day."
  },
  "Gliese 877": {
   "name": "Gliese 877",
@@ -3129,7 +3129,7 @@
   "turnover": 12096,
   "radius": 4114,
   "population": "36 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Almost everything here grows, and everything else is eaten. One ruler holds the system, and loyalty is not optional."
  },
  "GJ 1105": {
   "name": "GJ 1105",
@@ -3147,7 +3147,7 @@
   "turnover": 37440,
   "radius": 5222,
   "population": "52 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Steady industry hums across the system's stations. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Chi1 Orionis": {
   "name": "Chi1 Orionis",
@@ -3165,7 +3165,7 @@
   "turnover": 3200,
   "radius": 4689,
   "population": "20 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Farming settlements keep a quiet, honest trade. Sworn lords tax each ship that passes their keeps."
  },
  "Gliese 867": {
   "name": "Gliese 867",
@@ -3183,7 +3183,7 @@
   "turnover": 1536,
   "radius": 3474,
   "population": "16 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Failed harvests have the farmers eyeing every passing freighter. Warlords and gangs run the stations by turns."
  },
  "GJ 3839": {
   "name": "GJ 3839",
@@ -3201,7 +3201,7 @@
   "turnover": 14040,
   "radius": 4934,
   "population": "39 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Lush farm worlds feed half the sector. A loose league of stations argues its way through each day."
  },
  "Gliese 183": {
   "name": "Gliese 183",
@@ -3219,7 +3219,7 @@
   "turnover": 18720,
   "radius": 2957,
   "population": "39 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Endless fields stretch beneath the orbital docks. Lively elections keep the station councils on their toes."
  },
  "Gliese 250": {
   "name": "Gliese 250",
@@ -3237,7 +3237,7 @@
   "turnover": 16856,
   "radius": 4799,
   "population": "43 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Heavy industry dominates, and so does the noise. A strongman's portrait watches every docking bay."
  },
  "Gliese 791.2": {
   "name": "Gliese 791.2",
@@ -3255,7 +3255,7 @@
   "turnover": 7200,
   "radius": 4637,
   "population": "30 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Failed harvests have the farmers eyeing every passing freighter. Citizens vote on everything, from tariffs to the docking queue."
  },
  "GJ 3667": {
   "name": "GJ 3667",
@@ -3273,7 +3273,7 @@
   "turnover": 8120,
   "radius": 4565,
   "population": "29 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Smoke-stacked stations and shipyards crowd the orbits. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 1103": {
   "name": "GJ 1103",
@@ -3291,7 +3291,7 @@
   "turnover": 16192,
   "radius": 3223,
   "population": "46 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 666": {
   "name": "Gliese 666",
@@ -3309,7 +3309,7 @@
   "turnover": 33880,
   "radius": 4387,
   "population": "55 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Heavy industry dominates, and so does the noise. Company logos cover every bulkhead; the shareholders always win."
  },
  "Gliese 203": {
   "name": "Gliese 203",
@@ -3327,7 +3327,7 @@
   "turnover": 14784,
   "radius": 3238,
   "population": "42 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. The board owns the docks, the air, and the fine print."
  },
  "Gliese 465": {
   "name": "Gliese 465",
@@ -3345,7 +3345,7 @@
   "turnover": 1408,
   "radius": 3432,
   "population": "11 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Farming settlements keep a quiet, honest trade. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 433": {
   "name": "Gliese 433",
@@ -3363,7 +3363,7 @@
   "turnover": 14336,
   "radius": 6344,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Smoke-stacked stations and shipyards crowd the orbits. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 4247": {
   "name": "GJ 4247",
@@ -3381,7 +3381,7 @@
   "turnover": 2016,
   "radius": 5252,
   "population": "14 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim star few pilots have bothered to chart. Thin soil and tired crops make for hard living. Rival factions share the system in an uneasy peace."
  },
  "Gliese 318": {
   "name": "Gliese 318",
@@ -3399,7 +3399,7 @@
   "turnover": 13720,
   "radius": 3149,
   "population": "35 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Heavy industry dominates, and so does the noise. A strongman's portrait watches every docking bay."
  },
  "Gliese 785": {
   "name": "Gliese 785",
@@ -3417,7 +3417,7 @@
   "turnover": 16800,
   "radius": 5364,
   "population": "35 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Vast orbital factories turn out machinery night and day. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 424": {
   "name": "Gliese 424",
@@ -3435,7 +3435,7 @@
   "turnover": 8960,
   "radius": 6360,
   "population": "28 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Ageing plants limp along on spares and stubbornness. Noble houses hold the stations and guard their honour jealously."
  },
  "Gamma Leporis": {
   "name": "Gamma Leporis",
@@ -3453,7 +3453,7 @@
   "turnover": 2560,
   "radius": 5892,
   "population": "16 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A restless yellow-white star lights the lanes. Terraced farm stations ship grain and livestock to hungry neighbours. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 3128": {
   "name": "GJ 3128",
@@ -3471,7 +3471,7 @@
   "turnover": 5376,
   "radius": 4441,
   "population": "24 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Heavy industry dominates, and so does the noise. Warlords and gangs run the stations by turns."
  },
  "Gliese 283": {
   "name": "Gliese 283",
@@ -3489,7 +3489,7 @@
   "turnover": 2592,
   "radius": 3837,
   "population": "18 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Failed harvests have the farmers eyeing every passing freighter. Rival factions share the system in an uneasy peace."
  },
  "GJ 3707": {
   "name": "GJ 3707",
@@ -3507,7 +3507,7 @@
   "turnover": 2944,
   "radius": 4087,
   "population": "23 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Terraced farm stations ship grain and livestock to hungry neighbours. No one rules here, and pilots dock at their own risk."
  },
  "GJ 3820": {
   "name": "GJ 3820",
@@ -3525,7 +3525,7 @@
   "turnover": 45144,
   "radius": 6498,
   "population": "57 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Busy foundries and shipyards keep the traffic moving. The board owns the docks, the air, and the fine print."
  },
  "GJ 4360": {
   "name": "GJ 4360",
@@ -3543,7 +3543,7 @@
   "turnover": 23232,
   "radius": 5105,
   "population": "44 Billion",
-  "description": "A star of unknown class."
+  "description": "A small red star flickers sullenly over the docks. Endless fields stretch beneath the orbital docks. The board owns the docks, the air, and the fine print."
  },
  "Gliese 51": {
   "name": "Gliese 51",
@@ -3561,7 +3561,7 @@
   "turnover": 10240,
   "radius": 5429,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Rusting factory decks still turn out a little something. Sworn lords tax each ship that passes their keeps."
  },
  "Gliese 357": {
   "name": "Gliese 357",
@@ -3579,7 +3579,7 @@
   "turnover": 7936,
   "radius": 6582,
   "population": "31 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Rusting factory decks still turn out a little something. No one rules here, and pilots dock at their own risk."
  },
  "Rana": {
   "name": "Rana",
@@ -3597,7 +3597,7 @@
   "turnover": 16280,
   "radius": 5736,
   "population": "37 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Lush farm worlds feed half the sector. Company logos cover every bulkhead; the shareholders always win."
  },
  "Groombridge 1830": {
   "name": "Groombridge 1830",
@@ -3615,7 +3615,7 @@
   "turnover": 1920,
   "radius": 6403,
   "population": "20 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Thin soil and tired crops make for hard living. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 849": {
   "name": "Gliese 849",
@@ -3633,7 +3633,7 @@
   "turnover": 18720,
   "radius": 4673,
   "population": "39 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Endless fields stretch beneath the orbital docks. Citizens vote on everything, from tariffs to the docking queue."
  },
  "GJ 2066": {
   "name": "GJ 2066",
@@ -3651,7 +3651,7 @@
   "turnover": 12800,
   "radius": 5071,
   "population": "40 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim star few pilots have bothered to chart. Ageing plants limp along on spares and stubbornness. Noble houses hold the stations and guard their honour jealously."
  },
  "Beta Comae Berenices": {
   "name": "Beta Comae Berenices",
@@ -3669,7 +3669,7 @@
   "turnover": 8184,
   "radius": 2828,
   "population": "31 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Failed harvests have the farmers eyeing every passing freighter. The board owns the docks, the air, and the fine print."
  },
  "Kappa1 Ceti": {
   "name": "Kappa1 Ceti",
@@ -3687,7 +3687,7 @@
   "turnover": 13440,
   "radius": 4115,
   "population": "40 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Endless fields stretch beneath the orbital docks. One ruler holds the system, and loyalty is not optional."
  },
  "Gliese 84": {
   "name": "Gliese 84",
@@ -3705,7 +3705,7 @@
   "turnover": 1920,
   "radius": 5427,
   "population": "20 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Failed harvests have the farmers eyeing every passing freighter. No one rules here, and pilots dock at their own risk."
  },
  "GJ 3421": {
   "name": "GJ 3421",
@@ -3723,7 +3723,7 @@
   "turnover": 37440,
   "radius": 4646,
   "population": "52 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Steady industry hums across the system's stations. Citizens vote on everything, from tariffs to the docking queue."
  },
  "GJ 3325": {
   "name": "GJ 3325",
@@ -3741,7 +3741,7 @@
   "turnover": 9216,
   "radius": 6713,
   "population": "32 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Terraced farm stations ship grain and livestock to hungry neighbours. A loose league of stations argues its way through each day."
  },
  "Gliese 442": {
   "name": "Gliese 442",
@@ -3759,7 +3759,7 @@
   "turnover": 6624,
   "radius": 3796,
   "population": "23 Billion",
-  "description": "A yellow class G star."
+  "description": "A sun much like Earth's warms the docks here. Almost everything here grows, and everything else is eaten. Rival factions share the system in an uneasy peace."
  },
  "Gamma Pavonis": {
   "name": "Gamma Pavonis",
@@ -3777,7 +3777,7 @@
   "turnover": 26496,
   "radius": 6406,
   "population": "46 Billion",
-  "description": "A yellow-white class F star."
+  "description": "A bright yellow-white star warms a busy system. Steady industry hums across the system's stations. Shared stores and long queues at the dock office."
  },
  "Gliese 190": {
   "name": "Gliese 190",
@@ -3795,7 +3795,7 @@
   "turnover": 2560,
   "radius": 4100,
   "population": "16 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Farming settlements keep a quiet, honest trade. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 176": {
   "name": "Gliese 176",
@@ -3813,7 +3813,7 @@
   "turnover": 768,
   "radius": 5784,
   "population": "8 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Thin soil and tired crops make for hard living. No one rules here, and pilots dock at their own risk."
  },
  "GJ 3135": {
   "name": "GJ 3135",
@@ -3831,7 +3831,7 @@
   "turnover": 1152,
   "radius": 3933,
   "population": "12 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Failed harvests have the farmers eyeing every passing freighter. Warlords and gangs run the stations by turns."
  },
  "GJ 3380": {
   "name": "GJ 3380",
@@ -3849,7 +3849,7 @@
   "turnover": 1920,
   "radius": 6371,
   "population": "20 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. Warlords and gangs run the stations by turns."
  },
  "GJ 3801": {
   "name": "GJ 3801",
@@ -3867,7 +3867,7 @@
   "turnover": 9600,
   "radius": 6481,
   "population": "30 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Lush farm worlds feed half the sector. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 1253": {
   "name": "GJ 1253",
@@ -3885,7 +3885,7 @@
   "turnover": 4032,
   "radius": 5185,
   "population": "21 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Terraced farm stations ship grain and livestock to hungry neighbours. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 226": {
   "name": "Gliese 226",
@@ -3903,7 +3903,7 @@
   "turnover": 20608,
   "radius": 5575,
   "population": "46 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Rusting factory decks still turn out a little something. A strongman's portrait watches every docking bay."
  },
  "Gliese 358": {
   "name": "Gliese 358",
@@ -3921,7 +3921,7 @@
   "turnover": 7168,
   "radius": 4867,
   "population": "32 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Smoke-stacked stations and shipyards crowd the orbits. Warlords and gangs run the stations by turns."
  },
  "Gliese 694": {
   "name": "Gliese 694",
@@ -3939,7 +3939,7 @@
   "turnover": 8120,
   "radius": 5705,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Smoke-stacked stations and shipyards crowd the orbits. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 3988": {
   "name": "GJ 3988",
@@ -3957,7 +3957,7 @@
   "turnover": 52800,
   "radius": 6678,
   "population": "60 Billion",
-  "description": "A star of unknown class."
+  "description": "An orange dwarf burns slow and steady here. Refineries and assembly yards make this one of the richest industrial hubs. The board owns the docks, the air, and the fine print."
  },
  "GJ 3306": {
   "name": "GJ 3306",
@@ -3975,7 +3975,7 @@
   "turnover": 27648,
   "radius": 3650,
   "population": "48 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Rusting factory decks still turn out a little something. Rival stations share a flag and little else."
  },
  "GJ 1065": {
   "name": "GJ 1065",
@@ -3993,7 +3993,7 @@
   "turnover": 12160,
   "radius": 4623,
   "population": "38 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Golden harvests and exotic vintages make this a gourmet's stop. Shared stores and long queues at the dock office."
  },
  "Gliese 432": {
   "name": "Gliese 432",
@@ -4011,7 +4011,7 @@
   "turnover": 28800,
   "radius": 4103,
   "population": "50 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Steady industry hums across the system's stations. Shared stores and long queues at the dock office."
  },
  "Gliese 633": {
   "name": "Gliese 633",
@@ -4029,7 +4029,7 @@
   "turnover": 1560,
   "radius": 6344,
   "population": "13 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Failed harvests have the farmers eyeing every passing freighter. Noble houses hold the stations and guard their honour jealously."
  },
  "GJ 1207": {
   "name": "GJ 1207",
@@ -4047,7 +4047,7 @@
   "turnover": 11520,
   "radius": 6171,
   "population": "40 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Farming settlements keep a quiet, honest trade. A loose league of stations argues its way through each day."
  },
  "GJ 1001": {
   "name": "GJ 1001",
@@ -4065,7 +4065,7 @@
   "turnover": 40800,
   "radius": 3141,
   "population": "51 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Vast orbital factories turn out machinery night and day. Citizens vote on everything, from tariffs to the docking queue."
  },
  "61 Ursae Majoris": {
   "name": "61 Ursae Majoris",
@@ -4083,7 +4083,7 @@
   "turnover": 26496,
   "radius": 6002,
   "population": "46 Billion",
-  "description": "A yellow class G star."
+  "description": "A steady yellow star keeps the lanes bright. Steady industry hums across the system's stations. The collective runs everything, and the paperwork runs the collective."
  },
  "GJ 3253": {
   "name": "GJ 3253",
@@ -4101,7 +4101,7 @@
   "turnover": 22560,
   "radius": 4435,
   "population": "47 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Vast orbital factories turn out machinery night and day. Rival factions share the system in an uneasy peace."
  },
  "GJ 3275": {
   "name": "GJ 3275",
@@ -4119,7 +4119,7 @@
   "turnover": 11840,
   "radius": 6054,
   "population": "37 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Terraced farm stations ship grain and livestock to hungry neighbours. Lively elections keep the station councils on their toes."
  },
  "GJ 1125": {
   "name": "GJ 1125",
@@ -4137,7 +4137,7 @@
   "turnover": 11520,
   "radius": 4610,
   "population": "36 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Rusting factory decks still turn out a little something. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 3855": {
   "name": "GJ 3855",
@@ -4155,7 +4155,7 @@
   "turnover": 8120,
   "radius": 3381,
   "population": "29 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Heavy industry dominates, and so does the noise. Noble houses hold the stations and guard their honour jealously."
  },
  "Gliese 479": {
   "name": "Gliese 479",
@@ -4173,7 +4173,7 @@
   "turnover": 5888,
   "radius": 6684,
   "population": "23 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Rusting factory decks still turn out a little something. Warlords and gangs run the stations by turns."
  },
  "Gliese 680": {
   "name": "Gliese 680",
@@ -4191,7 +4191,7 @@
   "turnover": 8736,
   "radius": 5048,
   "population": "26 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Smoke-stacked stations and shipyards crowd the orbits. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 239": {
   "name": "Gliese 239",
@@ -4209,7 +4209,7 @@
   "turnover": 8736,
   "radius": 3180,
   "population": "26 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Smoke-stacked stations and shipyards crowd the orbits. Rival factions share the system in an uneasy peace."
  },
  "12 Ophiuchi": {
   "name": "12 Ophiuchi",
@@ -4227,7 +4227,7 @@
   "turnover": 4480,
   "radius": 3240,
   "population": "20 Billion",
-  "description": "A orange class K star."
+  "description": "A copper-orange star glows over a quiet system. Heavy industry dominates, and so does the noise. No one rules here, and pilots dock at their own risk."
  },
  "Gliese 102": {
   "name": "Gliese 102",
@@ -4245,7 +4245,7 @@
   "turnover": 6272,
   "radius": 5390,
   "population": "28 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Smoke-stacked stations and shipyards crowd the orbits. No one rules here, and pilots dock at their own risk."
  },
  "GJ 1138": {
   "name": "GJ 1138",
@@ -4263,7 +4263,7 @@
   "turnover": 27864,
   "radius": 3280,
   "population": "43 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Busy foundries and shipyards keep the traffic moving. Rival stations share a flag and little else."
  },
  "Gliese 638": {
   "name": "Gliese 638",
@@ -4281,7 +4281,7 @@
   "turnover": 33920,
   "radius": 6127,
   "population": "53 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Vast orbital factories turn out machinery night and day. Shared stores and long queues at the dock office."
  },
  "GJ 1256": {
   "name": "GJ 1256",
@@ -4299,7 +4299,7 @@
   "turnover": 31680,
   "radius": 6820,
   "population": "44 Billion",
-  "description": "A star of unknown class."
+  "description": "The pale ember of a white dwarf is all the light there is. Steady industry hums across the system's stations. Citizens vote on everything, from tariffs to the docking queue."
  },
  "Añañuca": {
   "name": "Añañuca",
@@ -4317,7 +4317,7 @@
   "turnover": 6624,
   "radius": 5208,
   "population": "23 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Almost everything here grows, and everything else is eaten. Rival factions share the system in an uneasy peace."
  },
  "GJ 3049": {
   "name": "GJ 3049",
@@ -4335,7 +4335,7 @@
   "turnover": 24192,
   "radius": 5253,
   "population": "42 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Steady industry hums across the system's stations. Shared stores and long queues at the dock office."
  },
  "Gliese 803": {
   "name": "Gliese 803",
@@ -4353,7 +4353,7 @@
   "turnover": 5888,
   "radius": 4852,
   "population": "23 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Rusting factory decks still turn out a little something. No one rules here, and pilots dock at their own risk."
  },
  "GJ 2012": {
   "name": "GJ 2012",
@@ -4371,7 +4371,7 @@
   "turnover": 34560,
   "radius": 5145,
   "population": "48 Billion",
-  "description": "A star of unknown class."
+  "description": "A cooling white dwarf, the dead heart of an old star, lights the system. Steady industry hums across the system's stations. Lively elections keep the station councils on their toes."
  },
  "Gliese 49": {
   "name": "Gliese 49",
@@ -4389,7 +4389,7 @@
   "turnover": 16416,
   "radius": 4341,
   "population": "38 Billion",
-  "description": "A orange class K star."
+  "description": "An orange dwarf burns slow and steady here. Almost everything here grows, and everything else is eaten. Rival stations share a flag and little else."
  },
  "Gliese 678.1": {
   "name": "Gliese 678.1",
@@ -4407,7 +4407,7 @@
   "turnover": 9240,
   "radius": 5026,
   "population": "33 Billion",
-  "description": "A red class M star."
+  "description": "A dim red dwarf casts a ruddy twilight. Smoke-stacked stations and shipyards crowd the orbits. Sworn lords tax each ship that passes their keeps."
  },
  "GJ 3512": {
   "name": "GJ 3512",
@@ -4425,7 +4425,7 @@
   "turnover": 9120,
   "radius": 4547,
   "population": "38 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Failed harvests have the farmers eyeing every passing freighter. Lively elections keep the station councils on their toes."
  },
  "GJ 1028": {
   "name": "GJ 1028",
@@ -4443,7 +4443,7 @@
   "turnover": 56320,
   "radius": 4243,
   "population": "64 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Vast orbital factories turn out machinery night and day. The board owns the docks, the air, and the fine print."
  },
  "GJ 3119": {
   "name": "GJ 3119",
@@ -4461,7 +4461,7 @@
   "turnover": 32384,
   "radius": 5728,
   "population": "46 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Rusting factory decks still turn out a little something. The board owns the docks, the air, and the fine print."
  },
  "GJ 3126": {
   "name": "GJ 3126",
@@ -4479,7 +4479,7 @@
   "turnover": 11968,
   "radius": 5512,
   "population": "34 Billion",
-  "description": "A red class M star."
+  "description": "A small red star flickers sullenly over the docks. Terraced farm stations ship grain and livestock to hungry neighbours. The board owns the docks, the air, and the fine print."
  },
  "GJ 3304": {
   "name": "GJ 3304",
@@ -4497,7 +4497,7 @@
   "turnover": 8960,
   "radius": 5415,
   "population": "35 Billion",
-  "description": "A star of unknown class."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Farming settlements keep a quiet, honest trade. Shared stores and long queues at the dock office."
  },
  "GJ 3959": {
   "name": "GJ 3959",
@@ -4515,7 +4515,7 @@
   "turnover": 8064,
   "radius": 3844,
   "population": "28 Billion",
-  "description": "A star of unknown class."
+  "description": "A faint red sun leaves the system in perpetual dusk. Terraced farm stations ship grain and livestock to hungry neighbours. Rival stations share a flag and little else."
  },
  "GJ 3976": {
   "name": "GJ 3976",
@@ -4533,7 +4533,7 @@
   "turnover": 18144,
   "radius": 5762,
   "population": "42 Billion",
-  "description": "A star of unknown class."
+  "description": "A dim red dwarf casts a ruddy twilight. Almost everything here grows, and everything else is eaten. Rival stations share a flag and little else."
  },
  "GJ 4248": {
   "name": "GJ 4248",
@@ -4551,7 +4551,7 @@
   "turnover": 1152,
   "radius": 5349,
   "population": "12 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Thin soil and tired crops make for hard living. Warlords and gangs run the stations by turns."
  },
  "Gliese 352": {
   "name": "Gliese 352",
@@ -4569,7 +4569,7 @@
   "turnover": 16800,
   "radius": 6196,
   "population": "35 Billion",
-  "description": "A red class M star."
+  "description": "A flare-prone red dwarf keeps pilots watching their shields. Refineries and assembly yards make this one of the richest industrial hubs. Several governments trade, bicker and spy on one another here."
  },
  "Gliese 536": {
   "name": "Gliese 536",
@@ -4587,7 +4587,7 @@
   "turnover": 19968,
   "radius": 3021,
   "population": "39 Billion",
-  "description": "A orange class K star."
+  "description": "A warm orange sun hangs low over the stations. Rusting factory decks still turn out a little something. Shared stores and long queues at the dock office."
  },
  "Gliese 609": {
   "name": "Gliese 609",
@@ -4605,6 +4605,6 @@
   "turnover": 2040,
   "radius": 6613,
   "population": "17 Billion",
-  "description": "A red class M star."
+  "description": "A faint red sun leaves the system in perpetual dusk. Thin soil and tired crops make for hard living. Noble houses hold the stations and guard their honour jealously."
  }
 }
