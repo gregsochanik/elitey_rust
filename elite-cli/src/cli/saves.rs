@@ -67,7 +67,7 @@ pub fn load(game: &GameState, args: &[String]) -> Result<Option<GameState>, Stri
 
 /// `saves`
 pub fn list(game: &GameState) {
-    match game.save_load_handler.list() {
+    match game.save_load_handler.list_slots() {
         Ok(saves) if saves.is_empty() => {
             println!("\n{}", "No save files found.".yellow());
             println!("Use 'save <slot_name>' to create your first save.");
@@ -77,15 +77,17 @@ pub fn list(game: &GameState) {
 
             let mut table = Table::new(&[
                 ("#", RIGHT),
+                ("Slot", LEFT),
                 ("Commander", LEFT),
                 ("Saved", LEFT),
                 ("Location", LEFT),
                 ("Credits", RIGHT),
                 ("Ship", LEFT),
             ]);
-            for (i, save) in saves.iter().enumerate() {
+            for (i, (slot, save)) in saves.iter().enumerate() {
                 table.row([
                     (i + 1).to_string(),
+                    slot.clone(),
                     save.commander_name.yellow().to_string(),
                     SaveLoadManager::format_timestamp(save.timestamp)
                         .blue()

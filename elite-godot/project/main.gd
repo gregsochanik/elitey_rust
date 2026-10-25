@@ -11,6 +11,8 @@ const GalaxyScreen := preload("res://screens/galaxy_screen.gd")
 const EquipmentScreen := preload("res://screens/equipment_screen.gd")
 const ShipyardScreen := preload("res://screens/shipyard_screen.gd")
 const JobsScreen := preload("res://screens/jobs_screen.gd")
+const SavesScreen := preload("res://screens/saves_screen.gd")
+const StartScreen := preload("res://screens/start_screen.gd")
 const JourneyScreen := preload("res://screens/journey_screen.gd")
 
 var game := EliteGame.new()
@@ -18,6 +20,8 @@ var header: PanelContainer
 var content := MarginContainer.new()
 var screens := {}
 var nav_buttons := {}
+var start: Control
+var playing := false
 
 
 func _ready() -> void:
@@ -63,9 +67,17 @@ func _ready() -> void:
 	_add_screen(nav, "equipment", "🧰  Equipment", _make_changing(EquipmentScreen))
 	_add_screen(nav, "shipyard", "🛠️  Shipyard", _make_changing(ShipyardScreen))
 	_add_screen(nav, "services", "🔧  Services", _make_services())
+	_add_screen(nav, "saves", "💾  Saves", _make_saves())
 	_add_screen(nav, "journey", "🚀  Journey", _make_journey())
 	_show("market")
 	_refresh_header()
+
+	get_tree().set_auto_accept_quit(false)
+	start = StartScreen.new()
+	start.setup(game)
+	start.game_started.connect(_game_started)
+	add_child(start)
+	start.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
 func _make_market() -> Control:
@@ -73,6 +85,28 @@ func _make_market() -> Control:
 	market.setup(game)
 	market.traded.connect(_refresh_header)
 	return market
+
+
+func _make_saves() -> Control:
+	var saves: Control = SavesScreen.new()
+	saves.setup(game)
+	saves.loaded.connect(_game_started)
+	return saves
+
+
+func _game_started() -> void:
+	playing = true
+	start.visible = false
+	screens["galaxy"].selected = ""
+	_refresh_header()
+	_show("market")
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if playing:
+			game.autosave()
+		get_tree().quit()
 
 
 func _make_galaxy() -> Control:

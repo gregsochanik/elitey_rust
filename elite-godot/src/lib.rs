@@ -37,6 +37,62 @@ impl EliteGame {
         status_to_dictionary(self.game.status())
     }
 
+    /// Every save, newest first: `slot`, `commander`, `location`, `credits`, `ship`, `saved_at`, `is_autosave`
+    #[func]
+    fn saves(&self) -> VarArray {
+        let mut saves = VarArray::new();
+        for save in self.game.saves() {
+            saves.push(
+                &vdict! {
+                    "slot": save.slot,
+                    "commander": save.commander,
+                    "location": save.location,
+                    "credits": save.credits,
+                    "ship": save.ship,
+                    "saved_at": save.saved_at,
+                    "is_autosave": save.is_autosave,
+                }
+                .to_variant(),
+            );
+        }
+        saves
+    }
+
+    #[func]
+    fn autosave_exists(&self, commander_name: GString) -> bool {
+        self.game.autosave_exists(commander_name.to_string())
+    }
+
+    #[func]
+    fn new_game(&self, commander_name: GString) -> VarDictionary {
+        action_to_dictionary(self.game.new_game(commander_name.to_string()))
+    }
+
+    #[func]
+    fn continue_game(&self, commander_name: GString) -> VarDictionary {
+        action_to_dictionary(self.game.continue_game(commander_name.to_string()))
+    }
+
+    #[func]
+    fn load_slot(&self, slot: GString) -> VarDictionary {
+        action_to_dictionary(self.game.load_slot(slot.to_string()))
+    }
+
+    #[func]
+    fn save_slot(&self, slot: GString) -> VarDictionary {
+        action_to_dictionary(self.game.save_slot(slot.to_string()))
+    }
+
+    #[func]
+    fn delete_slot(&self, slot: GString) -> VarDictionary {
+        action_to_dictionary(self.game.delete_slot(slot.to_string()))
+    }
+
+    #[func]
+    fn autosave(&self) -> VarDictionary {
+        action_to_dictionary(self.game.autosave())
+    }
+
     /// Start a jump; returns the first step: `kind` is event, fight, inspection, arrived or error
     #[func]
     fn begin_jump(&self, destination: GString) -> VarDictionary {

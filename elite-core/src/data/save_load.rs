@@ -129,6 +129,15 @@ impl SaveLoadManager {
 
     /// List all available save slots
     pub fn list_saves(&self) -> Result<Vec<SaveMetadata>, String> {
+        Ok(self
+            .list_slots()?
+            .into_iter()
+            .map(|(_, metadata)| metadata)
+            .collect())
+    }
+
+    /// Every save with the slot name it loads from, newest first
+    pub fn list_slots(&self) -> Result<Vec<(String, SaveMetadata)>, String> {
         let mut saves = Vec::new();
 
         if !self.save_directory.exists() {
@@ -143,15 +152,14 @@ impl SaveLoadManager {
 
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-                    if let Ok(save_file) = self.load_save_metadata(stem) {
-                        saves.push(save_file);
+                    if let Ok(metadata) = self.load_save_metadata(stem) {
+                        saves.push((stem.to_string(), metadata));
                     }
                 }
             }
         }
 
-        // Sort by timestamp (newest first)
-        saves.sort_by_key(|save| std::cmp::Reverse(save.timestamp));
+        saves.sort_by_key(|(_, save)| std::cmp::Reverse(save.timestamp));
         Ok(saves)
     }
 
