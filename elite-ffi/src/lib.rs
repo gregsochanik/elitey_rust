@@ -1,7 +1,9 @@
 use elite_core::data::commodities::CommodityType;
+use elite_core::data::systems::EconomyType;
 use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
 use elite_core::game::repair::CREDITS_PER_POINT;
 use elite_core::game::trade_log::TradeKind;
+use elite_core::game::travel::fuel_for_distance;
 use elite_core::game::GameState;
 use std::sync::{Arc, Mutex};
 
@@ -113,6 +115,49 @@ pub struct ServicesData {
 pub struct ActionResult {
     pub ok: bool,
     pub message: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct SystemPointData {
+    pub name: String,
+    pub x: u32,
+    pub y: u32,
+    pub distance: f64,
+    pub fuel_cost: u32,
+    pub reachable: bool,
+    pub is_current: bool,
+    pub industrial: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct GalaxyData {
+    pub current: String,
+    pub fuel: u32,
+    pub systems: Vec<SystemPointData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SystemDetailData {
+    pub name: String,
+    pub economy: String,
+    pub government: String,
+    pub tech_level: u32,
+    pub population: String,
+    pub description: String,
+    pub distance: f64,
+    pub fuel_cost: u32,
+    pub reachable: bool,
+    pub is_current: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct JumpPlanData {
+    pub ok: bool,
+    pub message: String,
+    pub origin: String,
+    pub destination: String,
+    pub distance: f64,
+    pub fuel_cost: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -239,6 +284,92 @@ impl Game {
                 receipt.points, receipt.cost, receipt.hull, receipt.max_hull
             )),
             Err(error) => failed(error),
+        }
+    }
+
+    /// Every system with its position and what a jump there would cost from here
+    pub fn galaxy(&self) -> GalaxyData {
+        let state = self.state.lock().expect("game state lock");
+        let current = state.commander.location.clone();
+        let fuel = state.ship.fuel_current;
+        let origin = state.travel_handler.get_system_info(&current);
+        let mut systems: Vec<SystemPointData> = state
+            .travel_handler
+            .get_available_systems()
+            .into_iter()
+            .map(|system| {
+                let distance = origin.map_or(0.0, |origin| origin.distance_to(system));
+                let fuel_cost = fuel_for_distance(distance);
+                let is_current = system.name == current;
+                SystemPointData {
+                    name: system.name.clone(),
+                    x: u32::from(system.x),
+                    y: u32::from(system.y),
+                    distance,
+                    fuel_cost,
+                    reachable: !is_current && fuel_cost <= fuel,
+                    is_current,
+                    industrial: matches!(
+                        system.economy,
+                        EconomyType::RichIndustrial
+                            | EconomyType::PoorIndustrial
+                            | EconomyType::MainlyIndustrial
+                            | EconomyType::AverageIndustrial
+                    ),
+                }
+            })
+            .collect();
+        systems.sort_by(|a, b| a.name.cmp(&b.name));
+        GalaxyData {
+            current,
+            fuel,
+            systems,
+        }
+    }
+
+    pub fn system_detail(&self, name: String) -> Option<SystemDetailData> {
+        let state = self.state.lock().expect("game state lock");
+        let view = state.system_info(&name)?;
+        let from_here = view.from_here.as_ref();
+        let is_current = view.name == state.commander.location;
+        Some(SystemDetailData {
+            economy: view.economy.display_name().to_string(),
+            government: view.government.display_name().to_string(),
+            tech_level: u32::from(view.tech_level),
+            population: view.population,
+            description: view.description,
+            distance: from_here.map_or(0.0, |jump| jump.distance),
+            fuel_cost: from_here.map_or(0, |jump| jump.fuel),
+            reachable: !is_current
+                && from_here.is_some_and(|jump| jump.fuel <= state.ship.fuel_current),
+            is_current,
+            name: view.name,
+        })
+    }
+
+    /// Check a jump and say what it would cost, without making it
+    pub fn plan_jump(&self, destination: String) -> JumpPlanData {
+        let state = self.state.lock().expect("game state lock");
+        match state
+            .travel_handler
+            .plan_jump(&state.commander, &state.ship, &destination)
+        {
+            Ok(plan) => JumpPlanData {
+                ok: true,
+                message: String::new(),
+                origin: plan.origin,
+                destination: plan.destination,
+                distance: plan.distance,
+                fuel_cost: plan.fuel_cost,
+            },
+            Err(error) => JumpPlanData {
+                ok: false,
+                message: error.to_string(),
+                origin: String::new(),
+                destination,
+                distance: 0.0,
+                fuel_cost: 0,
+            },
         }
     }
 
@@ -433,6 +564,61 @@ mod tests {
         let services = game.services();
         assert_eq!((services.fuel_missing, services.hull_missing), (2, 6));
         assert_eq!(services.credits, 100 - 6 - 8);
+    }
+
+    #[test]
+    fn the_galaxy_marks_the_current_and_reachable_systems() {
+        let game = Game::new("Test".to_string());
+
+        let galaxy = game.galaxy();
+
+        assert_eq!(galaxy.current, "LAVE");
+        assert!(galaxy.systems.len() > 200);
+        let lave = galaxy.systems.iter().find(|s| s.is_current).unwrap();
+        assert!(!lave.reachable);
+        let reachable: Vec<_> = galaxy.systems.iter().filter(|s| s.reachable).collect();
+        assert!(!reachable.is_empty());
+        assert!(reachable.iter().all(|s| s.fuel_cost <= galaxy.fuel));
+        assert!(galaxy
+            .systems
+            .iter()
+            .any(|s| s.name == "DISO" && s.reachable));
+    }
+
+    #[test]
+    fn a_system_detail_says_what_the_jump_costs() {
+        let game = Game::new("Test".to_string());
+
+        let diso = game.system_detail("DISO".to_string()).unwrap();
+
+        assert_eq!(diso.fuel_cost, 3);
+        assert!(diso.reachable && !diso.is_current);
+        assert_eq!(diso.economy, "Average Agricultural");
+        assert!(game.system_detail("NOWHERE".to_string()).is_none());
+        assert!(game.system_detail("LAVE".to_string()).unwrap().is_current);
+    }
+
+    #[test]
+    fn planning_a_jump_reports_cost_or_the_reason_it_cannot_be_made() {
+        let game = Game::new("Test".to_string());
+
+        let plan = game.plan_jump("diso".to_string());
+        assert!(plan.ok);
+        assert_eq!(
+            (plan.origin.as_str(), plan.destination.as_str()),
+            ("LAVE", "DISO")
+        );
+        assert_eq!(plan.fuel_cost, 3);
+
+        assert!(!game.plan_jump("LAVE".to_string()).ok);
+        assert!(!game.plan_jump("nowhere".to_string()).ok);
+        let far = game
+            .galaxy()
+            .systems
+            .into_iter()
+            .find(|s| !s.reachable && !s.is_current)
+            .unwrap();
+        assert!(!game.plan_jump(far.name).ok);
     }
 
     #[test]
