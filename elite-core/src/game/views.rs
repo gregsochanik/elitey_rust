@@ -1,3 +1,4 @@
+use crate::data::star_class::StarClass;
 use crate::data::systems::{EconomyType, GovernmentType};
 use crate::game::commander::{CombatRating, Standing};
 use crate::game::trade_log::{TradeStats, Transaction};
@@ -40,6 +41,7 @@ pub struct SystemInfoView {
     pub tech_level: u8,
     pub population: String,
     pub description: String,
+    pub star: Option<StarClass>,
     pub from_here: Option<JumpFromHere>,
 }
 

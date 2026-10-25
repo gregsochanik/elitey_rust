@@ -107,8 +107,11 @@ func _select(name: String) -> void:
 	text += "[color=#7d8da3]Economy[/color]  %s\n" % info["economy"]
 	text += "[color=#7d8da3]Government[/color]  %s\n" % info["government"]
 	text += "[color=#7d8da3]Tech level[/color]  %d\n" % info["tech_level"]
-	text += "[color=#7d8da3]Population[/color]  %s\n\n" % info["population"]
-	text += info["description"]
+	text += "[color=#7d8da3]Population[/color]  %s\n" % info["population"]
+	if info["star_class"] != "":
+		text += "[color=#7d8da3]Star[/color]  %s (%s)\n" % [info["star_type"], info["star_class"]]
+		text += "[color=#7d8da3]%s[/color]\n" % info["star_note"]
+	text += "\n" + info["description"]
 	details.text = text
 	var jump_plan: Dictionary = game.plan_jump(name)
 	jump.disabled = not jump_plan["ok"]

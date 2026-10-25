@@ -108,6 +108,8 @@ pub struct GalaxySystemData {
     radius: u32,
     population: String,
     description: String,
+    #[serde(default)]
+    star_class: String,
 }
 
 /// Represents a star system with all its properties
@@ -133,6 +135,9 @@ pub struct StarSystem {
     pub population: String,
     /// System description
     pub description: String,
+    /// Spectral class of the star, such as G2V; empty in saves that predate it
+    #[serde(default)]
+    pub star_class: String,
 }
 
 impl StarSystem {
@@ -155,6 +160,7 @@ impl StarSystem {
             radius: data.radius,
             population: data.population,
             description: data.description,
+            star_class: data.star_class,
         })
     }
 
@@ -302,6 +308,7 @@ mod tests {
             radius: 5000,
             population: "40 Billion".to_string(),
             description: "A test system.".to_string(),
+            star_class: "G2V".to_string(),
         };
 
         let system = StarSystem::from_galaxy_data(test_data).unwrap();
@@ -361,6 +368,22 @@ mod tests {
         assert!(systems
             .iter()
             .all(|system| system.x <= 255 && system.y <= 255));
+    }
+
+    #[test]
+    fn every_star_has_a_class_the_game_can_explain() {
+        let manager = SystemManager::new().unwrap();
+
+        for system in manager.get_all_systems() {
+            assert!(
+                crate::data::star_class::StarClass::from_code(&system.star_class).is_some(),
+                "{}: {:?}",
+                system.name,
+                system.star_class
+            );
+        }
+        let sol = manager.get_system("Sol").unwrap();
+        assert_eq!(sol.star_class, "G2V");
     }
 
     #[test]

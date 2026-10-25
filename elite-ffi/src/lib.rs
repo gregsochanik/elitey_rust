@@ -156,6 +156,9 @@ pub struct SystemDetailData {
     pub tech_level: u32,
     pub population: String,
     pub description: String,
+    pub star_class: String,
+    pub star_type: String,
+    pub star_note: String,
     pub distance: f64,
     pub fuel_cost: u32,
     pub reachable: bool,
@@ -542,6 +545,18 @@ impl Game {
             tech_level: u32::from(view.tech_level),
             population: view.population,
             description: view.description,
+            star_class: view
+                .star
+                .as_ref()
+                .map_or_else(String::new, |s| s.code.clone()),
+            star_type: view
+                .star
+                .as_ref()
+                .map_or_else(String::new, |s| s.type_name.clone()),
+            star_note: view
+                .star
+                .as_ref()
+                .map_or_else(String::new, |s| s.note.to_string()),
             distance: from_here.map_or(0.0, |jump| jump.distance),
             fuel_cost: from_here.map_or(0, |jump| jump.fuel),
             reachable: !is_current
