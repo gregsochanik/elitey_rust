@@ -37,10 +37,11 @@ Prefer one small command/outcome surface over many `handle_*` methods:
 
 ### Phase 1: Core refactor (in place, single crate)
 Do this first and on its own.
+- Areas migrated so far (typed API in the core, text in `src/cli/`): trading.
 - [ ] Introduce the action/outcome/error/view types above and migrate one area at a time: trading, refuel, repair, equipment, upgrades/ships, save/load, trade log, travel and events, combat entry.
 - [ ] Keep each existing command working through a thin CLI layer that calls the new API and prints. The CLI's visible output may only change where the old text was wrong.
 - [ ] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.
-- [ ] Make `main.rs` use the library (`use elitey_rust::...`), not duplicate `mod` declarations.
+- [x] Make `main.rs` use the library (`use elitey_rust::...`), not duplicate `mod` declarations.
 - [ ] Inject randomness (travel events, market fluctuation, combat rolls) so core tests can be deterministic.
 - [ ] Existing `tests/*` still pass. Rule and state tests may move to the core API, but keep representative CLI tests (command parsing, output formatting, prompts, error messages) so the "CLI unchanged" requirement is actually checked.
 

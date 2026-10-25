@@ -55,22 +55,26 @@ fn successful_buy_and_sell_are_logged() {
     let mut ship = Ship::new_cobra_mk3();
     let mut log = TradeLog::new();
 
-    assert!(handler.execute_buy(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &market(10, 8, 20),
-        &mut log
-    ));
-    assert!(handler.execute_sell(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &market(12, 15, 20),
-        &mut log
-    ));
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log
+        )
+        .is_ok());
+    assert!(handler
+        .execute_sell(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(12, 15, 20),
+            &mut log
+        )
+        .is_ok());
 
     assert_eq!(log.transactions().len(), 2);
     assert_eq!(log.transactions()[1].profit, Some(25));
@@ -85,30 +89,36 @@ fn failed_buy_and_sell_are_not_logged() {
     let mut log = TradeLog::new();
 
     // too expensive, not enough stock, nothing to sell
-    assert!(!handler.execute_buy(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &market(1_000_000, 8, 20),
-        &mut log
-    ));
-    assert!(!handler.execute_buy(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &market(10, 8, 2),
-        &mut log
-    ));
-    assert!(!handler.execute_sell(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &market(10, 8, 20),
-        &mut log
-    ));
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(1_000_000, 8, 20),
+            &mut log
+        )
+        .is_err());
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 2),
+            &mut log
+        )
+        .is_err());
+    assert!(handler
+        .execute_sell(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log
+        )
+        .is_err());
 
     assert!(log.transactions().is_empty());
 }
@@ -123,14 +133,16 @@ fn buying_reduces_stock_until_the_market_refreshes() {
 
     let before = handler.market_for("LAVE", &economy, 0);
     let stock = before.get_availability(&CommodityType::Food).unwrap();
-    assert!(handler.execute_buy(
-        CommodityType::Food,
-        1,
-        &mut commander,
-        &mut ship,
-        &before,
-        &mut log
-    ));
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            1,
+            &mut commander,
+            &mut ship,
+            &before,
+            &mut log
+        )
+        .is_ok());
 
     let after = handler.market_for("LAVE", &economy, 0);
     assert_eq!(
@@ -160,23 +172,27 @@ fn cannot_buy_more_than_remaining_stock() {
     commander.add_credits(1_000);
 
     let mut stock = market(10, 8, 6);
-    assert!(handler.execute_buy(
-        CommodityType::Food,
-        5,
-        &mut commander,
-        &mut ship,
-        &stock,
-        &mut log
-    ));
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &stock,
+            &mut log
+        )
+        .is_ok());
     stock.availability.insert(CommodityType::Food, 1);
-    assert!(!handler.execute_buy(
-        CommodityType::Food,
-        2,
-        &mut commander,
-        &mut ship,
-        &stock,
-        &mut log
-    ));
+    assert!(handler
+        .execute_buy(
+            CommodityType::Food,
+            2,
+            &mut commander,
+            &mut ship,
+            &stock,
+            &mut log
+        )
+        .is_err());
 }
 
 #[test]
@@ -373,4 +389,128 @@ fn a_refresh_clears_the_markers() {
     assert!(handler
         .pushed_commodities("LAVE", MARKET_REFRESH_JUMPS)
         .is_empty());
+}
+
+#[test]
+fn a_buy_returns_a_receipt_with_the_price_total_and_credits_left() {
+    let mut handler = TradingHandler::new();
+    let mut commander = Commander::new("Test".to_string());
+    commander.credits = 100;
+    let mut ship = Ship::new_cobra_mk3();
+    let mut log = TradeLog::new();
+
+    let receipt = handler
+        .execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log,
+        )
+        .unwrap();
+
+    assert_eq!(receipt.kind, TradeKind::Buy);
+    assert_eq!(receipt.quantity, 5);
+    assert_eq!(receipt.unit_price, 10);
+    assert_eq!(receipt.total, 50);
+    assert_eq!(receipt.credits_after, 50);
+    assert_eq!(receipt.illegal_penalty, None);
+}
+
+#[test]
+fn refusals_say_what_was_missing() {
+    let mut handler = TradingHandler::new();
+    let mut commander = Commander::new("Test".to_string());
+    commander.credits = 20;
+    let mut ship = Ship::new_cobra_mk3();
+    let mut log = TradeLog::new();
+    let mut buy = |price, stock| {
+        handler.execute_buy(
+            CommodityType::Food,
+            5,
+            &mut commander,
+            &mut ship,
+            &market(price, 8, stock),
+            &mut log,
+        )
+    };
+
+    assert_eq!(
+        buy(10, 2),
+        Err(TradeError::NotEnoughStock {
+            available: 2,
+            requested: 5
+        })
+    );
+    assert_eq!(
+        buy(10, 20),
+        Err(TradeError::NotEnoughCredits {
+            needed: 50,
+            have: 20
+        })
+    );
+    assert_eq!(
+        TradeError::NotEnoughCredits {
+            needed: 50,
+            have: 20
+        }
+        .to_string(),
+        "Insufficient credits. Need 50cr, have 20cr"
+    );
+}
+
+#[test]
+fn selling_what_you_do_not_hold_is_refused() {
+    let mut handler = TradingHandler::new();
+    let mut commander = Commander::new("Test".to_string());
+    let mut ship = Ship::new_cobra_mk3();
+    let mut log = TradeLog::new();
+
+    assert_eq!(
+        handler.execute_sell(
+            CommodityType::Food,
+            3,
+            &mut commander,
+            &mut ship,
+            &market(10, 8, 20),
+            &mut log
+        ),
+        Err(TradeError::NotEnoughCargo {
+            held: 0,
+            requested: 3
+        })
+    );
+}
+
+#[test]
+fn the_market_overview_lists_every_commodity_with_prices() {
+    use crate::data::systems::SystemManager;
+    let systems = SystemManager::new().unwrap();
+    let mut handler = TradingHandler::new();
+
+    let view = handler
+        .market_overview(&systems, "LAVE", Standing::Neutral, 0)
+        .unwrap();
+
+    assert_eq!(view.system_name, "LAVE");
+    assert_eq!(view.rows.len(), 8);
+    assert!(view.rows.iter().all(|row| row.sell_price <= row.buy_price));
+    assert!(handler
+        .market_overview(&systems, "NOWHERE", Standing::Neutral, 0)
+        .is_none());
+}
+
+#[test]
+fn the_cargo_view_totals_the_hold() {
+    let handler = TradingHandler::new();
+    let mut ship = Ship::new_cobra_mk3();
+    assert!(ship.cargo_hold.add_cargo(CommodityType::Food, 3));
+
+    let view = handler.cargo_view(&ship);
+
+    assert_eq!(view.weight, 3);
+    assert_eq!(view.capacity, 20);
+    assert_eq!(view.items.len(), 1);
+    assert_eq!(view.total_value, 3 * CommodityType::Food.base_price());
 }

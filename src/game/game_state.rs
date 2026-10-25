@@ -1,4 +1,6 @@
+use crate::data::commodities::CommodityType;
 use crate::data::systems::SystemManager;
+use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
 use crate::utils::display::{show_error, show_success};
 use crate::utils::input;
@@ -301,14 +303,56 @@ impl GameState {
 
     /// Handle buy command
     pub fn handle_buy_command(&mut self, args: &[String]) -> bool {
-        self.trading_handler.handle_buy(
-            args,
+        crate::cli::trading::buy(self, args)
+    }
+
+    /// Buy tons of a commodity at the current system
+    pub fn buy(
+        &mut self,
+        commodity: CommodityType,
+        quantity: u32,
+    ) -> Result<TradeReceipt, TradeError> {
+        self.trading_handler.buy(
+            commodity,
+            quantity,
             &mut self.commander,
             &mut self.ship,
             &self.system_manager,
             &mut self.trade_log,
             self.world_clock,
         )
+    }
+
+    /// Sell tons of a commodity at the current system
+    pub fn sell(
+        &mut self,
+        commodity: CommodityType,
+        quantity: u32,
+    ) -> Result<TradeReceipt, TradeError> {
+        self.trading_handler.sell(
+            commodity,
+            quantity,
+            &mut self.commander,
+            &mut self.ship,
+            &self.system_manager,
+            &mut self.trade_log,
+            self.world_clock,
+        )
+    }
+
+    /// The market here as a table
+    pub fn market_overview(&mut self) -> Option<MarketView> {
+        self.trading_handler.market_overview(
+            &self.system_manager,
+            &self.commander.location,
+            self.commander.standing(),
+            self.world_clock,
+        )
+    }
+
+    /// The cargo hold
+    pub fn cargo_view(&self) -> CargoView {
+        self.trading_handler.cargo_view(&self.ship)
     }
 
     /// Handle equipment command
@@ -361,24 +405,12 @@ impl GameState {
 
     /// Handle sell command
     pub fn handle_sell_command(&mut self, args: &[String]) -> bool {
-        self.trading_handler.handle_sell(
-            args,
-            &mut self.commander,
-            &mut self.ship,
-            &self.system_manager,
-            &mut self.trade_log,
-            self.world_clock,
-        )
+        crate::cli::trading::sell(self, args)
     }
 
     /// Handle market command
     pub fn handle_market_command(&mut self) {
-        self.trading_handler.handle_market(
-            &self.system_manager,
-            &self.commander.location,
-            self.commander.standing(),
-            self.world_clock,
-        );
+        crate::cli::trading::market(self);
     }
 
     /// Commodities here whose prices the player's recent trading is still moving
@@ -402,7 +434,7 @@ impl GameState {
 
     /// Handle cargo command
     pub fn handle_cargo_command(&self) {
-        self.trading_handler.handle_cargo(&self.ship);
+        crate::cli::trading::cargo(self);
     }
 
     /// Handle upgrade command
