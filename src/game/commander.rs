@@ -62,8 +62,9 @@ impl Standing {
 }
 
 /// How dangerous the commander is, from the number of ships destroyed
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum CombatRating {
+    #[default]
     Harmless,
     MostlyHarmless,
     Poor,

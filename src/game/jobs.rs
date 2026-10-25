@@ -2,7 +2,7 @@ use crate::data::commodities::CommodityType;
 use crate::data::systems::{GovernmentType, StarSystem};
 use crate::game::aftermath::settle_with_reward;
 use crate::game::combat::Outcome;
-use crate::game::commander::Standing;
+use crate::game::commander::{CombatRating, Standing};
 use crate::game::travel::fuel_for_distance;
 use crate::game::{Commander, Ship};
 use rand::seq::SliceRandom;
@@ -62,44 +62,50 @@ pub enum Track {
     Gateway,
 }
 
-/// Which tracks of job a commander is offered at a system
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct JobAccess {
-    pub lawful: bool,
-    pub criminal: bool,
-    pub gateway: bool,
-}
-
-impl JobAccess {
-    pub fn for_standing_at(standing: Standing, government: &GovernmentType) -> Self {
-        let lawful_post = government.is_lawful();
-        let none = JobAccess {
-            lawful: false,
-            criminal: false,
-            gateway: false,
-        };
-        match standing {
-            Standing::Respected | Standing::Trusted => JobAccess {
-                lawful: lawful_post,
-                ..none
-            },
-            Standing::Neutral => JobAccess {
-                gateway: !lawful_post,
-                ..none
-            },
-            Standing::Disreputable | Standing::Criminal => JobAccess {
-                criminal: !lawful_post,
-                ..none
-            },
+impl Track {
+    /// Whether a system with this government posts jobs of this track
+    pub fn posted_by(&self, government: &GovernmentType) -> bool {
+        match self {
+            Track::Ordinary => true,
+            Track::Lawful => government.is_lawful(),
+            Track::Criminal | Track::Gateway => !government.is_lawful(),
         }
     }
 
-    pub fn allows(&self, track: Track) -> bool {
-        match track {
+    /// Whether a commander of this standing may take jobs of this track
+    pub fn open_to(&self, standing: Standing) -> bool {
+        match self {
             Track::Ordinary => true,
-            Track::Lawful => self.lawful,
-            Track::Criminal => self.criminal,
-            Track::Gateway => self.gateway,
+            Track::Lawful => matches!(standing, Standing::Respected | Standing::Trusted),
+            Track::Criminal => matches!(standing, Standing::Disreputable | Standing::Criminal),
+            Track::Gateway => standing == Standing::Neutral,
+        }
+    }
+
+    fn required_standing(&self) -> &'static str {
+        match self {
+            Track::Ordinary => "any",
+            Track::Lawful => "Trusted or better",
+            Track::Criminal => "Disreputable or worse",
+            Track::Gateway => "Neutral",
+        }
+    }
+}
+
+/// Why a commander cannot take a job yet
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JobLock {
+    /// The job is posted for commanders of another standing
+    Standing(Track),
+    /// The job needs a better combat rating
+    Rating(CombatRating),
+}
+
+impl JobLock {
+    pub fn describe(&self) -> String {
+        match self {
+            JobLock::Standing(track) => format!("needs standing {}", track.required_standing()),
+            JobLock::Rating(rating) => format!("needs combat rating {}", rating.name()),
         }
     }
 }
@@ -121,6 +127,18 @@ impl JobKind {
 }
 
 impl Job {
+    /// What stops this commander taking the job, if anything
+    pub fn lock(&self, standing: Standing, rating: CombatRating) -> Option<JobLock> {
+        let track = self.kind.track();
+        if !track.open_to(standing) {
+            Some(JobLock::Standing(track))
+        } else if rating < self.min_rating {
+            Some(JobLock::Rating(self.min_rating))
+        } else {
+            None
+        }
+    }
+
     pub fn describe(&self) -> String {
         match (self.kind, &self.commodity) {
             (JobKind::Courier, _) => format!("Courier to {}", self.destination),
@@ -159,6 +177,9 @@ pub struct Job {
     pub fuel_cost: u32,
     pub reward: u32,
     pub deadline_jumps: u32,
+    /// Combat rating the commander needs to take the job
+    #[serde(default)]
+    pub min_rating: CombatRating,
 }
 
 /// A job the player has accepted and is working towards
@@ -174,6 +195,8 @@ pub fn accept(
     active: &mut Vec<ActiveJob>,
     ship: &mut Ship,
     location: &str,
+    standing: Standing,
+    rating: CombatRating,
     number: usize,
 ) -> Result<Job, String> {
     if board.location != location {
@@ -189,6 +212,9 @@ pub fn accept(
         return Err(format!("There is no job {} on the board.", number));
     }
     let wanted = &board.jobs[number - 1];
+    if let Some(lock) = wanted.lock(standing, rating) {
+        return Err(format!("Locked: {}.", lock.describe()));
+    }
     if wanted.kind.carries_cargo() && !ship.cargo_hold.reserve(wanted.tons) {
         return Err(format!(
             "No room: the cargo is {} tons and you have {} free.",
@@ -420,16 +446,22 @@ pub fn bounty_reward(fuel_cost: u32, variance: f64) -> u32 {
     ((BOUNTY_BASE_REWARD + BOUNTY_REWARD_PER_FUEL * f64::from(fuel_cost)) * variance).round() as u32
 }
 
-/// Roll a fresh board of jobs, offering the kinds this standing may see at this system
+/// Roll a fresh board of the jobs this system posts
 pub fn generate_board_for(
     origin: &StarSystem,
     systems: &[&StarSystem],
     rng: &mut impl Rng,
-    standing: Standing,
     hold: u32,
 ) -> Vec<Job> {
-    let access = JobAccess::for_standing_at(standing, &origin.government);
-    generate_board_with(origin, systems, rng, BOUNTY_SHARE, access, hold)
+    generate_board_with(origin, systems, rng, BOUNTY_SHARE, hold)
+}
+
+fn bounty_min_rating(fuel_cost: u32) -> CombatRating {
+    match fuel_cost {
+        0..=3 => CombatRating::Harmless,
+        4..=5 => CombatRating::MostlyHarmless,
+        _ => CombatRating::Poor,
+    }
 }
 
 fn generate_board_with(
@@ -437,7 +469,6 @@ fn generate_board_with(
     systems: &[&StarSystem],
     rng: &mut impl Rng,
     bounty_share: f64,
-    access: JobAccess,
     hold: u32,
 ) -> Vec<Job> {
     let mut destinations: Vec<&&StarSystem> = systems
@@ -457,24 +488,26 @@ fn generate_board_with(
             let distance = origin.distance_to(destination);
             let fuel_cost = fuel_for_distance(distance);
             let roll = rng.gen::<f64>();
-            let kind = if roll < bounty_share && access.allows(JobKind::Bounty.track()) {
-                JobKind::Bounty
-            } else if roll >= 1.0 - FREIGHT_SHARE && access.allows(JobKind::Freight.track()) {
-                JobKind::Freight
-            } else if roll >= bounty_share
-                && roll < bounty_share + SMUGGLING_SHARE
-                && access.allows(JobKind::Smuggling.track())
-                && destination.government.is_lawful()
-            {
-                JobKind::Smuggling
-            } else if roll >= bounty_share
-                && roll < bounty_share + GATEWAY_SHARE
-                && access.allows(JobKind::BlackCourier.track())
-            {
-                JobKind::BlackCourier
-            } else {
-                JobKind::Courier
-            };
+            let kind =
+                if roll < bounty_share && JobKind::Bounty.track().posted_by(&origin.government) {
+                    JobKind::Bounty
+                } else if roll >= 1.0 - FREIGHT_SHARE
+                    && JobKind::Freight.track().posted_by(&origin.government)
+                {
+                    JobKind::Freight
+                } else if roll >= bounty_share
+                    && roll < bounty_share + SMUGGLING_SHARE
+                    && JobKind::Smuggling.track().posted_by(&origin.government)
+                    && destination.government.is_lawful()
+                {
+                    JobKind::Smuggling
+                } else if roll >= 1.0 - GATEWAY_SHARE
+                    && JobKind::BlackCourier.track().posted_by(&origin.government)
+                {
+                    JobKind::BlackCourier
+                } else {
+                    JobKind::Courier
+                };
             let variance = rng.gen_range(0.9..=1.1);
             let (tons, commodity) = if kind == JobKind::Smuggling {
                 (
@@ -508,6 +541,11 @@ fn generate_board_with(
                     JobKind::Smuggling => smuggling_reward(fuel_cost, tons, variance),
                 },
                 deadline_jumps: rng.gen_range(2..=4),
+                min_rating: if kind == JobKind::Bounty {
+                    bounty_min_rating(fuel_cost)
+                } else {
+                    CombatRating::Harmless
+                },
             }
         })
         .collect()
@@ -524,11 +562,10 @@ impl JobBoard {
         origin: &StarSystem,
         systems: &[&StarSystem],
         rng: &mut impl Rng,
-        standing: Standing,
         hold: u32,
     ) -> &[Job] {
         if self.location != origin.name {
-            self.jobs = generate_board_for(origin, systems, rng, standing, hold);
+            self.jobs = generate_board_for(origin, systems, rng, hold);
             self.location = origin.name.clone();
         }
         &self.jobs

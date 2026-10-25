@@ -67,7 +67,7 @@ fn the_jobs_board_is_stable_while_docked_and_rerolls_after_a_jump() {
     assert!((3..=5).contains(&first.len()));
     assert!(first
         .iter()
-        .all(|job| job.fuel_cost <= game.ship.fuel_capacity()));
+        .all(|job| job.job.fuel_cost <= game.ship.fuel_capacity()));
 
     game.job_board.clear();
     let rerolled = game

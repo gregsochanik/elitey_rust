@@ -1,4 +1,5 @@
-use crate::game::jobs::{self, ActiveJob, Job};
+use crate::game::game_state::JobListing;
+use crate::game::jobs::{self, ActiveJob};
 use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
@@ -92,22 +93,39 @@ fn print_missions(active: &[ActiveJob]) {
     println!();
 }
 
-fn print_jobs(location: &str, jobs: &[Job]) {
+fn print_jobs(location: &str, jobs: &[JobListing]) {
     println!("\n{}", format!("Jobs at {}", location).cyan().bold());
     println!("{}", "=".repeat(location.len() + 8).cyan());
     if jobs.is_empty() {
         println!("No jobs on offer here.");
     }
-    for (index, job) in jobs.iter().enumerate() {
-        println!(
+    for (index, listing) in jobs.iter().enumerate() {
+        let job = &listing.job;
+        let line = format!(
             "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
             index + 1,
-            job.describe().yellow(),
+            job.describe(),
             job.distance,
             job.fuel_cost,
-            job.reward.to_string().green(),
+            job.reward,
             jumps(job.deadline_jumps)
         );
+        match &listing.lock {
+            Some(lock) => println!(
+                "{} {}",
+                line.dimmed(),
+                format!("[Locked: {}]", lock.describe()).red()
+            ),
+            None => println!(
+                "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
+                index + 1,
+                job.describe().yellow(),
+                job.distance,
+                job.fuel_cost,
+                job.reward.to_string().green(),
+                jumps(job.deadline_jumps)
+            ),
+        }
     }
     println!();
 }

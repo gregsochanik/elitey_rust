@@ -1,11 +1,36 @@
 use elitey_rust::data::commodities::TradingSystem;
 use elitey_rust::data::systems::SystemManager;
+use elitey_rust::game::commander::CombatRating;
 use elitey_rust::game::commander::{Standing, STARTING_CREDITS};
 use elitey_rust::game::jobs::{generate_board_for, Job, JobKind};
 use elitey_rust::game::refuel::CREDITS_PER_UNIT;
 use elitey_rust::game::smuggling::inspection_chance;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+
+fn board_for(
+    origin: &elitey_rust::data::systems::StarSystem,
+    all: &[&elitey_rust::data::systems::StarSystem],
+    seed: u64,
+    standing: Standing,
+    hold: u32,
+) -> Vec<Job> {
+    board_for_rated(origin, all, seed, standing, CombatRating::Harmless, hold)
+}
+
+fn board_for_rated(
+    origin: &elitey_rust::data::systems::StarSystem,
+    all: &[&elitey_rust::data::systems::StarSystem],
+    seed: u64,
+    standing: Standing,
+    rating: CombatRating,
+    hold: u32,
+) -> Vec<Job> {
+    generate_board_for(origin, all, &mut StdRng::seed_from_u64(seed), hold)
+        .into_iter()
+        .filter(|job| job.lock(standing, rating).is_none())
+        .collect()
+}
 
 const TRIPS: [(&str, &str); 5] = [
     ("LAVE", "DISO"),
@@ -149,10 +174,6 @@ fn better_standing_earns_more_but_a_criminal_can_still_trade() {
 }
 
 fn best_courier_net_per_jump(seeds: u64) -> f64 {
-    use elitey_rust::game::jobs::generate_board_for;
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
-
     let systems = SystemManager::new().unwrap();
     let all = systems.get_all_systems();
     let mut total = 0i64;
@@ -160,13 +181,7 @@ fn best_courier_net_per_jump(seeds: u64) -> f64 {
     for seed in 0..seeds {
         for (from, _) in TRIPS {
             let origin = systems.get_system(from).unwrap();
-            let board = generate_board_for(
-                origin,
-                &all,
-                &mut StdRng::seed_from_u64(seed),
-                Standing::Neutral,
-                20,
-            );
+            let board = board_for(origin, &all, seed, Standing::Neutral, 20);
             let best = board
                 .iter()
                 .filter(|job| job.kind == elitey_rust::game::jobs::JobKind::Courier)
@@ -263,10 +278,7 @@ fn starting_loadout_fights() -> FightStats {
 }
 
 fn best_bounty_net_per_jump(seeds: u64) -> f64 {
-    use elitey_rust::game::jobs::{generate_board_for, JobKind};
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
-
+    use elitey_rust::game::jobs::JobKind;
     let fights = starting_loadout_fights();
     let repair = fights.average_hull_lost * 2.0;
     let systems = SystemManager::new().unwrap();
@@ -275,11 +287,12 @@ fn best_bounty_net_per_jump(seeds: u64) -> f64 {
     for seed in 0..seeds {
         for (from, _) in TRIPS {
             let origin = systems.get_system(from).unwrap();
-            let board = generate_board_for(
+            let board = board_for_rated(
                 origin,
                 &all,
-                &mut StdRng::seed_from_u64(seed),
+                seed,
                 Standing::Neutral,
+                CombatRating::Poor,
                 20,
             );
             let best = board
@@ -345,13 +358,7 @@ fn mean_best_net(standing: Standing, lawful: bool, hold: u32, kind: JobKind) -> 
             .filter(|system| system.government.is_lawful() == lawful)
             .take(30)
         {
-            let board = generate_board_for(
-                origin,
-                &all,
-                &mut StdRng::seed_from_u64(seed),
-                standing,
-                hold,
-            );
+            let board = board_for(origin, &all, seed, standing, hold);
             nets.extend(best_net(&board, kind));
         }
     }
@@ -396,8 +403,7 @@ fn smuggling_runs(standing: Standing) -> SmugglingRuns {
             .filter(|system| !system.government.is_lawful())
             .take(20)
         {
-            let board =
-                generate_board_for(origin, &all, &mut StdRng::seed_from_u64(seed), standing, 20);
+            let board = board_for(origin, &all, seed, standing, 20);
             if let Some(job) = board
                 .iter()
                 .filter(|job| job.kind == JobKind::Smuggling)
