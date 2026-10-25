@@ -124,7 +124,9 @@ impl SaveLoadManager {
             ));
         }
 
-        Ok(save_file.game_state)
+        let mut game_state = save_file.game_state;
+        game_state.relocate_if_lost();
+        Ok(game_state)
     }
 
     /// List all available save slots

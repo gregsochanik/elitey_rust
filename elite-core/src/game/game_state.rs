@@ -157,6 +157,29 @@ impl GameState {
         self.system_manager.get_all_systems()
     }
 
+    /// Move a commander whose saved location is not in the galaxy to Sol, or the first system if there is no Sol
+    pub fn relocate_if_lost(&mut self) {
+        if self
+            .system_manager
+            .get_system(&self.commander.location)
+            .is_some()
+        {
+            return;
+        }
+        let home = if self.system_manager.get_system("Sol").is_some() {
+            Some("Sol".to_string())
+        } else {
+            self.system_manager
+                .get_all_systems()
+                .into_iter()
+                .map(|system| system.name.clone())
+                .min()
+        };
+        if let Some(home) = home {
+            self.commander.location = home;
+        }
+    }
+
     /// Get system information
     pub fn get_system_info(&self, system_name: &str) -> Option<&crate::data::systems::StarSystem> {
         self.system_manager.get_system(system_name)
