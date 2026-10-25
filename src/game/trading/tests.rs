@@ -490,14 +490,28 @@ fn the_market_overview_lists_every_commodity_with_prices() {
     let mut handler = TradingHandler::new();
 
     let view = handler
-        .market_overview(&systems, "LAVE", Standing::Neutral, 0)
+        .market_overview(
+            &systems,
+            "LAVE",
+            Standing::Neutral,
+            0,
+            &Ship::new_cobra_mk3(),
+            &TradeLog::new(),
+        )
         .unwrap();
 
     assert_eq!(view.system_name, "LAVE");
     assert_eq!(view.rows.len(), 8);
     assert!(view.rows.iter().all(|row| row.sell_price <= row.buy_price));
     assert!(handler
-        .market_overview(&systems, "NOWHERE", Standing::Neutral, 0)
+        .market_overview(
+            &systems,
+            "NOWHERE",
+            Standing::Neutral,
+            0,
+            &Ship::new_cobra_mk3(),
+            &TradeLog::new(),
+        )
         .is_none());
 }
 
@@ -507,7 +521,7 @@ fn the_cargo_view_totals_the_hold() {
     let mut ship = Ship::new_cobra_mk3();
     assert!(ship.cargo_hold.add_cargo(CommodityType::Food, 3));
 
-    let view = handler.cargo_view(&ship);
+    let view = handler.cargo_view(&ship, &TradeLog::new());
 
     assert_eq!(view.weight, 3);
     assert_eq!(view.capacity, 20);
@@ -537,4 +551,36 @@ fn a_seeded_handler_rolls_the_same_markets_every_time() {
             .buy_prices,
         a.buy_prices
     );
+}
+
+#[test]
+fn the_views_show_what_held_cargo_cost_on_average() {
+    use crate::data::systems::SystemManager;
+    let systems = SystemManager::new().unwrap();
+    let mut handler = TradingHandler::new();
+    let mut ship = Ship::new_cobra_mk3();
+    let mut log = TradeLog::new();
+    ship.add_cargo(CommodityType::Food, 2);
+    log.record_buy(CommodityType::Food, 2, 20, "LAVE", 0);
+    ship.add_cargo(CommodityType::Food, 2);
+    log.record_buy(CommodityType::Food, 2, 30, "LAVE", 2);
+
+    let cargo = handler.cargo_view(&ship, &log);
+    assert_eq!(cargo.items[0].paid, Some(25));
+
+    let market = handler
+        .market_overview(&systems, "LAVE", Standing::Neutral, 0, &ship, &log)
+        .unwrap();
+    let food = market
+        .rows
+        .iter()
+        .find(|row| row.commodity == CommodityType::Food)
+        .unwrap();
+    assert_eq!((food.held, food.paid), (4, Some(25)));
+    let textiles = market
+        .rows
+        .iter()
+        .find(|row| row.commodity == CommodityType::Textiles)
+        .unwrap();
+    assert_eq!((textiles.held, textiles.paid), (0, None));
 }

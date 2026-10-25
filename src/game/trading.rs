@@ -54,6 +54,10 @@ pub struct MarketRow {
     pub available: u32,
     pub percent_vs_base: i32,
     pub pushed: Pushed,
+    /// Tons of this commodity in the hold
+    pub held: u32,
+    /// What each held ton cost on average, when it was bought
+    pub paid: Option<u32>,
 }
 
 /// The market at a system as the player sees it
@@ -70,6 +74,8 @@ pub struct CargoLine {
     pub commodity: CommodityType,
     pub quantity: u32,
     pub estimated_value: u32,
+    /// What each ton cost on average, when it was bought
+    pub paid: Option<u32>,
 }
 
 /// The cargo hold
@@ -310,6 +316,8 @@ impl TradingHandler {
         location: &str,
         standing: Standing,
         clock: u32,
+        ship: &Ship,
+        trade_log: &TradeLog,
     ) -> Option<MarketView> {
         let market = self.market_view(system_manager, location, standing, clock)?;
         let pushed = self.pushed_commodities(location, clock);
@@ -319,6 +327,7 @@ impl TradingHandler {
             .iter()
             .map(|commodity| {
                 let buy_price = market.get_buy_price(commodity).unwrap_or(0);
+                let held = ship.cargo_hold().get_quantity(commodity);
                 MarketRow {
                     commodity: commodity.clone(),
                     buy_price,
@@ -326,6 +335,8 @@ impl TradingHandler {
                     available: market.get_availability(commodity).unwrap_or(0),
                     percent_vs_base: commodity.percent_vs_base(buy_price),
                     pushed: pushed.get(commodity).copied().unwrap_or_default(),
+                    held,
+                    paid: trade_log.average_cost(commodity, held),
                 }
             })
             .collect();
@@ -382,7 +393,7 @@ impl TradingHandler {
     }
 
     /// The cargo hold as lines with a rough value
-    pub fn cargo_view(&self, ship: &Ship) -> CargoView {
+    pub fn cargo_view(&self, ship: &Ship, trade_log: &TradeLog) -> CargoView {
         let hold = ship.cargo_hold();
         let items: Vec<CargoLine> = hold
             .get_items()
@@ -391,6 +402,7 @@ impl TradingHandler {
                 commodity: item.commodity.clone(),
                 quantity: item.quantity,
                 estimated_value: item.quantity * item.commodity.base_price(),
+                paid: trade_log.average_cost(&item.commodity, item.quantity),
             })
             .collect();
         CargoView {

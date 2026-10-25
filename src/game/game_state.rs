@@ -249,12 +249,14 @@ impl GameState {
             &self.commander.location,
             self.commander.standing(),
             self.world_clock,
+            &self.ship,
+            &self.trade_log,
         )
     }
 
     /// The cargo hold
     pub fn cargo_view(&self) -> CargoView {
-        self.trading_handler.cargo_view(&self.ship)
+        self.trading_handler.cargo_view(&self.ship, &self.trade_log)
     }
 
     /// Buy fuel (all that fits and is affordable when `None`), or be rescued if stranded
