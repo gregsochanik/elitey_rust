@@ -1,5 +1,6 @@
 use elite_ffi::{
-    CargoData, Game, MarketData, StatusData, TradeLogData, TradeRecordData, TradeResult,
+    ActionResult, CargoData, Game, MarketData, StatusData, TradeLogData, TradeRecordData,
+    TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -33,6 +34,31 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    /// Prices and what is missing: `fuel_missing`, `hull_missing`, `fuel_price`, `repair_price`, `credits`
+    #[func]
+    fn services(&self) -> VarDictionary {
+        let services = self.game.services();
+        vdict! {
+            "credits": services.credits,
+            "fuel_price": services.fuel_price,
+            "fuel_missing": services.fuel_missing,
+            "repair_price": services.repair_price,
+            "hull_missing": services.hull_missing,
+        }
+    }
+
+    /// Buy `units` of fuel; 0 or less means as much as fits and is affordable
+    #[func]
+    fn refuel(&self, units: i64) -> VarDictionary {
+        action_to_dictionary(self.game.refuel(positive(units)))
+    }
+
+    /// Repair `points`; 0 or less means as much as is affordable
+    #[func]
+    fn repair(&self, points: i64) -> VarDictionary {
+        action_to_dictionary(self.game.repair(positive(points)))
     }
 
     #[func]
@@ -173,4 +199,12 @@ fn log_to_dictionary(log: TradeLogData) -> VarDictionary {
         "has_best": log.best.is_some(),
         "best": log.best.as_ref().map_or_else(VarDictionary::new, record_to_dictionary),
     }
+}
+
+fn positive(amount: i64) -> Option<u32> {
+    (amount > 0).then_some(amount as u32)
+}
+
+fn action_to_dictionary(result: ActionResult) -> VarDictionary {
+    vdict! { "ok": result.ok, "message": result.message }
 }

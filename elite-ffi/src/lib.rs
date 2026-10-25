@@ -1,4 +1,6 @@
 use elite_core::data::commodities::CommodityType;
+use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
+use elite_core::game::repair::CREDITS_PER_POINT;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::GameState;
 use std::sync::{Arc, Mutex};
@@ -98,6 +100,22 @@ pub struct TradeLogData {
 }
 
 #[derive(Debug, Clone)]
+pub struct ServicesData {
+    pub credits: u32,
+    pub fuel_price: u32,
+    pub fuel_missing: u32,
+    pub repair_price: u32,
+    pub hull_missing: u32,
+}
+
+/// What a service did, ready to show
+#[derive(Debug, Clone)]
+pub struct ActionResult {
+    pub ok: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
@@ -172,6 +190,58 @@ impl Game {
         }
     }
 
+    pub fn services(&self) -> ServicesData {
+        let state = self.state.lock().expect("game state lock");
+        let status = state.status_view();
+        ServicesData {
+            credits: status.credits,
+            fuel_price: CREDITS_PER_UNIT,
+            fuel_missing: status.fuel_capacity.saturating_sub(status.fuel_current),
+            repair_price: CREDITS_PER_POINT,
+            hull_missing: status.max_hull.saturating_sub(status.hull),
+        }
+    }
+
+    /// Buy `units` of fuel, or all that fits and is affordable when `None`
+    pub fn refuel(&self, units: Option<u32>) -> ActionResult {
+        let mut state = self.state.lock().expect("game state lock");
+        match state.refuel(units) {
+            Ok(RefuelOutcome::Bought {
+                units,
+                cost,
+                fuel,
+                capacity,
+            }) => ok(format!(
+                "Bought {} light years of fuel for {} credits. Fuel: {}/{}",
+                units, cost, fuel, capacity
+            )),
+            Ok(RefuelOutcome::Rescued {
+                fuel,
+                capacity,
+                change,
+            }) => ok(format!(
+                "Stranded! A rescue crew tops up your tank to {}/{}. Reputation {:+}.",
+                fuel, capacity, change.applied
+            )),
+            Err(RefuelError::CannotAfford { stranded: true }) => failed(
+                "Fuel costs credits you don't have. You are stranded: refuel with no amount to call a rescue crew.",
+            ),
+            Err(error) => failed(error),
+        }
+    }
+
+    /// Repair `points` of hull, or all that is affordable when `None`
+    pub fn repair(&self, points: Option<u32>) -> ActionResult {
+        let mut state = self.state.lock().expect("game state lock");
+        match state.repair(points) {
+            Ok(receipt) => ok(format!(
+                "Repaired {} hull points for {} credits. Hull: {}/{}",
+                receipt.points, receipt.cost, receipt.hull, receipt.max_hull
+            )),
+            Err(error) => failed(error),
+        }
+    }
+
     pub fn market(&self) -> Result<MarketData, GameError> {
         let mut state = self.state.lock().expect("game state lock");
         let view = state
@@ -233,6 +303,17 @@ impl Game {
             ),
             credits_after: receipt.credits_after,
         })
+    }
+}
+
+fn ok(message: String) -> ActionResult {
+    ActionResult { ok: true, message }
+}
+
+fn failed(message: impl ToString) -> ActionResult {
+    ActionResult {
+        ok: false,
+        message: message.to_string(),
     }
 }
 
@@ -319,6 +400,39 @@ mod tests {
         assert_eq!(log.best.is_some(), profit > 0);
         assert_eq!(log.net_profit, profit);
         assert_eq!(game.trade_log(1).recent.len(), 1);
+    }
+
+    #[test]
+    fn services_report_what_is_missing_and_what_it_costs() {
+        let game = Game::new("Test".to_string());
+        let services = game.services();
+        assert_eq!((services.fuel_missing, services.hull_missing), (0, 0));
+        assert_eq!((services.fuel_price, services.repair_price), (2, 2));
+
+        let result = game.refuel(None);
+        assert!(!result.ok);
+        assert_eq!(result.message, "Your tank is already full.");
+        assert!(!game.repair(None).ok);
+    }
+
+    #[test]
+    fn refuelling_and_repairing_spend_credits_and_restore_levels() {
+        let game = Game::new("Test".to_string());
+        {
+            let mut state = game.state.lock().unwrap();
+            state.ship.fuel_current = 2;
+            state.ship.take_damage(10);
+        }
+        assert_eq!(game.services().fuel_missing, 5);
+        assert_eq!(game.services().hull_missing, 10);
+
+        let fuel = game.refuel(Some(3));
+        let hull = game.repair(Some(4));
+
+        assert!(fuel.ok && hull.ok, "{} / {}", fuel.message, hull.message);
+        let services = game.services();
+        assert_eq!((services.fuel_missing, services.hull_missing), (2, 6));
+        assert_eq!(services.credits, 100 - 6 - 8);
     }
 
     #[test]
