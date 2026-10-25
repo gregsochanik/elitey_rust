@@ -19,7 +19,7 @@ Of 119,614 stars, 549 have proper names; 149 of those lie within 100 ly of Sol.
 - Position: HYG `x`/`y` in light years, scaled to fit the existing 0 to 255 grid; `z` is dropped
 - Sol is the starting system, replacing LAVE
 - Economy, government, tech level, population and description are generated per star from a fixed seed, so the file is reproducible; real stars carry none of these
-- The description names the star's spectral class (`A yellow class G star.`)
+- Each description is two to three sentences built from the star's spectral class, economy and government, picked per star from a fixed seed; the best-known stars (Sol, Sirius, Tau Ceti and others) have hand-written ones
 - Every system has at least 2 others within 7 ly (the starting fuel range) and the galaxy is connected, so nobody is stranded; the script drops stars that would break this
 - Credit HYG and the licence in the README and on the GUI start screen; `galaxy1.json` stays CC BY-SA 4.0
 
