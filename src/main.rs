@@ -3,7 +3,6 @@ use clap::Parser;
 use colored::*;
 use std::io::{self, Write};
 
-use elitey_rust::game::GameState;
 use elitey_rust::utils::display;
 use elitey_rust::utils::input;
 
@@ -22,9 +21,9 @@ fn main() -> Result<()> {
 
     // Initialize game state
     let mut game_state = if args.new {
-        GameState::new_game()
+        elitey_rust::cli::startup::new_game()
     } else {
-        GameState::load_or_new()
+        elitey_rust::cli::startup::load_or_new()
     };
 
     // Display welcome message

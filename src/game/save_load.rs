@@ -1,9 +1,27 @@
 use crate::data::save_load::{SaveLoadManager, SaveMetadata};
 use crate::game::GameState;
-use crate::utils::display::{show_error, show_info, show_success};
-use crate::utils::input;
-use colored::*;
-use std::io::Write;
+use thiserror::Error;
+
+/// Why a save operation failed
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum SaveError {
+    #[error("Slot name must contain only letters, numbers, and underscores")]
+    InvalidSlotName,
+    #[error("Save file '{0}' not found")]
+    NotFound(String),
+    #[error("Failed to save game: {0}")]
+    Save(String),
+    #[error("Failed to load save metadata: {0}")]
+    Metadata(String),
+    #[error("Failed to load game: {0}")]
+    Load(String),
+    #[error("Failed to list saves: {0}")]
+    List(String),
+    #[error("Failed to delete save: {0}")]
+    Delete(String),
+    #[error("Auto-save failed: {0}")]
+    AutoSave(String),
+}
 
 /// Save/load command handler
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -19,194 +37,58 @@ impl SaveLoadHandler {
         })
     }
 
-    /// Handle save command
-    pub fn handle_save(&self, args: &[String], game_state: &GameState) -> bool {
-        if args.is_empty() {
-            show_error("Usage: save <slot_name>");
-            return false;
-        }
+    /// Create a handler that keeps saves in `directory`
+    pub fn with_directory(directory: std::path::PathBuf) -> Result<Self, SaveError> {
+        Ok(Self {
+            save_manager: SaveLoadManager::in_directory(directory).map_err(SaveError::Save)?,
+        })
+    }
 
-        let slot_name = &args[0];
-
-        // Validate slot name (alphanumeric and underscores only)
+    /// Save to a named slot (letters, numbers and underscores only)
+    pub fn save(&self, game_state: &GameState, slot_name: &str) -> Result<(), SaveError> {
         if !slot_name.chars().all(|c| c.is_alphanumeric() || c == '_') {
-            show_error("Slot name must contain only letters, numbers, and underscores");
-            return false;
+            return Err(SaveError::InvalidSlotName);
         }
-
-        match self.save_manager.save_game(game_state, slot_name) {
-            Ok(_) => {
-                show_success(&format!(
-                    "Game saved successfully! Commander {}'s progress has been saved to slot '{}'.",
-                    game_state.commander().name(),
-                    slot_name
-                ));
-                true
-            }
-            Err(e) => {
-                show_error(&format!("Failed to save game: {}", e));
-                false
-            }
-        }
+        self.save_manager
+            .save_game(game_state, slot_name)
+            .map_err(SaveError::Save)
     }
 
-    /// Handle load command
-    pub fn handle_load(&self, args: &[String]) -> Result<Option<GameState>, String> {
-        if args.is_empty() {
-            show_error("Usage: load <slot_name>");
-            return Ok(None);
-        }
-
-        let slot_name = &args[0];
-
+    /// What is stored in a slot, without loading it
+    pub fn preview(&self, slot_name: &str) -> Result<SaveMetadata, SaveError> {
         if !self.save_manager.save_exists(slot_name) {
-            show_error(&format!("Save file '{}' not found", slot_name));
-            return Ok(None);
+            return Err(SaveError::NotFound(slot_name.to_string()));
         }
-
-        // Load metadata first to show confirmation
-        let metadata = self
-            .save_manager
+        self.save_manager
             .load_save_metadata(slot_name)
-            .map_err(|e| format!("Failed to load save metadata: {}", e))?;
-
-        // Show save information and ask for confirmation
-        self.display_save_info(&metadata);
-
-        print!("Would you like to load this save? (y/n): ");
-        std::io::stdout().flush().expect("Failed to flush stdout");
-
-        match input::get_input() {
-            Ok(input) => {
-                let response = input.trim().to_lowercase();
-                if response == "y" || response == "yes" {
-                    match self.save_manager.load_game(slot_name) {
-                        Ok(game_state) => {
-                            show_success(&format!(
-                                "Game loaded successfully! Commander {}, your journey continues!",
-                                game_state.commander().name()
-                            ));
-                            Ok(Some(game_state))
-                        }
-                        Err(e) => {
-                            show_error(&format!("Failed to load game: {}", e));
-                            Ok(None)
-                        }
-                    }
-                } else {
-                    show_info("Load cancelled.");
-                    Ok(None)
-                }
-            }
-            Err(_) => {
-                show_error("Error reading input. Load cancelled.");
-                Ok(None)
-            }
-        }
+            .map_err(SaveError::Metadata)
     }
 
-    /// Handle list saves command
-    pub fn handle_list_saves(&self) {
-        match self.save_manager.list_saves() {
-            Ok(saves) => {
-                if saves.is_empty() {
-                    println!("\n{}", "No save files found.".yellow());
-                    println!("Use 'save <slot_name>' to create your first save.");
-                } else {
-                    println!("\n{}", "Available Save Files".cyan().bold());
-                    println!("{}", "===================".cyan());
-
-                    for (i, save) in saves.iter().enumerate() {
-                        let slot_name = self.get_slot_name_from_metadata(save);
-                        let timestamp = SaveLoadManager::format_timestamp(save.timestamp);
-
-                        println!("{}. {} ({})", i + 1, slot_name.yellow(), timestamp.blue());
-                        println!("   Commander: {}", save.commander_name.green());
-                        println!("   Location: {}", save.location.cyan());
-                        println!("   Credits: {}cr", save.credits.to_string().green());
-                        println!("   Ship: {}", save.ship_type.magenta());
-                        println!();
-                    }
-                }
-            }
-            Err(e) => {
-                show_error(&format!("Failed to list saves: {}", e));
-            }
-        }
+    pub fn load(&self, slot_name: &str) -> Result<GameState, SaveError> {
+        self.save_manager
+            .load_game(slot_name)
+            .map_err(SaveError::Load)
     }
 
-    /// Handle delete save command
-    pub fn handle_delete_save(&self, args: &[String]) -> bool {
-        if args.is_empty() {
-            show_error("Usage: delete <slot_name>");
-            return false;
-        }
+    pub fn list(&self) -> Result<Vec<SaveMetadata>, SaveError> {
+        self.save_manager.list_saves().map_err(SaveError::List)
+    }
 
-        let slot_name = &args[0];
-
+    pub fn delete(&self, slot_name: &str) -> Result<(), SaveError> {
         if !self.save_manager.save_exists(slot_name) {
-            show_error(&format!("Save file '{}' not found", slot_name));
-            return false;
+            return Err(SaveError::NotFound(slot_name.to_string()));
         }
-
-        // Load metadata to show what we're deleting
-        if let Ok(metadata) = self.save_manager.load_save_metadata(slot_name) {
-            self.display_save_info(&metadata);
-
-            print!("Are you sure you want to delete this save? (y/n): ");
-            std::io::stdout().flush().expect("Failed to flush stdout");
-
-            match input::get_input() {
-                Ok(input) => {
-                    let response = input.trim().to_lowercase();
-                    if response == "y" || response == "yes" {
-                        match self.save_manager.delete_save(slot_name) {
-                            Ok(_) => {
-                                show_success(&format!(
-                                    "Save file '{}' deleted successfully.",
-                                    slot_name
-                                ));
-                                true
-                            }
-                            Err(e) => {
-                                show_error(&format!("Failed to delete save: {}", e));
-                                false
-                            }
-                        }
-                    } else {
-                        show_info("Delete cancelled.");
-                        false
-                    }
-                }
-                Err(_) => {
-                    show_error("Error reading input. Delete cancelled.");
-                    false
-                }
-            }
-        } else {
-            show_error(&format!("Failed to load save metadata for '{}'", slot_name));
-            false
-        }
+        self.save_manager
+            .delete_save(slot_name)
+            .map_err(SaveError::Delete)
     }
 
-    /// Handle auto-save on quit
-    pub fn auto_save(&self, game_state: &GameState) -> bool {
+    /// Write the commander's autosave
+    pub fn auto_save(&self, game_state: &GameState) -> Result<(), SaveError> {
         let slot_name = Self::autosave_slot(game_state.commander().name());
-
-        match self.save_manager.save_game(game_state, &slot_name) {
-            Ok(_) => {
-                println!("{}", "Auto-saving game state...".yellow());
-                show_success(&format!(
-                    "Game saved successfully! Commander {}'s progress has been saved.",
-                    game_state.commander().name()
-                ));
-                true
-            }
-            Err(e) => {
-                show_error(&format!("Auto-save failed: {}", e));
-                false
-            }
-        }
+        self.save_manager
+            .save_game(game_state, &slot_name)
+            .map_err(SaveError::AutoSave)
     }
 
     /// Slot the autosave for a commander is written to
@@ -249,28 +131,6 @@ impl SaveLoadHandler {
             Ok(None)
         }
     }
-
-    /// Display save information
-    fn display_save_info(&self, metadata: &SaveMetadata) {
-        let timestamp = SaveLoadManager::format_timestamp(metadata.timestamp);
-
-        println!("\n{}", "Save Information".cyan().bold());
-        println!("{}", "================".cyan());
-        println!("Commander: {}", metadata.commander_name.green());
-        println!("Location: {}", metadata.location.cyan());
-        println!("Credits: {}cr", metadata.credits.to_string().green());
-        println!("Ship: {}", metadata.ship_type.magenta());
-        println!("Saved: {}", timestamp.blue());
-        println!("Version: {}", metadata.version.yellow());
-        println!();
-    }
-
-    /// Get slot name from metadata (this is a simplified approach)
-    fn get_slot_name_from_metadata(&self, metadata: &SaveMetadata) -> String {
-        // In a real implementation, we'd need to store the slot name in metadata
-        // For now, we'll use the commander name as the slot name
-        metadata.commander_name.clone()
-    }
 }
 
 impl Default for SaveLoadHandler {
@@ -287,5 +147,53 @@ mod tests {
     fn test_save_load_handler_creation() {
         let handler = SaveLoadHandler::new();
         assert!(handler.is_ok());
+    }
+
+    fn temp_handler(label: &str) -> SaveLoadHandler {
+        let directory =
+            std::env::temp_dir().join(format!("elitey-save-test-{}-{}", label, std::process::id()));
+        let _ = std::fs::remove_dir_all(&directory);
+        SaveLoadHandler::with_directory(directory).unwrap()
+    }
+
+    #[test]
+    fn slot_names_are_validated_before_saving() {
+        let handler = temp_handler("slot-names");
+        let game = GameState::new("Test".to_string());
+
+        assert_eq!(
+            handler.save(&game, "bad name!"),
+            Err(SaveError::InvalidSlotName)
+        );
+        assert!(handler.save(&game, "good_name_1").is_ok());
+    }
+
+    #[test]
+    fn saves_round_trip_through_a_chosen_directory() {
+        let handler = temp_handler("round-trip");
+        let mut game = GameState::new("Test".to_string());
+        game.commander.credits = 777;
+
+        handler.save(&game, "slot1").unwrap();
+
+        assert_eq!(handler.preview("slot1").unwrap().credits, 777);
+        assert_eq!(handler.list().unwrap().len(), 1);
+        assert_eq!(handler.load("slot1").unwrap().commander.credits(), 777);
+        assert!(handler.delete("slot1").is_ok());
+        assert!(handler.list().unwrap().is_empty());
+    }
+
+    #[test]
+    fn missing_slots_are_reported_by_name() {
+        let handler = temp_handler("missing");
+
+        assert_eq!(
+            handler.preview("nope").unwrap_err(),
+            SaveError::NotFound("nope".to_string())
+        );
+        assert_eq!(
+            handler.delete("nope").unwrap_err().to_string(),
+            "Save file 'nope' not found"
+        );
     }
 }

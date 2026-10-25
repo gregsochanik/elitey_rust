@@ -43,8 +43,8 @@ fn autosaves_are_kept_per_commander() {
     let mut second = new_game(222);
     second.commander.name = "Grace".to_string();
 
-    assert!(handler.auto_save(&first));
-    assert!(handler.auto_save(&second));
+    assert!(handler.auto_save(&first).is_ok());
+    assert!(handler.auto_save(&second).is_ok());
 
     assert_eq!(
         handler

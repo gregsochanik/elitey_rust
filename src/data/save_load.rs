@@ -40,11 +40,13 @@ pub struct SaveLoadManager {
 }
 
 impl SaveLoadManager {
-    /// Create a new save/load manager
+    /// Create a new save/load manager in the default save directory
     pub fn new() -> Result<Self, String> {
-        let save_dir = Self::get_save_directory()?;
+        Self::in_directory(Self::get_save_directory()?)
+    }
 
-        // Create save directory if it doesn't exist
+    /// Create a save/load manager that keeps saves in `save_dir`
+    pub fn in_directory(save_dir: PathBuf) -> Result<Self, String> {
         if !save_dir.exists() {
             fs::create_dir_all(&save_dir)
                 .map_err(|e| format!("Failed to create save directory: {}", e))?;
