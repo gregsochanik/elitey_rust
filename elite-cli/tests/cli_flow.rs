@@ -201,3 +201,23 @@ fn screens_open_with_an_icon_header_when_colour_is_on() {
         assert!(coloured.contains(icon), "missing {}", icon);
     }
 }
+
+#[test]
+fn systems_and_info_show_economy_and_government() {
+    let plain = play("plain_systems", "systems\ninfo diso");
+    assert!(plain.contains("light years, 3 fuel - "));
+    assert!(plain.contains("Economy: "));
+    assert!(
+        !plain.contains("Economy: Rich Ind"),
+        "uses the display name"
+    );
+    assert!(!plain.contains('🏭') && !plain.contains('🌾'));
+
+    let coloured = play_with(
+        "coloured_systems",
+        "systems\ninfo diso",
+        &[("CLICOLOR_FORCE", "1")],
+    );
+    assert!(coloured.contains('🏭') || coloured.contains('🌾'));
+    assert!(coloured.contains("Government: "));
+}

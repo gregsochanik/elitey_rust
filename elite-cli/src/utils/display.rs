@@ -1,5 +1,6 @@
 use colored::*;
 use elite_core::data::equipment::EquipmentCategory;
+use elite_core::data::systems::{EconomyType, GovernmentType};
 
 /// The emoji vocabulary shared by every screen
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,6 +72,43 @@ pub fn header(icon_kind: Icon, title: &str) {
     let width = title.chars().count() + if icon.is_empty() { 0 } else { 4 };
     println!("{}", format!("{}{}", icon, title).cyan().bold());
     println!("{}", "=".repeat(width).cyan());
+}
+
+/// The sector an economy works in
+pub fn economy_icon(economy: &EconomyType) -> String {
+    let glyph = match economy {
+        EconomyType::RichIndustrial
+        | EconomyType::PoorIndustrial
+        | EconomyType::MainlyIndustrial
+        | EconomyType::AverageIndustrial => "🏭",
+        EconomyType::RichAgricultural
+        | EconomyType::PoorAgricultural
+        | EconomyType::MainlyAgricultural
+        | EconomyType::AverageAgricultural => "🌾",
+    };
+    glyph_prefix(glyph, control::SHOULD_COLORIZE.should_colorize())
+}
+
+pub fn government_icon(government: &GovernmentType) -> String {
+    let glyph = match government {
+        GovernmentType::Anarchy => "💥",
+        GovernmentType::Feudal => "🏰",
+        GovernmentType::MultiGovernment => "🤝",
+        GovernmentType::Dictatorship => "👑",
+        GovernmentType::Communist => "🚩",
+        GovernmentType::Confederacy => "🏛️",
+        GovernmentType::Democracy => "🗳️",
+        GovernmentType::CorporateState => "🏢",
+    };
+    glyph_prefix(glyph, control::SHOULD_COLORIZE.should_colorize())
+}
+
+fn glyph_prefix(glyph: &str, enabled: bool) -> String {
+    if enabled {
+        format!("{}  ", glyph)
+    } else {
+        String::new()
+    }
 }
 
 /// Credits in green, or red when negative
@@ -277,6 +315,12 @@ mod tests {
         assert!(negative.contains("31m"));
         assert!(positive.contains("32m"));
         assert_eq!(colours.len(), EquipmentCategory::ALL.len());
+    }
+
+    #[test]
+    fn economy_and_government_icons_are_dropped_with_colour_off() {
+        assert_eq!(glyph_prefix("🏭", false), "");
+        assert_eq!(glyph_prefix("🏭", true), "🏭  ");
     }
 
     #[test]
