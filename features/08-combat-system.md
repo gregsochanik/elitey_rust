@@ -94,15 +94,15 @@ Trading nets about 12cr per trip at 100cr and the best courier job about 55cr pe
 - [x] Better equipment visibly improves results
 
 ## Testing (write first)
-- [ ] Attack with fixed dice: hit and miss, shield absorbs before hull, damage carries over when the shield breaks
-- [ ] Shield recharge never exceeds the maximum
-- [ ] Round order: a destroyed enemy does not attack
-- [ ] Flee success and failure
-- [ ] Surrender takes the stated cargo and credits
-- [ ] Victory and defeat consequences
-- [ ] No weapons: attack refused
-- [ ] Simulation over many seeds: starting loadout wins at least 80%; unarmed ship wins 0%; an upgraded ship wins more than the starting one
-- [ ] Pirate Attack's Fight choice starts combat
+- [x] Attack with fixed dice: hit and miss, shield absorbs before hull, damage carries over when the shield breaks
+- [x] Shield recharge never exceeds the maximum
+- [x] Round order: a destroyed enemy does not attack
+- [x] Flee success and failure
+- [x] Surrender takes the stated cargo and credits
+- [x] Victory and defeat consequences
+- [x] No weapons: attack refused
+- [x] Simulation over many seeds: starting loadout wins at least 80%; unarmed ship wins 0%; an upgraded ship wins more than the starting one
+- [x] Pirate Attack's Fight choice starts combat
 
 ## Dependencies
 - Feature 06: Dynamic Events ✅ (Pirate Attack)
