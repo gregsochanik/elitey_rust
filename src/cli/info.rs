@@ -103,6 +103,7 @@ fn print_status(view: &StatusView) {
         view.fuel_current, view.fuel_capacity
     );
     println!("Hull: {}/{}", view.hull, view.max_hull);
+    println!("Power: {}/{}", view.power_used, view.power_capacity);
 
     if view.damaged {
         println!("{}", "⚠️  Hull damage detected!".red());
@@ -206,6 +207,7 @@ mod tests {
         assert_eq!((view.hull, view.max_hull), (95, 100));
         assert!(view.damaged);
         assert_eq!(view.fuel_current, 1);
+        assert_eq!((view.power_used, view.power_capacity), (9, 20));
         print_status(&view);
     }
 

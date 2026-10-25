@@ -19,6 +19,8 @@ pub struct StatusView {
     pub fuel_capacity: u32,
     pub hull: u32,
     pub max_hull: u32,
+    pub power_used: u32,
+    pub power_capacity: u32,
     pub damaged: bool,
 }
 

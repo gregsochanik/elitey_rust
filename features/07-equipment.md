@@ -72,9 +72,22 @@ Not in v1: weapon, shield, engine, sensor and special effects (stored but inacti
 | ECM System | Military | 120 | 4 | +60% jamming |
 | Cloaking Device | Elite | 250 | 8 | Temporary invisibility |
 
+## Reactors
+Power capacity comes from the installed reactor, a one-slot category that replaces like racks do. The starting Basic Reactor is free and gives 20 units, the Cobra Mk III's original capacity.
+
+| Equipment | Quality | Price | Output |
+|---|---|---|---|
+| Basic Reactor | Basic | 10 | 20 |
+| Improved Reactor | Standard | 60 | 28 |
+| Military Reactor | Military | 160 | 38 |
+| Elite Reactor | Elite | 350 | 50 |
+
+- Reactors draw no power. A swap is refused if the installed equipment would need more than the new output, and the only reactor cannot be sold
+- `status` shows `Power: used/capacity`; `equipment` and `equipment installed` show used, capacity and free power, with each item's draw
+- Saves from before reactors load with the Basic Reactor
+
 ## Ship Capacity (Cobra Mk III)
-- Power: 20 units
-- Slots: weapons 2, shields 1, engines 1, sensors 1, cargo 1, special 2
+- Slots: reactor 1, weapons 2, shields 1, engines 1, sensors 1, cargo 1, special 2
 
 Cargo is one slot: racks replace each other, they don't stack. The earlier specs listed two cargo slots; one avoids stacking multipliers. Prices below are one tenth of the figures in the original specs, so upgrades are reachable from a 100cr start.
 

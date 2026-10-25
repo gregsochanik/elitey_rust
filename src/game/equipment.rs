@@ -3,8 +3,6 @@ use crate::game::{Commander, Ship};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-const POWER_CAPACITY: u32 = 20;
-
 fn slot_capacity(category: EquipmentCategory) -> usize {
     match category {
         EquipmentCategory::Weapon | EquipmentCategory::Special => 2,
@@ -19,7 +17,16 @@ pub struct Installed {
     pub paid: u32,
 }
 
+const STARTING_REACTOR: &str = "basic-reactor";
+
 impl Installed {
+    fn free(id: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            paid: 0,
+        }
+    }
+
     pub fn item(&self) -> &'static Equipment {
         equipment::find(&self.id).expect("installed equipment must exist in the catalog")
     }
@@ -30,18 +37,35 @@ impl Installed {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(from = "SavedLoadout")]
 pub struct Loadout {
     installed: Vec<Installed>,
 }
 
+#[derive(Deserialize)]
+struct SavedLoadout {
+    installed: Vec<Installed>,
+}
+
+impl From<SavedLoadout> for Loadout {
+    fn from(saved: SavedLoadout) -> Self {
+        let mut installed = saved.installed;
+        if !installed
+            .iter()
+            .any(|i| i.item().category == EquipmentCategory::Power)
+        {
+            installed.insert(0, Installed::free(STARTING_REACTOR));
+        }
+        Self { installed }
+    }
+}
+
 impl Loadout {
     pub fn starting() -> Self {
-        let free = |id: &str| Installed {
-            id: id.to_string(),
-            paid: 0,
-        };
+        let free = Installed::free;
         Self {
             installed: vec![
+                free(STARTING_REACTOR),
                 free("pulse-laser"),
                 free("basic-shield"),
                 free("standard-drive"),
@@ -61,7 +85,7 @@ impl Loadout {
     }
 
     pub fn power_capacity(&self) -> u32 {
-        POWER_CAPACITY
+        self.installed.iter().map(|i| i.item().output).sum()
     }
 
     pub fn slots_used(&self, category: EquipmentCategory) -> usize {
@@ -107,12 +131,15 @@ impl Loadout {
             None
         };
 
-        let replaced_power = replaced_index.map_or(0, |index| self.installed[index].item().power);
-        if self.power_used() - replaced_power + item.power > POWER_CAPACITY {
+        let replaced_item = replaced_index.map(|index| self.installed[index].item());
+        let freed_power = replaced_item.map_or(0, |old| old.power);
+        let lost_output = replaced_item.map_or(0, |old| old.output);
+        let used = self.power_used() - freed_power + item.power;
+        let capacity = self.power_capacity() - lost_output + item.output;
+        if used > capacity {
             return Err(format!(
                 "Not enough power: need {}, {} available",
-                item.power,
-                POWER_CAPACITY - self.power_used() + replaced_power
+                used, capacity
             ));
         }
 
@@ -184,6 +211,8 @@ pub struct ShopCategory {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShopView {
     pub credits: u32,
+    pub power_used: u32,
+    pub power_capacity: u32,
     pub categories: Vec<ShopCategory>,
 }
 
@@ -267,6 +296,8 @@ pub fn sell(
 pub fn shop_view(commander: &Commander, ship: &Ship) -> ShopView {
     ShopView {
         credits: commander.credits(),
+        power_used: ship.equipment.power_used(),
+        power_capacity: ship.equipment.power_capacity(),
         categories: EquipmentCategory::ALL
             .into_iter()
             .map(|category| ShopCategory {
@@ -318,7 +349,7 @@ mod tests {
     #[test]
     fn new_ship_starts_with_basic_equipment_and_unchanged_capacity() {
         let ship = Ship::new_cobra_mk3();
-        assert_eq!(ship.equipment.installed().len(), 6);
+        assert_eq!(ship.equipment.installed().len(), 7);
         assert_eq!(ship.equipment.power_used(), 9);
         assert_eq!(ship.cargo_capacity(), 20);
     }
@@ -508,5 +539,66 @@ mod tests {
         let installed = installed_view(&ship);
         assert_eq!(installed.power_capacity, 20);
         assert_eq!(installed.cargo_capacity, 20);
+    }
+
+    #[test]
+    fn a_better_reactor_raises_capacity_and_makes_room_for_more_equipment() {
+        let (mut commander, mut ship) = setup(2_000);
+        assert!(buy("military-shield", &mut commander, &mut ship));
+        assert!(!buy("missile-launcher", &mut commander, &mut ship));
+
+        assert!(buy("improved-reactor", &mut commander, &mut ship));
+
+        assert_eq!(ship.equipment.power_capacity(), 28);
+        assert!(buy("missile-launcher", &mut commander, &mut ship));
+        assert_eq!(ship.equipment.power_used(), 21);
+    }
+
+    #[test]
+    fn swapping_a_reactor_refunds_the_old_one() {
+        let (mut commander, mut ship) = setup(500);
+        buy("improved-reactor", &mut commander, &mut ship);
+        let credits = commander.credits();
+
+        buy("military-reactor", &mut commander, &mut ship);
+
+        assert_eq!(commander.credits(), credits + 30 - 160);
+        assert!(!has(&ship, "improved-reactor"));
+    }
+
+    #[test]
+    fn a_weaker_reactor_is_refused_while_the_equipment_needs_more_power() {
+        let (mut commander, mut ship) = setup(2_000);
+        buy("military-reactor", &mut commander, &mut ship);
+        buy("elite-shield", &mut commander, &mut ship);
+        buy("missile-launcher", &mut commander, &mut ship);
+        let credits = commander.credits();
+
+        assert!(!buy("basic-reactor", &mut commander, &mut ship));
+
+        assert_eq!(commander.credits(), credits);
+        assert!(has(&ship, "military-reactor"));
+    }
+
+    #[test]
+    fn the_only_reactor_cannot_be_sold() {
+        let (mut commander, mut ship) = setup(100);
+
+        assert!(!sell("basic-reactor", &mut commander, &mut ship));
+
+        assert!(has(&ship, "basic-reactor"));
+        assert_eq!(ship.equipment.power_capacity(), 20);
+    }
+
+    #[test]
+    fn saved_loadouts_without_a_reactor_get_the_basic_one() {
+        let json =
+            r#"{"installed":[{"id":"pulse-laser","paid":0},{"id":"basic-shield","paid":0}]}"#;
+
+        let loadout: Loadout = serde_json::from_str(json).unwrap();
+
+        assert_eq!(loadout.power_capacity(), 20);
+        assert_eq!(loadout.power_used(), 5);
+        assert_eq!(loadout.slots_used(EquipmentCategory::Power), 1);
     }
 }

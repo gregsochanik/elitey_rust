@@ -1,4 +1,8 @@
 [
+  {"id": "basic-reactor", "name": "Basic Reactor", "category": "Power", "quality": "Basic", "price": 10, "power": 0, "output": 20, "effect": "Output 20"},
+  {"id": "improved-reactor", "name": "Improved Reactor", "category": "Power", "quality": "Standard", "price": 60, "power": 0, "output": 28, "effect": "Output 28"},
+  {"id": "military-reactor", "name": "Military Reactor", "category": "Power", "quality": "Military", "price": 160, "power": 0, "output": 38, "effect": "Output 38"},
+  {"id": "elite-reactor", "name": "Elite Reactor", "category": "Power", "quality": "Elite", "price": 350, "power": 0, "output": 50, "effect": "Output 50"},
   {"id": "pulse-laser", "name": "Pulse Laser", "category": "Weapon", "quality": "Basic", "price": 50, "power": 2, "combat": {"damage": 15, "accuracy": 0.9}, "effect": "Damage 15, accuracy 0.9"},
   {"id": "beam-laser", "name": "Beam Laser", "category": "Weapon", "quality": "Standard", "price": 120, "power": 4, "combat": {"damage": 25, "accuracy": 0.8}, "effect": "Damage 25, accuracy 0.8"},
   {"id": "plasma-cannon", "name": "Plasma Cannon", "category": "Weapon", "quality": "Military", "price": 250, "power": 6, "combat": {"damage": 45, "accuracy": 0.6}, "effect": "Damage 45, accuracy 0.6"},
