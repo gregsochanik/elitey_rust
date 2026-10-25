@@ -16,7 +16,7 @@ Implemented in `src/game/events.rs` and `src/game/travel.rs`. Gaps are listed at
 - [x] Outcomes can change credits, hull, fuel and reputation
 - [x] Jump and approach events are shown with their phase
 - [x] Outcomes can remove or award cargo
-- [ ] Outcomes can move the player to another system (see Gaps)
+- [x] Outcomes can move the player to another system (see Redirects)
 
 ### Events
 Jump: Wormhole, Hyperspace Anomaly, Navigation Error, Space Debris.
@@ -85,12 +85,23 @@ The numbers on an outcome are bases; each time an outcome is applied they are ro
 - [x] Credits and cargo tons fall within their ranges, and windfalls respect the cap
 - [x] The message matches the amounts applied
 
+### Redirects
+An outcome can drop the ship somewhere other than the planned destination.
+
+- **Wormhole, Enter:** a random system other than the origin and the planned destination
+- **Navigation Error, Continue as planned:** one of the three systems closest to the planned destination (not the origin or the destination itself)
+- Fuel is still measured from the origin to the planned destination, so the ship can arrive short of fuel
+- The approach phase, arrival, jobs and markets all happen at the system the ship lands in
+- The commander is told where they landed
+- Event definitions are not saved, so old saves pick up rule changes when loaded
+- [x] A redirect never lands at the origin or the planned destination; "near" picks from the three closest
+- [x] An old save loads with the current event definitions
+
 ### Reputation
 - [x] Outcomes change the commander's reputation, which is saved and shown in `status`
 - [ ] Reputation affects outcomes or anything else (Feature 10: prices, and the odds of patrols and inspections, via Feature 18; outcomes later)
 
 ## Gaps
-- **Movement.** The wormhole and navigation error do not change where the player ends up; the destination is always reached.
 - **Advanced:** difficulty scaling, event chains, event history.
 
 ## Testing
