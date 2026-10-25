@@ -59,11 +59,11 @@ func _ready() -> void:
 	_add_screen(nav, "cargo", "📦  Cargo", _make(CargoScreen))
 	_add_screen(nav, "log", "📜  Trading Log", _make(LogScreen))
 	_add_screen(nav, "jobs", "💼  Jobs", _make(JobsScreen))
-	_add_screen(nav, "galaxy", "🗺️  Galaxy", _make(GalaxyScreen))
+	_add_screen(nav, "galaxy", "🗺️  Galaxy", _make_galaxy())
 	_add_screen(nav, "equipment", "🧰  Equipment", _make_changing(EquipmentScreen))
 	_add_screen(nav, "shipyard", "🛠️  Shipyard", _make_changing(ShipyardScreen))
 	_add_screen(nav, "services", "🔧  Services", _make_services())
-	_add_screen(nav, "journey", "🚀  Journey", JourneyScreen.new())
+	_add_screen(nav, "journey", "🚀  Journey", _make_journey())
 	_show("market")
 	_refresh_header()
 
@@ -73,6 +73,35 @@ func _make_market() -> Control:
 	market.setup(game)
 	market.traded.connect(_refresh_header)
 	return market
+
+
+func _make_galaxy() -> Control:
+	var galaxy: Control = GalaxyScreen.new()
+	galaxy.setup(game)
+	galaxy.jump_requested.connect(_begin_journey)
+	return galaxy
+
+
+func _make_journey() -> Control:
+	var journey: Control = JourneyScreen.new()
+	journey.setup(game)
+	journey.arrived.connect(_end_journey)
+	return journey
+
+
+func _begin_journey(destination: String) -> void:
+	for key in nav_buttons:
+		nav_buttons[key].disabled = true
+	_show("journey")
+	screens["journey"].start(destination)
+	_refresh_header()
+
+
+func _end_journey() -> void:
+	for key in nav_buttons:
+		nav_buttons[key].disabled = false
+	_refresh_header()
+	_show("market")
 
 
 func _make_changing(script: GDScript) -> Control:

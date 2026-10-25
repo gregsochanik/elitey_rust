@@ -1,6 +1,6 @@
 use elite_ffi::{
     ActionResult, CargoData, EquipmentShopData, GalaxyData, Game, InstalledData, JobBoardData,
-    JumpPlanData, MarketData, ShipyardData, StatusData, SystemDetailData, TradeLogData,
+    JumpPlanData, MarketData, ShipyardData, StatusData, StepData, SystemDetailData, TradeLogData,
     TradeRecordData, TradeResult,
 };
 use godot::prelude::*;
@@ -35,6 +35,33 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    /// Start a jump; returns the first step: `kind` is event, fight, inspection, arrived or error
+    #[func]
+    fn begin_jump(&self, destination: GString) -> VarDictionary {
+        step_to_dictionary(self.game.begin_jump(destination.to_string()))
+    }
+
+    #[func]
+    fn answer_event(&self, choice: i64) -> VarDictionary {
+        step_to_dictionary(self.game.answer_event(choice.max(0) as u32))
+    }
+
+    /// `bribe`, `run` or `hand_over`
+    #[func]
+    fn answer_inspection(&self, choice: GString) -> VarDictionary {
+        step_to_dictionary(self.game.answer_inspection(choice.to_string()))
+    }
+
+    #[func]
+    fn resolve_fight(&self) -> VarDictionary {
+        step_to_dictionary(self.game.resolve_fight_automatically())
+    }
+
+    #[func]
+    fn journey_in_progress(&self) -> bool {
+        self.game.journey_in_progress()
     }
 
     /// The board here: `location`, `active`, `max_active` and numbered `jobs` with lock reasons
@@ -442,5 +469,33 @@ fn board_to_dictionary(board: JobBoardData) -> VarDictionary {
         "active": board.active,
         "max_active": board.max_active,
         "jobs": jobs,
+    }
+}
+
+fn step_to_dictionary(step: StepData) -> VarDictionary {
+    let mut notices = VarArray::new();
+    for notice in step.notices {
+        notices.push(&vdict! { "kind": notice.kind, "text": notice.text }.to_variant());
+    }
+    let mut choices = VarArray::new();
+    for choice in step.choices {
+        choices.push(&choice.to_variant());
+    }
+    vdict! {
+        "kind": step.kind,
+        "notices": notices,
+        "title": step.title,
+        "description": step.description,
+        "phase": step.phase,
+        "choices": choices,
+        "enemy_name": step.enemy_name,
+        "enemy_hull": step.enemy_hull,
+        "player_hull": step.player_hull,
+        "bribe_cost": step.bribe_cost,
+        "can_bribe": step.can_bribe,
+        "arrived_at": step.arrived_at,
+        "planned": step.planned,
+        "eventful": step.eventful,
+        "message": step.message,
     }
 }
