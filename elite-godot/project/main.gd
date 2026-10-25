@@ -8,6 +8,8 @@ const CargoScreen := preload("res://screens/cargo_screen.gd")
 const LogScreen := preload("res://screens/log_screen.gd")
 const ServicesScreen := preload("res://screens/services_screen.gd")
 const GalaxyScreen := preload("res://screens/galaxy_screen.gd")
+const EquipmentScreen := preload("res://screens/equipment_screen.gd")
+const ShipyardScreen := preload("res://screens/shipyard_screen.gd")
 const JourneyScreen := preload("res://screens/journey_screen.gd")
 
 var game := EliteGame.new()
@@ -56,6 +58,8 @@ func _ready() -> void:
 	_add_screen(nav, "cargo", "📦  Cargo", _make(CargoScreen))
 	_add_screen(nav, "log", "🧾  Trading Log", _make(LogScreen))
 	_add_screen(nav, "galaxy", "🗺️  Galaxy", _make(GalaxyScreen))
+	_add_screen(nav, "equipment", "🧰  Equipment", _make_changing(EquipmentScreen))
+	_add_screen(nav, "shipyard", "🛠️  Shipyard", _make_changing(ShipyardScreen))
 	_add_screen(nav, "services", "🔧  Services", _make_services())
 	_add_screen(nav, "journey", "🚀  Journey", JourneyScreen.new())
 	_show("market")
@@ -67,6 +71,13 @@ func _make_market() -> Control:
 	market.setup(game)
 	market.traded.connect(_refresh_header)
 	return market
+
+
+func _make_changing(script: GDScript) -> Control:
+	var screen: Control = script.new()
+	screen.setup(game)
+	screen.changed.connect(_refresh_header)
+	return screen
 
 
 func _make_services() -> Control:
