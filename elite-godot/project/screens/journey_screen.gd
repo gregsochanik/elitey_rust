@@ -6,13 +6,13 @@ signal started
 
 const Theme_ := preload("res://theme/elite_theme.gd")
 const JourneyScene := preload("res://screens/journey_scene.gd")
+const DialogPanel := preload("res://widgets/dialog_panel.gd")
 var hyperspace_seconds := 2.6
 
 var game: EliteGame
 var journey: Node3D
 var log := RichTextLabel.new()
-var prompt := PanelContainer.new()
-var prompt_box := VBoxContainer.new()
+var dialog := DialogPanel.new()
 var banner := Label.new()
 var fight_panel := PanelContainer.new()
 var fight_logged := 0
@@ -56,14 +56,7 @@ func _ready() -> void:
 
 	_build_fight_panel()
 
-	prompt.visible = false
-	prompt.custom_minimum_size = Vector2(560, 0)
-	prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	prompt.grow_vertical = Control.GROW_DIRECTION_BOTH
-	prompt_box.add_theme_constant_override("separation", 12)
-	prompt.add_child(prompt_box)
-	add_child(prompt)
+	add_child(dialog)
 
 	banner.text = "🚀  Cruising"
 
@@ -101,12 +94,44 @@ func _next(step: Dictionary) -> void:
 	_present(step)
 
 
+## What came of an answer: shown as an outcome dialog before the journey moves on.
+func _answered(step: Dictionary) -> void:
+	_log_notices(step)
+	_clear_prompt()
+	var lines := []
+	for notice in step["notices"]:
+		if notice["kind"] != "blank" and notice["text"] != "":
+			lines.append(notice)
+	if lines.is_empty():
+		_present(step)
+		return
+	dialog.subtitle("Outcome")
+	dialog.title("What happened")
+	for notice in lines:
+		dialog.text(notice["text"], _notice_colour(notice["kind"]))
+	dialog.choice("Continue", func(): _present(step))
+	dialog.present()
+
+
+func _notice_colour(kind: String) -> Color:
+	match kind:
+		"success":
+			return Theme_.GOOD
+		"error":
+			return Theme_.BAD
+		"info":
+			return Color("6fb1ff")
+		_:
+			return Theme_.TEXT
+
+
 func _show_event(step: Dictionary) -> void:
-	_title(step["title"])
-	_text(step["description"])
+	dialog.subtitle("Hyperspace" if step["phase"] == "jump" else "Approaching the station")
+	dialog.title(step["title"])
+	dialog.text(step["description"])
 	for i in step["choices"].size():
-		_button("%d.  %s" % [i + 1, step["choices"][i]], func(): _next(game.answer_event(i)))
-	prompt.visible = true
+		dialog.choice(step["choices"][i], func(): _answered(game.answer_event(i)))
+	dialog.present()
 
 
 func _build_fight_panel() -> void:
@@ -252,13 +277,14 @@ func _end_fight(fight: Dictionary) -> void:
 
 
 func _show_inspection(step: Dictionary) -> void:
-	_title("🚨  Patrol inspection")
-	_text("A patrol vessel has stopped you and is scanning your hold.")
-	var bribe := _button("Bribe (%d cr)" % step["bribe_cost"], func(): _next(game.answer_inspection("bribe")))
+	dialog.subtitle("Approaching the station")
+	dialog.title("🚨  Patrol inspection")
+	dialog.text("A patrol vessel has stopped you and is scanning your hold.")
+	var bribe := dialog.choice("Bribe the patrol (%d cr)" % step["bribe_cost"], func(): _answered(game.answer_inspection("bribe")))
 	bribe.disabled = not step["can_bribe"]
-	_button("Run", func(): _next(game.answer_inspection("run")))
-	_button("Hand over the cargo", func(): _next(game.answer_inspection("hand_over")))
-	prompt.visible = true
+	dialog.choice("Run for it", func(): _answered(game.answer_inspection("run")))
+	dialog.choice("Hand over the cargo", func(): _answered(game.answer_inspection("hand_over")))
+	dialog.present()
 
 
 func _show_arrival(step: Dictionary) -> void:
@@ -271,11 +297,11 @@ func _show_arrival(step: Dictionary) -> void:
 
 
 func _show_message(title: String, text: String, button: String, action: Callable) -> void:
-	_title(title)
+	dialog.title(title)
 	if text != "":
-		_text(text)
-	_button(button, action)
-	prompt.visible = true
+		dialog.text(text)
+	dialog.choice(button, action)
+	dialog.present()
 
 
 func _log_notices(step: Dictionary) -> void:
@@ -294,32 +320,5 @@ func _log_notices(step: Dictionary) -> void:
 				log.append_text("%s\n" % text)
 
 
-func _title(text: String) -> void:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", Theme_.FONT_STRONG)
-	label.add_theme_color_override("font_color", Theme_.ACCENT)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prompt_box.add_child(label)
-
-
-func _text(text: String) -> void:
-	var label := Label.new()
-	label.text = text
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prompt_box.add_child(label)
-
-
-func _button(text: String, action: Callable) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.pressed.connect(action)
-	prompt_box.add_child(button)
-	return button
-
-
 func _clear_prompt() -> void:
-	prompt.visible = false
-	for child in prompt_box.get_children():
-		prompt_box.remove_child(child)
-		child.queue_free()
+	dialog.clear()
