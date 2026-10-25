@@ -46,6 +46,15 @@ pub struct CargoGain {
     pub tons: u32,
 }
 
+/// Where an event drops the ship instead of the planned destination
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum Redirect {
+    /// Any system other than the origin and the planned destination
+    Anywhere,
+    /// One of the few systems closest to the planned destination
+    NearDestination,
+}
+
 /// Represents the outcome of an event choice
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EventOutcome {
@@ -57,7 +66,8 @@ pub struct EventOutcome {
     pub fuel_change: i32,
     pub reputation_change: i32,
     pub starts_combat: bool,
-    pub new_location: Option<String>, // For wormhole events
+    #[serde(default)]
+    pub redirect: Option<Redirect>,
     pub message: String,
 }
 
@@ -439,11 +449,6 @@ impl EventManager {
         ship.take_damage(outcome.hull_damage.unsigned_abs());
         ship.fuel_current = (ship.fuel_current as i32 + outcome.fuel_change).max(0) as u32;
 
-        // Update location if specified (for wormhole events)
-        if let Some(new_location) = &outcome.new_location {
-            commander.location = new_location.clone();
-        }
-
         Ok(rolled)
     }
 
@@ -469,9 +474,8 @@ impl EventManager {
                         fuel_change: -2,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: Some("UNKNOWN".to_string()),
-                        message: "The wormhole has transported you to an unknown location!"
-                            .to_string(),
+                        redirect: Some(Redirect::Anywhere),
+                        message: "The wormhole spits you out far from your course!".to_string(),
                     },
                 },
                 EventChoice {
@@ -485,7 +489,7 @@ impl EventManager {
                         fuel_change: -1,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You safely avoid the wormhole and continue your journey."
                             .to_string(),
                     },
@@ -516,7 +520,7 @@ impl EventManager {
                         fuel_change: -1,
                         reputation_change: 10,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You discover valuable materials! +{credits} credits, +{tons} tons of Computers, +10 reputation"
                             .to_string(),
                     },
@@ -532,7 +536,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You safely avoid the anomaly and continue your journey."
                             .to_string(),
                     },
@@ -559,7 +563,7 @@ impl EventManager {
                         fuel_change: -2,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "Navigation corrected, but you used extra fuel.".to_string(),
                     },
                 },
@@ -574,8 +578,8 @@ impl EventManager {
                         fuel_change: -3,
                         reputation_change: -5,
                         starts_combat: false,
-                        new_location: None,
-                        message: "You arrive at your destination but used more fuel than expected."
+                        redirect: Some(Redirect::NearDestination),
+                        message: "You drift off course and use more fuel than expected."
                             .to_string(),
                     },
                 },
@@ -604,7 +608,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You salvage valuable materials! +{credits} credits, +{tons} tons of Minerals, minor hull damage."
                             .to_string(),
                     },
@@ -620,7 +624,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 0,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You safely avoid the debris field.".to_string(),
                     },
                 },
@@ -646,7 +650,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 15,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "The aliens are friendly! +{credits} credits, +15 reputation."
                             .to_string(),
                     },
@@ -662,7 +666,7 @@ impl EventManager {
                         fuel_change: -2,
                         reputation_change: -5,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You escape but take some damage and use extra fuel.".to_string(),
                     },
                 },
@@ -677,7 +681,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -10,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message:
                             "You win the battle! +{credits} credits, but significant hull damage."
                                 .to_string(),
@@ -705,7 +709,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 0,
                         starts_combat: true,
-                        new_location: None,
+                        redirect: None,
                         message: "The pirates open fire!"
                             .to_string(),
                     },
@@ -721,7 +725,7 @@ impl EventManager {
                         fuel_change: -3,
                         reputation_change: -5,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You escape but lose up to {tons} tons of cargo and take damage.".to_string(),
                     },
                 },
@@ -736,7 +740,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -10,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You surrender and lose up to {tons} tons of cargo and {credits} credits, but avoid damage."
                             .to_string(),
                     },
@@ -766,7 +770,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 20,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You rescue the crew! +{credits} credits, +{tons} tons of Luxury as thanks, +20 reputation.".to_string(),
                     },
                 },
@@ -781,7 +785,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -5,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You ignore the signal and continue your journey.".to_string(),
                     },
                 },
@@ -808,7 +812,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 10,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message:
                             "Inspection completed. -{credits} credits for fees, +10 reputation."
                                 .to_string(),
@@ -825,7 +829,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -5,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "Bribe successful. -{credits} credits, minor reputation loss."
                             .to_string(),
                     },
@@ -841,7 +845,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -15,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You resist but lose any illegal cargo and reputation."
                             .to_string(),
                     },
@@ -868,7 +872,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: 5,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "Standard procedure completed. +5 reputation.".to_string(),
                     },
                 },
@@ -883,7 +887,7 @@ impl EventManager {
                         fuel_change: -2,
                         reputation_change: -10,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You evade but take damage and use extra fuel.".to_string(),
                     },
                 },
@@ -898,7 +902,7 @@ impl EventManager {
                         fuel_change: 0,
                         reputation_change: -20,
                         starts_combat: false,
-                        new_location: None,
+                        redirect: None,
                         message: "You defeat the patrol! +{credits} credits, but heavy damage and reputation loss.".to_string(),
                     },
                 },

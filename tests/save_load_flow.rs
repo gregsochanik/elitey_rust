@@ -109,3 +109,32 @@ fn saves_write_ships_by_id() {
     let value = serde_json::to_value(&game).unwrap();
     assert_eq!(value["ship"]["ship_type"], "cobra-mk-iii");
 }
+
+#[test]
+fn saves_do_not_store_event_definitions() {
+    let game = new_game(500);
+    let json = serde_json::to_value(&game).unwrap();
+    assert!(json.get("event_manager").is_none());
+}
+
+#[test]
+fn an_old_save_uses_the_current_event_definitions() {
+    use elitey_rust::game::events::{EventType, Redirect};
+    use elitey_rust::game::EventPhase;
+
+    let json = include_str!("fixtures/save_before_json_data.json");
+    let envelope: serde_json::Value = serde_json::from_str(json).unwrap();
+    let loaded: elitey_rust::game::GameState =
+        serde_json::from_value(envelope["game_state"].clone()).unwrap();
+
+    let wormhole = loaded
+        .event_manager()
+        .get_available_events(&EventPhase::Jump)
+        .into_iter()
+        .find(|event| event.event_type == EventType::Wormhole)
+        .unwrap();
+    assert!(wormhole
+        .choices
+        .iter()
+        .any(|choice| choice.outcome.redirect == Some(Redirect::Anywhere)));
+}

@@ -1,6 +1,7 @@
 use crate::data::systems::{StarSystem, SystemManager};
 use crate::game::aftermath::settle;
 use crate::game::combat::{Combat, Combatant};
+use crate::game::events::Redirect;
 use crate::game::fight::run_fight;
 use crate::game::{Commander, Event, EventManager, EventPhase, Ship};
 use crate::utils::display::{show_error, show_info, show_success};
@@ -18,6 +19,37 @@ pub struct TravelHandler {
 /// Fuel a jump of this distance costs, in whole light years
 pub fn fuel_for_distance(distance: f64) -> u32 {
     distance.ceil() as u32
+}
+
+const NEAR_DESTINATION_SYSTEMS: usize = 3;
+
+/// The system a redirecting event drops the ship at, never the origin or planned destination
+pub fn redirect_target<R: Rng>(
+    redirect: Redirect,
+    systems: &[&StarSystem],
+    origin: &str,
+    destination: &StarSystem,
+    rng: &mut R,
+) -> Option<String> {
+    let mut candidates: Vec<&StarSystem> = systems
+        .iter()
+        .copied()
+        .filter(|system| {
+            !system.name.eq_ignore_ascii_case(origin)
+                && !system.name.eq_ignore_ascii_case(&destination.name)
+        })
+        .collect();
+    candidates.sort_by(|a, b| a.name.cmp(&b.name));
+    if redirect == Redirect::NearDestination {
+        candidates.sort_by(|a, b| {
+            destination
+                .distance_to(a)
+                .total_cmp(&destination.distance_to(b))
+        });
+        candidates.truncate(NEAR_DESTINATION_SYSTEMS);
+    }
+    let pick = rng.gen_range(0..candidates.len().max(1));
+    candidates.get(pick).map(|system| system.name.clone())
 }
 
 impl TravelHandler {
@@ -95,6 +127,8 @@ impl TravelHandler {
     ) -> Result<bool, String> {
         show_info("Initiating hyperspace jump...");
 
+        let origin = commander.location.clone();
+
         let fuel_cost = self
             .jump_fuel_cost(&commander.location, destination)
             .ok_or_else(|| format!("Unknown origin system: {}", commander.location))?;
@@ -105,21 +139,33 @@ impl TravelHandler {
 
         ship.consume_fuel(fuel_cost);
 
+        let arrival = if commander.location == origin {
+            destination
+        } else {
+            self.system_manager
+                .get_system_case_insensitive(&commander.location)
+                .unwrap_or(destination)
+        };
+
         // Phase 2: Approach Events (after jump, before station)
         let approach_event_occurred =
-            self.process_approach_phase(commander, ship, event_manager, destination)?;
+            self.process_approach_phase(commander, ship, event_manager, arrival)?;
 
-        // Update location
-        commander.location = destination.name.clone();
+        commander.location = arrival.name.clone();
 
-        // Show arrival message
+        if arrival.name != destination.name {
+            show_info(&format!(
+                "You emerge at {}, not {}.",
+                arrival.name, destination.name
+            ));
+        }
         if jump_event_occurred || approach_event_occurred {
             show_success(&format!(
                 "Arrived at {} after an eventful journey!",
-                destination.name
+                arrival.name
             ));
         } else {
-            show_success(&format!("Arrived safely at {}.", destination.name));
+            show_success(&format!("Arrived safely at {}.", arrival.name));
         }
 
         Ok(true)
@@ -144,7 +190,7 @@ impl TravelHandler {
                 destination,
                 commander.standing(),
             ) {
-                return self.handle_event(event, commander, ship, event_manager);
+                return self.handle_event(event, commander, ship, event_manager, destination);
             }
         }
         Ok(false)
@@ -164,7 +210,7 @@ impl TravelHandler {
                 destination,
                 commander.standing(),
             ) {
-                return self.handle_event(event, commander, ship, event_manager);
+                return self.handle_event(event, commander, ship, event_manager, destination);
             }
         }
         Ok(false)
@@ -177,6 +223,7 @@ impl TravelHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         event_manager: &EventManager,
+        destination: &StarSystem,
     ) -> Result<bool, String> {
         println!();
         println!("{}", "=".repeat(50));
@@ -203,21 +250,29 @@ impl TravelHandler {
                             commander,
                             ship,
                             event_manager,
+                            destination,
                             actual_index,
                         )
                     } else {
                         show_error("Invalid choice. Defaulting to first option.");
-                        self.process_event_choice(event, commander, ship, event_manager, 0)
+                        self.process_event_choice(
+                            event,
+                            commander,
+                            ship,
+                            event_manager,
+                            destination,
+                            0,
+                        )
                     }
                 }
                 Err(_) => {
                     show_error("Invalid input. Defaulting to first option.");
-                    self.process_event_choice(event, commander, ship, event_manager, 0)
+                    self.process_event_choice(event, commander, ship, event_manager, destination, 0)
                 }
             },
             Err(_) => {
                 show_error("Error reading input. Defaulting to first option.");
-                self.process_event_choice(event, commander, ship, event_manager, 0)
+                self.process_event_choice(event, commander, ship, event_manager, destination, 0)
             }
         }
     }
@@ -229,6 +284,7 @@ impl TravelHandler {
         commander: &mut Commander,
         ship: &mut Ship,
         event_manager: &EventManager,
+        destination: &StarSystem,
         choice_index: usize,
     ) -> Result<bool, String> {
         match event_manager.process_event(event, commander, ship, choice_index) {
@@ -246,6 +302,20 @@ impl TravelHandler {
                 }
                 if outcome.fuel_change != 0 {
                     show_info(&format!("Fuel: {}", ship.fuel_current));
+                }
+
+                if let Some(redirect) = outcome.redirect {
+                    let systems = self.system_manager.get_all_systems();
+                    let target = redirect_target(
+                        redirect,
+                        &systems,
+                        &commander.location,
+                        destination,
+                        &mut rand::thread_rng(),
+                    );
+                    if let Some(target) = target {
+                        commander.location = target;
+                    }
                 }
 
                 if outcome.starts_combat {
@@ -386,5 +456,87 @@ mod tests {
         let lave_info = travel_handler.get_system_info("LAVE");
         assert!(lave_info.is_some());
         assert_eq!(lave_info.unwrap().name, "LAVE");
+    }
+
+    fn systems_for_redirects() -> SystemManager {
+        SystemManager::new().expect("Failed to load galaxy data")
+    }
+
+    #[test]
+    fn a_redirect_never_lands_at_the_origin_or_the_planned_destination() {
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+        let manager = systems_for_redirects();
+        let systems = manager.get_all_systems();
+        let destination = manager.get_system("DISO").unwrap();
+        for redirect in [Redirect::Anywhere, Redirect::NearDestination] {
+            for seed in 0..200 {
+                let target = redirect_target(
+                    redirect,
+                    &systems,
+                    "LAVE",
+                    destination,
+                    &mut StdRng::seed_from_u64(seed),
+                )
+                .unwrap();
+                assert!(target != "LAVE" && target != "DISO");
+            }
+        }
+    }
+
+    #[test]
+    fn an_anywhere_redirect_reaches_distant_systems() {
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+        let manager = systems_for_redirects();
+        let systems = manager.get_all_systems();
+        let destination = manager.get_system("DISO").unwrap();
+        let targets: std::collections::HashSet<String> = (0..300)
+            .filter_map(|seed| {
+                redirect_target(
+                    Redirect::Anywhere,
+                    &systems,
+                    "LAVE",
+                    destination,
+                    &mut StdRng::seed_from_u64(seed),
+                )
+            })
+            .collect();
+        assert!(targets.len() > NEAR_DESTINATION_SYSTEMS);
+    }
+
+    #[test]
+    fn a_near_destination_redirect_lands_at_one_of_the_closest_systems() {
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+        let manager = systems_for_redirects();
+        let systems = manager.get_all_systems();
+        let destination = manager.get_system("DISO").unwrap();
+        let mut closest: Vec<&StarSystem> = systems
+            .iter()
+            .copied()
+            .filter(|system| system.name != "LAVE" && system.name != "DISO")
+            .collect();
+        closest.sort_by(|a, b| {
+            destination
+                .distance_to(a)
+                .total_cmp(&destination.distance_to(b))
+        });
+        let allowed: Vec<&str> = closest
+            .iter()
+            .take(NEAR_DESTINATION_SYSTEMS)
+            .map(|system| system.name.as_str())
+            .collect();
+        for seed in 0..200 {
+            let target = redirect_target(
+                Redirect::NearDestination,
+                &systems,
+                "LAVE",
+                destination,
+                &mut StdRng::seed_from_u64(seed),
+            )
+            .unwrap();
+            assert!(allowed.contains(&target.as_str()), "{target}");
+        }
     }
 }

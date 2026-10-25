@@ -30,7 +30,8 @@ pub struct GameState {
     pub upgrade_handler: UpgradeHandler,
     /// The save/load handler
     pub save_load_handler: SaveLoadHandler,
-    /// The event manager
+    /// The event manager; events are rebuilt on load so saves pick up rule changes
+    #[serde(skip)]
     pub event_manager: EventManager,
     /// The travel handler
     pub travel_handler: TravelHandler,
