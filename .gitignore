@@ -44,6 +44,4 @@ node_modules/
 
 # dotenv environment variables file
 .env
-elite-gui/.build/
-elite-gui/Sources/EliteGUI/Generated/
-elite-gui/Sources/elite_ffiFFI/include/
+elite-godot/project/.godot/

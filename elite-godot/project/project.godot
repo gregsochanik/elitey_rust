@@ -1,0 +1,13 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="Elite"
+run/main_scene="res://main.tscn"
+
+[display]
+window/size/viewport_width=1100
+window/size/viewport_height=700
+
+[rendering]
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
