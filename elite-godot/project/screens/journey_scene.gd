@@ -30,7 +30,7 @@ func _ready() -> void:
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color.BLACK
 	environment.glow_enabled = true
-	environment.glow_intensity = 1.2
+	environment.glow_intensity = 2.0
 	environment.glow_bloom = 0.15
 	var world := WorldEnvironment.new()
 	world.environment = environment
