@@ -78,6 +78,11 @@ jobs:
           "$GODOT" --headless --path elite-godot/project --export-release "${{ matrix.preset }}" "../dist/${{ matrix.output }}" || echo "export exited with $?"
           ls -la elite-godot/dist
           test -s "elite-godot/dist/${{ matrix.output }}"
+      - name: Keep the Linux executable bit
+        if: runner.os == 'Linux'
+        run: |
+          tar -C elite-godot/dist -czf elite-godot/dist/${{ matrix.output }}.tar.gz ${{ matrix.output }}
+          rm elite-godot/dist/${{ matrix.output }}
       - uses: actions/upload-artifact@v7
         with:
           name: elite-gui-${{ matrix.preset }}

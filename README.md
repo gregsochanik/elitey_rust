@@ -55,6 +55,12 @@ Feature specs and implementation details live in the [features/](features/) dire
    cargo test
    ```
 
+## Graphical version
+
+Releases include a desktop GUI for macOS, Linux and Windows (`Elite-macos.zip`, `Elite-linux.x86_64.tar.gz`, `Elite-windows.exe`). The builds are unsigned: on macOS right-click the app and choose Open the first time. The GUI shares its saves with the terminal game.
+
+To run it from source, install Godot 4, run `sh elite-godot/build.sh`, then open `elite-godot/project` in Godot.
+
 ## Available Commands
 
 ### Core
