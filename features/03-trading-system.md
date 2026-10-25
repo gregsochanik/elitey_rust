@@ -14,7 +14,7 @@ Implement the core trading mechanics including commodities, market prices, buy/s
 ### Market Commands
 - [x] `market` - Show current system's market prices
 - [x] `buy <item> <quantity>` - Purchase commodities
-- [x] `sell <item> <quantity>` - Sell commodities
+- [x] `sell <item> <quantity|all>` and `sell all` - Sell commodities
 - [x] `cargo` - Show current cargo hold contents
 
 ### Price System

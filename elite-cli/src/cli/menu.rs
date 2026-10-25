@@ -62,7 +62,10 @@ const SECTIONS: &[Section] = &[
             Entry {
                 name: "sell",
                 aliases: &[],
-                lines: &[("sell <item> <quantity>", "Sell commodities")],
+                lines: &[
+                    ("sell <item> <quantity|all>", "Sell commodities"),
+                    ("sell all", "Sell your whole hold"),
+                ],
             },
             Entry {
                 name: "cargo",

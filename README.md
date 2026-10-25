@@ -71,7 +71,7 @@ To run it from source, install Godot 4, run `sh elite-godot/build.sh`, then open
 ### Trading
 - `market` - Show local market prices
 - `buy <commodity> [amount]` - Buy cargo
-- `sell <commodity> [amount]` - Sell cargo
+- `sell <commodity> [amount|all]` - Sell cargo; `sell all` sells the whole hold (the GUI market has Sell all and Sell everything buttons)
 - `cargo` - List cargo hold
 - `log [count]` - Show trading history and statistics
 

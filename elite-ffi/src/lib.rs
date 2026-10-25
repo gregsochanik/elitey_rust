@@ -1111,6 +1111,21 @@ impl Game {
         })
     }
 
+    pub fn sell_all(&self, commodity_id: Option<String>) -> Result<TradeResult, GameError> {
+        let commodity = commodity_id.as_deref().map(parse_commodity).transpose()?;
+        let mut state = self.state.lock().expect("game state lock");
+        let receipts = state.sell_all(commodity).map_err(GameError::refused)?;
+        let sold: Vec<String> = receipts
+            .iter()
+            .map(|receipt| format!("{} tons of {}", receipt.quantity, receipt.commodity.name()))
+            .collect();
+        let total: u32 = receipts.iter().map(|receipt| receipt.total).sum();
+        Ok(TradeResult {
+            message: format!("Sold {} for {}cr", sold.join(", "), total),
+            credits_after: receipts.last().map_or(0, |receipt| receipt.credits_after),
+        })
+    }
+
     pub fn sell(&self, commodity_id: String, quantity: u32) -> Result<TradeResult, GameError> {
         let commodity = parse_commodity(&commodity_id)?;
         let mut state = self.state.lock().expect("game state lock");
@@ -1802,6 +1817,23 @@ mod tests {
         let sold = game.sell("food".to_string(), 2).unwrap();
         assert!(sold.message.starts_with("Sold 2 tons of Food"));
         assert_eq!(game.market().unwrap().cargo_used, 0);
+    }
+
+    #[test]
+    fn selling_all_sells_one_commodity_or_the_whole_hold() {
+        let game = Game::new("Test".to_string());
+        game.buy("food".to_string(), 1).unwrap();
+        game.buy("textiles".to_string(), 1).unwrap();
+
+        let one = game.sell_all(Some("food".to_string())).unwrap();
+        assert!(one.message.starts_with("Sold 1 tons of Food"));
+        assert_eq!(game.market().unwrap().cargo_used, 1);
+
+        let everything = game.sell_all(None).unwrap();
+        assert!(everything.message.contains("1 tons of Textiles"));
+        assert_eq!(game.market().unwrap().cargo_used, 0);
+        assert!(game.sell_all(None).is_err());
+        assert!(game.sell_all(Some("food".to_string())).is_err());
     }
 
     #[test]

@@ -283,6 +283,16 @@ impl EliteGame {
     }
 
     #[func]
+    fn sell_all(&self, commodity_id: GString) -> VarDictionary {
+        trade_to_dictionary(self.game.sell_all(Some(commodity_id.to_string())))
+    }
+
+    #[func]
+    fn sell_everything(&self) -> VarDictionary {
+        trade_to_dictionary(self.game.sell_all(None))
+    }
+
+    #[func]
     fn sell(&self, commodity_id: GString, quantity: i64) -> VarDictionary {
         trade_to_dictionary(self.game.sell(commodity_id.to_string(), quantity as u32))
     }
