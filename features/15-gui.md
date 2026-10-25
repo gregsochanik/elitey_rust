@@ -44,10 +44,10 @@ Done. Typed actions, outcomes, errors and views live in `src/game`; all text, pr
 - [x] Inject randomness (travel events, market fluctuation, combat rolls) so core tests can be deterministic.
 - [x] Existing `tests/*` still pass. Rule and state tests may move to the core API, but keep representative CLI tests (command parsing, output formatting, prompts, error messages) so the "CLI unchanged" requirement is actually checked.
 
-### Phase 2: Workspace split
-- [ ] Convert to a Cargo workspace: `elite-core`, `elite-cli` (binary, keeps the `elitey_rust` binary name or documents the rename), later `elite-gui`.
-- [ ] Update `Makefile`, CI (`.github/workflows/ci.yml`, `release.yml`) and README for the new layout.
-- [ ] `elite-core` must not depend on `colored`, `crossterm` or `clap`, including as dev or build dependencies. CI fails if `cargo tree -p elite-core -e normal,build,dev` mentions any of them.
+### Phase 2: Workspace split (done)
+- [x] Convert to a Cargo workspace: `elite-core`, `elite-cli` (binary keeps the `elitey_rust` name), later `elite-gui`.
+- [x] Update `Makefile`, CI (`.github/workflows/ci.yml`, `release.yml`) and README for the new layout.
+- [x] `elite-core` must not depend on `colored`, `crossterm` or `clap`, including as dev or build dependencies. CI fails if `cargo tree -p elite-core -e normal,build,dev` mentions any of them.
 
 ### Phase 3: GUI shell (macOS)
 - [ ] Toolkit: **TBC**; see Toolkit options. Decide before starting this phase. Phases 1 and 2 do not depend on the choice.

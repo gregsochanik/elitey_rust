@@ -1,11 +1,11 @@
-use crate::data::equipment::{Equipment, EquipmentCategory};
-use crate::game::equipment::{self, InstalledView, ShopView};
-use crate::game::{Commander, Ship};
 use crate::utils::display::{show_error, show_success};
 use colored::*;
+use elite_core::data::equipment::{Equipment, EquipmentCategory};
+use elite_core::game::equipment::{self, InstalledView, ShopView};
+use elite_core::game::{Commander, Ship};
 
 /// `equipment ...` on a game
-pub fn command(game: &mut crate::game::GameState, args: &[String]) -> bool {
+pub fn command(game: &mut elite_core::game::GameState, args: &[String]) -> bool {
     handle(args, &mut game.commander, &mut game.ship)
 }
 
@@ -29,7 +29,9 @@ pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bo
     }
 }
 
-fn item_from_args(args: &[String]) -> Result<&'static crate::data::equipment::Equipment, String> {
+fn item_from_args(
+    args: &[String],
+) -> Result<&'static elite_core::data::equipment::Equipment, String> {
     if args.is_empty() {
         return Err("Specify an item, e.g. pulse-laser".to_string());
     }

@@ -1,14 +1,14 @@
 mod common;
 
 use common::{args, new_game};
-use elitey_rust::data::commodities::CommodityType;
-use elitey_rust::data::save_load::SaveLoadManager;
+use elite_core::data::commodities::CommodityType;
+use elite_core::data::save_load::SaveLoadManager;
 
 #[test]
 fn a_played_game_survives_saving_to_disk_and_loading_back() {
     let mut game = new_game(500);
-    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 3")));
-    assert!(elitey_rust::cli::equipment::command(
+    assert!(elite_cli::cli::trading::buy(&mut game, &args("food 3")));
+    assert!(elite_cli::cli::equipment::command(
         &mut game,
         &args("buy expanded-racks")
     ));
@@ -32,12 +32,12 @@ fn a_played_game_survives_saving_to_disk_and_loading_back() {
     assert_eq!(restored.buy_prices, expected.buy_prices);
     assert_eq!(restored.sell_prices, expected.sell_prices);
     assert_eq!(restored.availability, expected.availability);
-    assert!(elitey_rust::cli::trading::buy(&mut loaded, &args("food 1")));
+    assert!(elite_cli::cli::trading::buy(&mut loaded, &args("food 1")));
 }
 
 #[test]
 fn autosaves_are_kept_per_commander() {
-    use elitey_rust::game::SaveLoadHandler;
+    use elite_core::game::SaveLoadHandler;
 
     common::isolate_home();
     let handler = SaveLoadHandler::new().unwrap();
@@ -86,7 +86,7 @@ fn a_save_from_before_game_data_moved_to_json_still_loads() {
     let mut state = envelope["game_state"].clone();
     assert_eq!(state["ship"]["ship_type"], "CobraMkIII");
 
-    let loaded: elitey_rust::game::GameState = serde_json::from_value(state.clone()).unwrap();
+    let loaded: elite_core::game::GameState = serde_json::from_value(state.clone()).unwrap();
     assert_eq!(loaded.ship.ship_type.id(), "cobra-mk-iii");
     assert_eq!(loaded.ship.cargo_capacity(), 20);
     assert_eq!(loaded.world_clock, 0);
@@ -102,7 +102,7 @@ fn a_save_from_before_game_data_moved_to_json_still_loads() {
     assert!(commodities.iter().all(|c| *c == CommodityType::Food));
 
     state["ship"]["ship_type"] = serde_json::json!("Python");
-    let python: elitey_rust::game::GameState = serde_json::from_value(state).unwrap();
+    let python: elite_core::game::GameState = serde_json::from_value(state).unwrap();
     assert_eq!(python.ship.ship_type.id(), "python");
     assert_eq!(python.ship.ship_type.max_hull(), 150);
 }
@@ -123,12 +123,12 @@ fn saves_do_not_store_event_definitions() {
 
 #[test]
 fn an_old_save_uses_the_current_event_definitions() {
-    use elitey_rust::game::events::{EventType, Redirect};
-    use elitey_rust::game::EventPhase;
+    use elite_core::game::events::{EventType, Redirect};
+    use elite_core::game::EventPhase;
 
     let json = include_str!("fixtures/save_before_json_data.json");
     let envelope: serde_json::Value = serde_json::from_str(json).unwrap();
-    let loaded: elitey_rust::game::GameState =
+    let loaded: elite_core::game::GameState =
         serde_json::from_value(envelope["game_state"].clone()).unwrap();
 
     let wormhole = loaded

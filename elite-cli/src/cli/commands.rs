@@ -1,7 +1,7 @@
 use crate::cli::{equipment, info, jobs, saves, trading, travel, upgrades, upkeep};
-use crate::game::GameState;
 use crate::utils::display;
 use colored::*;
+use elite_core::game::GameState;
 
 /// What the game loop does after a command
 pub enum Control {

@@ -1,5 +1,5 @@
-use crate::game::combat::{Action, Combat, CombatError, Combatant, Outcome};
 use colored::*;
+use elite_core::game::combat::{Action, Combat, CombatError, Combatant, Outcome};
 use std::io::{self, BufRead, Write};
 
 /// Play a fight to its end, reading actions from `input` and writing the fight to `out`.
@@ -99,7 +99,7 @@ fn ending(outcome: Outcome) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::game::combat::Weapon;
+    use elite_core::game::combat::Weapon;
     use std::io::Cursor;
 
     fn fighter(name: &str, hull: u32, shield: u32, weapons: &[(u32, f64)]) -> Combatant {

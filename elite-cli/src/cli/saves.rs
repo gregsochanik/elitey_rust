@@ -1,9 +1,9 @@
-use crate::data::save_load::{SaveLoadManager, SaveMetadata};
-use crate::game::save_load::SaveError;
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use crate::utils::input;
 use colored::*;
+use elite_core::data::save_load::{SaveLoadManager, SaveMetadata};
+use elite_core::game::save_load::SaveError;
+use elite_core::game::GameState;
 use std::io::Write;
 
 /// `save <slot>`

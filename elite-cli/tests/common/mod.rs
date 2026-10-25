@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use elitey_rust::data::systems::SystemManager;
-use elitey_rust::game::{
+use elite_core::data::systems::SystemManager;
+use elite_core::game::{
     Commander, EventManager, GameState, JobBoard, SaveLoadHandler, Ship, TradeLog, TradingHandler,
     TravelHandler, UpgradeHandler,
 };

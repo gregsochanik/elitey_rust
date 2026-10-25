@@ -1,8 +1,8 @@
-use crate::data::ships::ShipType;
-use crate::game::upgrades::{ShipList, UpgradeError, UpgradeOptions};
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use colored::*;
+use elite_core::data::ships::ShipType;
+use elite_core::game::upgrades::{ShipList, UpgradeError, UpgradeOptions};
+use elite_core::game::GameState;
 
 /// `upgrade`: show the ships that can be bought
 pub fn show_upgrades(game: &GameState) {

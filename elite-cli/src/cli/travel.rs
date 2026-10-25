@@ -1,13 +1,13 @@
 use crate::cli::fight::run_fight;
-use crate::game::combat::Combat;
-use crate::game::events::Event;
-use crate::game::journey::{Input, Journey, Notice, Step};
-use crate::game::smuggling::InspectionChoice;
-use crate::game::travel::JumpPlan;
-use crate::game::GameState;
 use crate::utils::display::{show_error, show_info, show_success};
 use crate::utils::input;
 use colored::*;
+use elite_core::game::combat::Combat;
+use elite_core::game::events::Event;
+use elite_core::game::journey::{Input, Journey, Notice, Step};
+use elite_core::game::smuggling::InspectionChoice;
+use elite_core::game::travel::JumpPlan;
+use elite_core::game::GameState;
 use std::io::{self, Write};
 
 /// `jump <system>`: confirm, then play the journey through its events, fights and arrival

@@ -1,13 +1,13 @@
 mod common;
 
 use common::new_game;
-use elitey_rust::cli::fight::run_fight;
-use elitey_rust::game::aftermath::settle;
-use elitey_rust::game::combat::{Combat, Combatant, Outcome};
+use elite_cli::cli::fight::run_fight;
+use elite_core::game::aftermath::settle;
+use elite_core::game::combat::{Combat, Combatant, Outcome};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
-fn fight(game: &mut elitey_rust::game::GameState, typed: &str, dice: f64) -> Outcome {
+fn fight(game: &mut elite_core::game::GameState, typed: &str, dice: f64) -> Outcome {
     let mut combat = Combat::new(Combatant::from_ship(&game.ship), Combatant::pirate_raider());
     let mut roll = || dice;
     let outcome = run_fight(
@@ -44,14 +44,11 @@ fn winning_a_fight_pays_out_and_keeps_the_damage() {
 #[test]
 fn losing_a_fight_strips_the_ship_but_the_game_goes_on() {
     let mut game = new_game(400);
-    elitey_rust::cli::equipment::command(
-        &mut game,
-        &["sell".to_string(), "pulse-laser".to_string()],
-    );
+    elite_cli::cli::equipment::command(&mut game, &["sell".to_string(), "pulse-laser".to_string()]);
     game.ship.hull_percentage = 12;
     game.ship
         .cargo_hold
-        .add_cargo(elitey_rust::data::commodities::CommodityType::Food, 5);
+        .add_cargo(elite_core::data::commodities::CommodityType::Food, 5);
 
     // no weapons to attack with: fleeing fails every time, so the raider wins
     let outcome = fight(&mut game, &"f\n".repeat(30), 0.55);
@@ -67,7 +64,7 @@ fn surrendering_costs_cargo_and_credits_only() {
     let mut game = new_game(500);
     game.ship
         .cargo_hold
-        .add_cargo(elitey_rust::data::commodities::CommodityType::Food, 8);
+        .add_cargo(elite_core::data::commodities::CommodityType::Food, 8);
 
     let outcome = fight(&mut game, "s\n", 0.5);
 
@@ -86,14 +83,14 @@ fn repair_restores_hull_lost_in_a_fight() {
     assert!(lost > 0);
 
     let credits_before = game.commander.credits;
-    elitey_rust::cli::upkeep::repair(&mut game, &[]);
+    elite_cli::cli::upkeep::repair(&mut game, &[]);
     assert_eq!(game.ship.hull_percentage, 100);
     assert_eq!(game.commander.credits, credits_before - lost * 2);
 }
 
 #[test]
 fn a_run_of_victories_raises_standing_and_announces_it() {
-    use elitey_rust::game::commander::Standing;
+    use elite_core::game::commander::Standing;
 
     let mut game = new_game(100);
     let mut announced = Vec::new();

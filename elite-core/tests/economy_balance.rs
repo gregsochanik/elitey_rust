@@ -1,16 +1,16 @@
-use elitey_rust::data::commodities::TradingSystem;
-use elitey_rust::data::systems::SystemManager;
-use elitey_rust::game::commander::CombatRating;
-use elitey_rust::game::commander::{Standing, STARTING_CREDITS};
-use elitey_rust::game::jobs::{generate_board_for, Job, JobKind};
-use elitey_rust::game::refuel::CREDITS_PER_UNIT;
-use elitey_rust::game::smuggling::inspection_chance;
+use elite_core::data::commodities::TradingSystem;
+use elite_core::data::systems::SystemManager;
+use elite_core::game::commander::CombatRating;
+use elite_core::game::commander::{Standing, STARTING_CREDITS};
+use elite_core::game::jobs::{generate_board_for, Job, JobKind};
+use elite_core::game::refuel::CREDITS_PER_UNIT;
+use elite_core::game::smuggling::inspection_chance;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
 fn board_for(
-    origin: &elitey_rust::data::systems::StarSystem,
-    all: &[&elitey_rust::data::systems::StarSystem],
+    origin: &elite_core::data::systems::StarSystem,
+    all: &[&elite_core::data::systems::StarSystem],
     seed: u64,
     standing: Standing,
     hold: u32,
@@ -19,8 +19,8 @@ fn board_for(
 }
 
 fn board_for_rated(
-    origin: &elitey_rust::data::systems::StarSystem,
-    all: &[&elitey_rust::data::systems::StarSystem],
+    origin: &elite_core::data::systems::StarSystem,
+    all: &[&elite_core::data::systems::StarSystem],
     seed: u64,
     standing: Standing,
     rating: CombatRating,
@@ -184,7 +184,7 @@ fn best_courier_net_per_jump(seeds: u64) -> f64 {
             let board = board_for(origin, &all, seed, Standing::Neutral, 20);
             let best = board
                 .iter()
-                .filter(|job| job.kind == elitey_rust::game::jobs::JobKind::Courier)
+                .filter(|job| job.kind == elite_core::game::jobs::JobKind::Courier)
                 .map(|job| {
                     i64::from(job.reward) - i64::from(job.fuel_cost) * i64::from(CREDITS_PER_UNIT)
                 })
@@ -221,7 +221,7 @@ fn courier_jobs_beat_trading_when_poor_and_fall_behind_as_capital_grows() {
 
 #[test]
 fn random_pirate_fights_add_less_than_trading_and_courier_jobs() {
-    use elitey_rust::game::aftermath::VICTORY_REWARD;
+    use elite_core::game::aftermath::VICTORY_REWARD;
 
     // Measured share of jumps that meet a pirate attack, over every system
     const PIRATE_ATTACKS_PER_JUMP: f64 = 0.031;
@@ -248,8 +248,8 @@ struct FightStats {
 }
 
 fn starting_loadout_fights() -> FightStats {
-    use elitey_rust::game::combat::{Action, Combat, Combatant, Outcome};
-    use elitey_rust::game::Ship;
+    use elite_core::game::combat::{Action, Combat, Combatant, Outcome};
+    use elite_core::game::Ship;
     use rand::Rng;
     use rand::SeedableRng;
 
@@ -278,7 +278,7 @@ fn starting_loadout_fights() -> FightStats {
 }
 
 fn best_bounty_net_per_jump(seeds: u64) -> f64 {
-    use elitey_rust::game::jobs::JobKind;
+    use elite_core::game::jobs::JobKind;
     let fights = starting_loadout_fights();
     let repair = fights.average_hull_lost * 2.0;
     let systems = SystemManager::new().unwrap();

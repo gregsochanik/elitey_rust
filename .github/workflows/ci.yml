@@ -22,4 +22,10 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+      - name: elite-core has no terminal dependencies
+        run: |
+          if cargo tree -p elite-core -e normal,build,dev | grep -E '(colored|crossterm|clap) v'; then
+            echo "elite-core must not depend on colored, crossterm or clap"
+            exit 1
+          fi
       - run: cargo build --release

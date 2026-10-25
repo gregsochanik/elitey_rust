@@ -3,9 +3,9 @@ use clap::Parser;
 use std::io::{self, Write};
 
 use colored::*;
-use elitey_rust::cli::commands::{self, Control};
-use elitey_rust::utils::display;
-use elitey_rust::utils::input;
+use elite_cli::cli::commands::{self, Control};
+use elite_cli::utils::display;
+use elite_cli::utils::input;
 
 #[derive(Parser)]
 #[command(name = "Elite Rust")]
@@ -22,9 +22,9 @@ fn main() -> Result<()> {
 
     // Initialize game state
     let mut game_state = if args.new {
-        elitey_rust::cli::startup::new_game()
+        elite_cli::cli::startup::new_game()
     } else {
-        elitey_rust::cli::startup::load_or_new()
+        elite_cli::cli::startup::load_or_new()
     };
 
     // Display welcome message

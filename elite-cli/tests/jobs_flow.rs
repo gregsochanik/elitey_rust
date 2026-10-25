@@ -1,18 +1,18 @@
 mod common;
 
 use common::{args, new_game};
-use elitey_rust::data::save_load::SaveLoadManager;
+use elite_core::data::save_load::SaveLoadManager;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
-fn game_with_board() -> elitey_rust::game::GameState {
+fn game_with_board() -> elite_core::game::GameState {
     let mut game = new_game(100);
     game.jobs_here(&mut StdRng::seed_from_u64(4)).unwrap();
     game
 }
 
-fn courier_index(game: &elitey_rust::game::GameState) -> usize {
-    use elitey_rust::game::jobs::JobKind;
+fn courier_index(game: &elite_core::game::GameState) -> usize {
+    use elite_core::game::jobs::JobKind;
     game.job_board_jobs()
         .iter()
         .position(|job| job.kind == JobKind::Courier)
@@ -66,7 +66,7 @@ fn old_saves_without_active_jobs_load_with_none() {
     let mut value = serde_json::to_value(&game).unwrap();
     value.as_object_mut().unwrap().remove("active_jobs");
 
-    let loaded: elitey_rust::game::GameState = serde_json::from_value(value).unwrap();
+    let loaded: elite_core::game::GameState = serde_json::from_value(value).unwrap();
 
     assert!(loaded.active_jobs.is_empty());
 }
@@ -107,8 +107,8 @@ fn a_late_job_fails_through_the_game() {
     assert_eq!(game.commander.reputation, -3);
 }
 
-fn game_with_freight_on_the_board() -> elitey_rust::game::GameState {
-    use elitey_rust::game::jobs::JobKind;
+fn game_with_freight_on_the_board() -> elite_core::game::GameState {
+    use elite_core::game::jobs::JobKind;
 
     let mut game = new_game(500);
     game.commander.reputation = 30;
@@ -128,7 +128,7 @@ fn game_with_freight_on_the_board() -> elitey_rust::game::GameState {
 
 #[test]
 fn freight_takes_room_cannot_be_sold_and_pays_on_delivery() {
-    use elitey_rust::game::jobs::JobKind;
+    use elite_core::game::jobs::JobKind;
 
     let mut game = game_with_freight_on_the_board();
     let index = game
@@ -146,7 +146,7 @@ fn freight_takes_room_cannot_be_sold_and_pays_on_delivery() {
     assert_eq!(game.ship.cargo_used(), job.tons);
 
     // contract cargo is not goods: it cannot be sold at any market
-    assert!(!elitey_rust::cli::trading::sell(
+    assert!(!elite_cli::cli::trading::sell(
         &mut game,
         &args(&format!("{} 1", commodity.id()))
     ));
@@ -162,8 +162,8 @@ fn freight_takes_room_cannot_be_sold_and_pays_on_delivery() {
 
 #[test]
 fn a_full_hold_refuses_freight_and_nothing_changes() {
-    use elitey_rust::data::commodities::CommodityType;
-    use elitey_rust::game::jobs::JobKind;
+    use elite_core::data::commodities::CommodityType;
+    use elite_core::game::jobs::JobKind;
 
     let mut game = game_with_freight_on_the_board();
     let index = game
@@ -187,7 +187,7 @@ fn contract_cargo_survives_saving_and_loading_and_old_holds_load_empty() {
     let index = game
         .job_board_jobs()
         .iter()
-        .position(|job| job.kind == elitey_rust::game::jobs::JobKind::Freight)
+        .position(|job| job.kind == elite_core::game::jobs::JobKind::Freight)
         .unwrap()
         + 1;
     game.accept_job(index).unwrap();
@@ -210,12 +210,12 @@ fn contract_cargo_survives_saving_and_loading_and_old_holds_load_empty() {
         .as_object_mut()
         .unwrap()
         .remove("reserved");
-    let old: elitey_rust::game::GameState = serde_json::from_value(value).unwrap();
+    let old: elite_core::game::GameState = serde_json::from_value(value).unwrap();
     assert_eq!(old.ship.cargo_hold().reserved, 0);
 }
 
-fn criminal_game_with_smuggling_on_the_board() -> elitey_rust::game::GameState {
-    use elitey_rust::game::jobs::JobKind;
+fn criminal_game_with_smuggling_on_the_board() -> elite_core::game::GameState {
+    use elite_core::game::jobs::JobKind;
 
     let mut game = new_game(500);
     game.commander.reputation = -40;
@@ -243,7 +243,7 @@ fn criminal_game_with_smuggling_on_the_board() -> elitey_rust::game::GameState {
 
 #[test]
 fn smuggling_ends_with_the_job_gone_the_hold_empty_and_either_pay_or_a_fine() {
-    use elitey_rust::game::jobs::JobKind;
+    use elite_core::game::jobs::JobKind;
 
     let mut game = criminal_game_with_smuggling_on_the_board();
     let index = game
@@ -275,7 +275,7 @@ fn smuggling_ends_with_the_job_gone_the_hold_empty_and_either_pay_or_a_fine() {
 
 #[test]
 fn smuggling_is_locked_for_a_neutral_commander() {
-    use elitey_rust::game::jobs::JobKind;
+    use elite_core::game::jobs::JobKind;
 
     let mut game = new_game(500);
     game.commander.location = game
