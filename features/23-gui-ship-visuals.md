@@ -4,7 +4,7 @@
 Part 2 of the GUI (Feature 15). Ships, stations and planets become data, drawn first as Elite-style wireframes and then upgraded through the same pipeline: wireframe, hidden-line, flat fills, textures and lighting. Godot's built-in 3D does the work; the Rust core and `elite-ffi` facade do not change.
 
 ## Status
-Spec only. Nothing is built.
+Approved; sliced into issues #214 to #222 (umbrella #212). Nothing is built.
 
 ## Current state
 - The Rust core, `elite-ffi` and `elite-godot` (gdext) are in place, and the menu screens, jobs, saves and the turn-based journey scene are built (Feature 15, Phase 3).
@@ -57,7 +57,7 @@ A `VisualStyle` resource (GDScript) with a mapping `model id -> scene` for the a
 - Planets and stations use the same path (a sphere and a simple station model), later.
 
 ### Renderer
-Move the project to the **Mobile** renderer in Phase 1 so effects port to iOS later. Godot's renderer docs list Mobile as suited to mobile and desktop and as using Vulkan, Direct3D 12 or Metal, and show glow supported in all three renderers. Not checked: whether any current effect (glow strength, bloom) looks different under Mobile; check in Phase 1 by comparing screenshots.
+The project moves to the **Mobile** renderer in Phase 1 so effects port to iOS later. Godot's renderer docs list Mobile as suited to mobile and desktop and as using Vulkan, Direct3D 12 or Metal, and show glow supported in all three renderers. Not checked: whether any current effect (glow strength, bloom) looks different under Mobile; check in Phase 1 by comparing screenshots.
 
 ## Phases
 
@@ -104,10 +104,10 @@ Move the project to the **Mobile** renderer in Phase 1 so effects port to iOS la
 - **gdext on iOS**: reported as experimental with thin documentation (README mirrors, not the official book). Unverified; tracked as #184.
 - **Headless testing**: GDScript test frameworks (GUT, gdUnit4) run headless in CI, but are not needed since logic stays in Rust; model validation is a Rust test.
 
-## Open questions
-- **Authoring**: hand-written JSON (fine for wireframes) versus exporting from Blender with a script or importing glTF for the textured phase. Suggest JSON now, glTF for textured models resolved by the same ids.
-- **Hidden-line look**: pure black fill, or a very dark tint of the line colour.
-- **Mobile renderer timing**: switch in Phase 1 (suggested) or wait until iOS.
+## Decisions
+- **Authoring**: hand-written JSON for wireframes; glTF for the textured models later, resolved by the same ids
+- **Hidden-line look**: pure black fill; revisit if it looks harsh against the glow
+- **Mobile renderer**: switch in Phase 1
 
 ## Dependencies
 - Feature 15 (GUI shell, journey scene), Feature 22 (star class for lighting), #199 (combat effects polish), #187 (flight), #184 (iOS)
