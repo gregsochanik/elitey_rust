@@ -1,7 +1,7 @@
 use elite_ffi::{
-    ActionResult, CargoData, EquipmentShopData, GalaxyData, Game, InstalledData, JobBoardData,
-    JumpPlanData, MarketData, ShipyardData, StatusData, StepData, SystemDetailData, TradeLogData,
-    TradeRecordData, TradeResult,
+    ActionResult, CargoData, EquipmentShopData, FightData, FighterData, GalaxyData, Game,
+    InstalledData, JobBoardData, JumpPlanData, MarketData, ShipyardData, StatusData, StepData,
+    SystemDetailData, TradeLogData, TradeRecordData, TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -23,7 +23,13 @@ struct EliteGame {
 impl IRefCounted for EliteGame {
     fn init(base: Base<RefCounted>) -> Self {
         Self {
-            game: Game::new("Commander".to_string()),
+            game: match std::env::var("ELITE_SEED")
+                .ok()
+                .and_then(|seed| seed.parse().ok())
+            {
+                Some(seed) => Game::with_seed("Commander".to_string(), seed),
+                None => Game::new("Commander".to_string()),
+            },
             base,
         }
     }
@@ -108,6 +114,24 @@ impl EliteGame {
     #[func]
     fn answer_inspection(&self, choice: GString) -> VarDictionary {
         step_to_dictionary(self.game.answer_inspection(choice.to_string()))
+    }
+
+    /// The fight now waiting: `active`, `player`, `enemy`, `outcome`, `log` (everything so far), `message`
+    #[func]
+    fn fight(&self) -> VarDictionary {
+        fight_to_dictionary(self.game.fight())
+    }
+
+    /// Play a round: `attack`, `flee` or `surrender`
+    #[func]
+    fn fight_action(&self, action: GString) -> VarDictionary {
+        fight_to_dictionary(self.game.fight_action(action.to_string()))
+    }
+
+    /// Hand a finished fight back to the journey
+    #[func]
+    fn finish_fight(&self) -> VarDictionary {
+        step_to_dictionary(self.game.finish_fight())
     }
 
     #[func]
@@ -553,5 +577,31 @@ fn step_to_dictionary(step: StepData) -> VarDictionary {
         "planned": step.planned,
         "eventful": step.eventful,
         "message": step.message,
+    }
+}
+
+fn fighter_to_dictionary(fighter: FighterData) -> VarDictionary {
+    vdict! {
+        "name": fighter.name,
+        "hull": fighter.hull,
+        "max_hull": fighter.max_hull,
+        "shield": fighter.shield,
+        "max_shield": fighter.max_shield,
+        "weapons": fighter.weapons,
+    }
+}
+
+fn fight_to_dictionary(fight: FightData) -> VarDictionary {
+    let mut log = VarArray::new();
+    for line in fight.log {
+        log.push(&line.to_variant());
+    }
+    vdict! {
+        "active": fight.active,
+        "player": fighter_to_dictionary(fight.player),
+        "enemy": fighter_to_dictionary(fight.enemy),
+        "outcome": fight.outcome,
+        "log": log,
+        "message": fight.message,
     }
 }

@@ -7,7 +7,12 @@ const CRUISE_SPEED := 4.0
 const JUMP_SPEED := 160.0
 const JUMP_SECONDS := 3.0
 
+const PLAYER_ENCOUNTER := Vector3(-3.4, -0.7, 0.0)
+const ENEMY_ENCOUNTER := Vector3(4.4, 0.9, -15.0)
+
 var ship := MeshInstance3D.new()
+var enemy := MeshInstance3D.new()
+var in_encounter := false
 var stars := MeshInstance3D.new()
 var star_mesh := ImmediateMesh.new()
 var star_positions: PackedVector3Array = []
@@ -35,6 +40,11 @@ func _ready() -> void:
 	ship.material_override = _line_material(Color(0.35, 1.0, 0.85))
 	add_child(ship)
 
+	enemy.mesh = _raider_mesh()
+	enemy.material_override = _line_material(Color(1.0, 0.35, 0.3))
+	enemy.visible = false
+	add_child(enemy)
+
 	stars.mesh = star_mesh
 	stars.material_override = _line_material(Color(0.8, 0.9, 1.0))
 	add_child(stars)
@@ -46,8 +56,143 @@ func start_jump() -> void:
 	jump_left = JUMP_SECONDS
 
 
+func begin_encounter() -> void:
+	in_encounter = true
+	ship.position = PLAYER_ENCOUNTER
+	enemy.position = ENEMY_ENCOUNTER
+	enemy.visible = true
+	enemy.scale = Vector3.ONE
+
+
+func end_encounter() -> void:
+	in_encounter = false
+	ship.position = Vector3.ZERO
+	ship.visible = true
+	enemy.visible = false
+
+
+func point_of(player: bool) -> Vector3:
+	return ship.position if player else enemy.position
+
+
+## A burst of laser fire from one ship at the other; a miss passes wide.
+func fire_beam(from_player: bool, hit: bool) -> void:
+	var from := point_of(from_player)
+	var target := point_of(not from_player)
+	if not hit:
+		target += Vector3(randf_range(-4.0, 4.0), randf_range(2.0, 4.0), 0.0)
+	var colour := Color(0.5, 1.0, 0.9) if from_player else Color(1.0, 0.45, 0.3)
+	var material := _glow_material(colour)
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	for offset in [Vector3.ZERO, Vector3(0.05, 0.05, 0), Vector3(-0.05, 0.05, 0), Vector3(0, -0.06, 0)]:
+		mesh.surface_add_vertex(from + offset)
+		mesh.surface_add_vertex(target + offset)
+	mesh.surface_end()
+	var beam := MeshInstance3D.new()
+	beam.mesh = mesh
+	beam.material_override = material
+	add_child(beam)
+	_fade_and_free(beam, material, 0.4, 1.0)
+
+
+## A shimmering wireframe shield around the ship that was hit.
+func flash_shield(on_player: bool) -> void:
+	var material := _glow_material(Color(0.4, 0.7, 1.0))
+	var bubble := MeshInstance3D.new()
+	bubble.mesh = _sphere_mesh(2.6)
+	bubble.material_override = material
+	bubble.position = point_of(on_player)
+	add_child(bubble)
+	_fade_and_free(bubble, material, 0.5, 1.25)
+
+
+func explode(on_player: bool) -> void:
+	var at := point_of(on_player)
+	var material := _glow_material(Color(1.0, 0.7, 0.3))
+	var burst := MeshInstance3D.new()
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	for i in 70:
+		var direction := Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized()
+		mesh.surface_add_vertex(direction * randf_range(0.2, 0.8))
+		mesh.surface_add_vertex(direction * randf_range(1.0, 2.2))
+	mesh.surface_end()
+	burst.mesh = mesh
+	burst.material_override = material
+	burst.position = at
+	add_child(burst)
+	_fade_and_free(burst, material, 1.1, 5.0)
+	if on_player:
+		ship.visible = false
+	else:
+		enemy.visible = false
+
+
+func _fade_and_free(node: Node3D, material: StandardMaterial3D, seconds: float, grow: float) -> void:
+	var tween := create_tween()
+	tween.tween_property(material, "albedo_color:a", 0.0, seconds)
+	tween.parallel().tween_property(node, "scale", Vector3.ONE * grow, seconds)
+	tween.tween_callback(node.queue_free)
+
+
+func _glow_material(color: Color) -> StandardMaterial3D:
+	var material := _line_material(color)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return material
+
+
+func _sphere_mesh(radius: float) -> ImmediateMesh:
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	var rings := 6
+	var steps := 24
+	for ring in range(1, rings):
+		var latitude := PI * ring / rings - PI / 2.0
+		for i in steps:
+			var a := TAU * i / steps
+			var b := TAU * (i + 1) / steps
+			mesh.surface_add_vertex(Vector3(cos(latitude) * cos(a), sin(latitude), cos(latitude) * sin(a)) * radius)
+			mesh.surface_add_vertex(Vector3(cos(latitude) * cos(b), sin(latitude), cos(latitude) * sin(b)) * radius)
+	for meridian in 8:
+		var longitude := TAU * meridian / 8.0
+		for i in steps:
+			var a := TAU * i / steps
+			var b := TAU * (i + 1) / steps
+			mesh.surface_add_vertex(Vector3(cos(a) * cos(longitude), sin(a), cos(a) * sin(longitude)) * radius)
+			mesh.surface_add_vertex(Vector3(cos(b) * cos(longitude), sin(b), cos(b) * sin(longitude)) * radius)
+	mesh.surface_end()
+	return mesh
+
+
+func _raider_mesh() -> ImmediateMesh:
+	var v := [
+		Vector3(0, 0, 2.6),
+		Vector3(-0.6, 0.3, -1.4), Vector3(0.6, 0.3, -1.4),
+		Vector3(-0.6, -0.3, -1.4), Vector3(0.6, -0.3, -1.4),
+		Vector3(-2.4, 0.0, -1.9), Vector3(2.4, 0.0, -1.9),
+		Vector3(0, 0.9, -1.6),
+	]
+	var edges := [
+		[0, 1], [0, 2], [0, 3], [0, 4],
+		[1, 2], [3, 4], [1, 3], [2, 4],
+		[1, 5], [3, 5], [2, 6], [4, 6],
+		[5, 7], [6, 7], [1, 7], [2, 7],
+	]
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	for edge in edges:
+		mesh.surface_add_vertex(v[edge[0]])
+		mesh.surface_add_vertex(v[edge[1]])
+	mesh.surface_end()
+	return mesh
+
+
 func _process(delta: float) -> void:
-	ship.rotation.y += delta * (0.4 if jump_left <= 0.0 else 0.05)
+	if enemy.visible:
+		enemy.rotation.y = sin(Time.get_ticks_msec() / 1400.0) * 0.5 + 0.35
+		enemy.position.y = ENEMY_ENCOUNTER.y + sin(Time.get_ticks_msec() / 700.0) * 0.15
+	ship.rotation.y += delta * (0.4 if jump_left <= 0.0 and not in_encounter else 0.05)
 	ship.rotation.z = sin(Time.get_ticks_msec() / 900.0) * 0.12
 
 	var target := JUMP_SPEED if jump_left > 0.0 else CRUISE_SPEED

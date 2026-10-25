@@ -3,6 +3,7 @@ use elite_core::data::equipment::EquipmentCategory;
 use elite_core::data::save_load::SaveLoadManager;
 use elite_core::data::ships::ShipType;
 use elite_core::data::systems::EconomyType;
+use elite_core::game::combat::{Action, Combat, Outcome};
 use elite_core::game::equipment;
 use elite_core::game::events::EventPhase;
 use elite_core::game::jobs::{ABANDON_REPUTATION, MAX_ACTIVE_JOBS};
@@ -15,7 +16,7 @@ use elite_core::game::travel::fuel_for_distance;
 use elite_core::game::GameState;
 use elite_core::game::SaveLoadHandler;
 use rand::rngs::StdRng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug, thiserror::Error)]
@@ -304,6 +305,29 @@ pub struct SaveSlotData {
     pub ship: String,
     pub saved_at: String,
     pub is_autosave: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct FighterData {
+    pub name: String,
+    pub hull: u32,
+    pub max_hull: u32,
+    pub shield: u32,
+    pub max_shield: u32,
+    pub weapons: u32,
+}
+
+/// The fight in progress: both ships, how it stands and everything said so far
+#[derive(Debug, Clone, Default)]
+pub struct FightData {
+    pub active: bool,
+    pub player: FighterData,
+    pub enemy: FighterData,
+    /// `ongoing`, `victory`, `defeat`, `escaped` or `surrendered`
+    pub outcome: String,
+    pub log: Vec<String>,
+    /// Why the last action was refused, if it was
+    pub message: String,
 }
 
 #[derive(Debug, Clone)]
@@ -825,6 +849,60 @@ impl Game {
         self.answer(Input::FightEnded(combat))
     }
 
+    /// The fight the journey is waiting on
+    pub fn fight(&self) -> FightData {
+        let voyage = self.voyage.lock().expect("voyage lock");
+        match voyage.as_ref().map(|voyage| &voyage.step) {
+            Some(Step::Fight(combat)) => fight_data(combat, String::new()),
+            _ => FightData::default(),
+        }
+    }
+
+    /// Play one round: `attack`, `flee` or `surrender`
+    pub fn fight_action(&self, action: String) -> FightData {
+        let action = match action.as_str() {
+            "attack" => Action::Attack,
+            "flee" => Action::Flee,
+            "surrender" => Action::Surrender,
+            _ => return self.fight_with_message(format!("Unknown action: {}", action)),
+        };
+        let mut voyage = self.voyage.lock().expect("voyage lock");
+        let Some(Voyage {
+            step: Step::Fight(combat),
+            ..
+        }) = voyage.as_mut()
+        else {
+            return FightData::default();
+        };
+        let mut rng = self.rng.lock().expect("rng lock");
+        let mut roll = || rng.gen::<f64>();
+        let message = match combat.resolve_round(action, &mut roll) {
+            Ok(_) => String::new(),
+            Err(error) => error.to_string(),
+        };
+        fight_data(combat, message)
+    }
+
+    /// Hand the finished fight back to the journey and carry on
+    pub fn finish_fight(&self) -> StepData {
+        let combat = {
+            let voyage = self.voyage.lock().expect("voyage lock");
+            match voyage.as_ref().map(|voyage| &voyage.step) {
+                Some(Step::Fight(combat)) if combat.outcome() != Outcome::Ongoing => combat.clone(),
+                Some(Step::Fight(_)) => return step_error("The fight is not over"),
+                _ => return step_error("No fight is waiting"),
+            }
+        };
+        self.answer(Input::FightEnded(combat))
+    }
+
+    fn fight_with_message(&self, message: String) -> FightData {
+        FightData {
+            message,
+            ..self.fight()
+        }
+    }
+
     pub fn journey_in_progress(&self) -> bool {
         self.voyage.lock().expect("voyage lock").is_some()
     }
@@ -1034,6 +1112,35 @@ impl Game {
             ),
             credits_after: receipt.credits_after,
         })
+    }
+}
+
+fn fighter_data(fighter: &elite_core::game::combat::Combatant) -> FighterData {
+    FighterData {
+        name: fighter.name.clone(),
+        hull: fighter.hull,
+        max_hull: fighter.max_hull,
+        shield: fighter.shield,
+        max_shield: fighter.max_shield,
+        weapons: fighter.weapons.len() as u32,
+    }
+}
+
+fn fight_data(combat: &Combat, message: String) -> FightData {
+    FightData {
+        active: true,
+        player: fighter_data(&combat.player),
+        enemy: fighter_data(&combat.enemy),
+        outcome: match combat.outcome() {
+            Outcome::Ongoing => "ongoing",
+            Outcome::Victory => "victory",
+            Outcome::Defeat => "defeat",
+            Outcome::Escaped => "escaped",
+            Outcome::Surrendered => "surrendered",
+        }
+        .to_string(),
+        log: combat.log.clone(),
+        message,
     }
 }
 
@@ -1595,6 +1702,75 @@ mod tests {
             assert!(game.new_game("Fresh".to_string()).ok);
             assert!(!game.journey_in_progress());
         }
+    }
+
+    fn game_in_a_fight() -> Option<(Arc<Game>, StepData)> {
+        (0..400).find_map(|seed| {
+            let game = Game::with_seed("Test".to_string(), seed);
+            let mut step = game.begin_jump("DISO".to_string());
+            for _ in 0..20 {
+                step = match step.kind.as_str() {
+                    "fight" => return Some((game, step)),
+                    "event" => game.answer_event(0),
+                    "inspection" => game.answer_inspection("hand_over".to_string()),
+                    _ => return None,
+                };
+            }
+            None
+        })
+    }
+
+    #[test]
+    fn a_fight_can_be_played_round_by_round_and_handed_back() {
+        let (game, step) = game_in_a_fight().expect("a seed with a fight");
+        assert_eq!(step.kind, "fight");
+
+        let before = game.fight();
+        assert!(before.active);
+        assert_eq!(before.outcome, "ongoing");
+        assert!(before.log.is_empty());
+        assert!(before.player.weapons > 0);
+        assert!(!game.finish_fight().message.is_empty());
+
+        let mut fight = before;
+        for _ in 0..40 {
+            if fight.outcome != "ongoing" {
+                break;
+            }
+            fight = game.fight_action("attack".to_string());
+        }
+        assert_ne!(fight.outcome, "ongoing");
+        assert!(fight.log.len() >= 2);
+
+        let next = game.finish_fight();
+        assert_ne!(next.kind, "error", "{}", next.message);
+    }
+
+    #[test]
+    fn fleeing_and_surrendering_end_or_continue_a_fight() {
+        let (game, _) = game_in_a_fight().expect("a seed with a fight");
+
+        let surrendered = game.fight_action("surrender".to_string());
+
+        assert_eq!(surrendered.outcome, "surrendered");
+        assert!(surrendered
+            .log
+            .iter()
+            .any(|line| line.contains("surrender")));
+        assert!(!game.fight_action("attack".to_string()).message.is_empty());
+        assert!(game
+            .fight_action("dance".to_string())
+            .message
+            .contains("Unknown"));
+    }
+
+    #[test]
+    fn there_is_no_fight_outside_one() {
+        let game = Game::with_seed("Test".to_string(), 1);
+
+        assert!(!game.fight().active);
+        assert!(!game.fight_action("attack".to_string()).active);
+        assert_eq!(game.finish_fight().kind, "error");
     }
 
     #[test]
