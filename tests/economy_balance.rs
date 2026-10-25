@@ -22,12 +22,22 @@ struct Totals {
     losing: i64,
 }
 
+#[derive(Clone, Copy)]
+enum Pick {
+    Cheapest,
+    DearestAboveBase,
+}
+
 /// A trader who buys the affordable commodity furthest below its base price
 fn informed_trader_totals(seeds: u64, standing: Standing) -> Totals {
     trader_totals(seeds, standing, STARTING_CREDITS)
 }
 
 fn trader_totals(seeds: u64, standing: Standing, capital: u32) -> Totals {
+    trader_totals_picking(seeds, standing, capital, Pick::Cheapest)
+}
+
+fn trader_totals_picking(seeds: u64, standing: Standing, capital: u32, pick_rule: Pick) -> Totals {
     let systems = SystemManager::new().unwrap();
     let trading = TradingSystem::new();
     let mut totals = Totals {
@@ -46,12 +56,17 @@ fn trader_totals(seeds: u64, standing: Standing, capital: u32) -> Totals {
             let buy_price_of = |c: &_| standing.buy_price(buy_market.get_buy_price(c).unwrap());
             let sell_price_of = |c: &_| standing.sell_price(sell_market.get_sell_price(c).unwrap());
 
-            let pick = trading
+            let affordable = trading
                 .get_commodities()
                 .iter()
-                .filter(|c| buy_price_of(c) <= capital)
-                .min_by_key(|c| c.percent_vs_base(buy_price_of(c)))
-                .unwrap();
+                .filter(|c| buy_price_of(c) <= capital);
+            let pick = match pick_rule {
+                Pick::Cheapest => affordable.min_by_key(|c| c.percent_vs_base(buy_price_of(c))),
+                Pick::DearestAboveBase => {
+                    affordable.max_by_key(|c| c.percent_vs_base(buy_price_of(c)))
+                }
+            }
+            .unwrap();
             let buy_price = buy_price_of(pick);
             let tons = (capital / buy_price)
                 .min(20)
@@ -92,6 +107,18 @@ fn trips_can_still_lose_money_after_fuel() {
 
     assert!(losing > 0.05, "losing {:.0}%", losing * 100.0);
     assert!(losing < 0.4, "losing {:.0}%", losing * 100.0);
+}
+
+#[test]
+fn buying_at_a_premium_usually_loses_money() {
+    let totals = trader_totals_picking(
+        300,
+        Standing::Neutral,
+        STARTING_CREDITS,
+        Pick::DearestAboveBase,
+    );
+    let losing = totals.losing as f64 / totals.trips as f64;
+    assert!(losing > 0.6, "losing {:.0}%", losing * 100.0);
 }
 
 fn gross_per_trip(standing: Standing) -> f64 {

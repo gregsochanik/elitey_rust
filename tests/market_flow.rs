@@ -36,6 +36,19 @@ fn markets_still_trade_after_the_state_change() {
 }
 
 #[test]
+fn prices_stay_the_same_while_docked_without_trading() {
+    let mut game = new_game(500);
+    let first = game.market_prices().unwrap();
+
+    for _ in 0..5 {
+        let again = game.market_prices().unwrap();
+        assert_eq!(first.buy_prices, again.buy_prices);
+        assert_eq!(first.sell_prices, again.sell_prices);
+        assert_eq!(first.availability, again.availability);
+    }
+}
+
+#[test]
 fn hopping_between_systems_does_not_reroll_prices_or_stock() {
     let mut game = new_game(500);
     let before = game.market_prices().unwrap();
