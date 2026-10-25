@@ -1,0 +1,19 @@
+[package]
+name = "elite-ffi"
+description = "Swift bindings for elite-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+name = "elite_ffi"
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+elite-core = { path = "../elite-core" }
+thiserror = "1.0"
+uniffi = { version = "0.32.2", features = ["cli"] }
