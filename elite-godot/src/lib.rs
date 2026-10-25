@@ -1,4 +1,4 @@
-use elite_ffi::{Game, MarketData, TradeResult};
+use elite_ffi::{Game, MarketData, StatusData, TradeResult};
 use godot::prelude::*;
 use std::sync::Arc;
 
@@ -27,6 +27,12 @@ impl IRefCounted for EliteGame {
 
 #[godot_api]
 impl EliteGame {
+    /// Commander and ship numbers for the header and status screen
+    #[func]
+    fn status(&self) -> VarDictionary {
+        status_to_dictionary(self.game.status())
+    }
+
     /// The market here: system, credits, cargo and one dictionary per commodity
     #[func]
     fn market(&self) -> VarDictionary {
@@ -82,5 +88,26 @@ fn trade_to_dictionary(result: Result<TradeResult, elite_ffi::GameError>) -> Var
             "credits": trade.credits_after,
         },
         Err(error) => vdict! { "ok": false, "message": error.to_string() },
+    }
+}
+
+fn status_to_dictionary(status: StatusData) -> VarDictionary {
+    vdict! {
+        "commander_name": status.commander_name,
+        "credits": status.credits,
+        "location": status.location,
+        "reputation": status.reputation,
+        "standing": status.standing,
+        "combat_rating": status.combat_rating,
+        "kills": status.kills,
+        "ship_name": status.ship_name,
+        "cargo_used": status.cargo_used,
+        "cargo_capacity": status.cargo_capacity,
+        "fuel_current": status.fuel_current,
+        "fuel_capacity": status.fuel_capacity,
+        "hull": status.hull,
+        "max_hull": status.max_hull,
+        "power_used": status.power_used,
+        "power_capacity": status.power_capacity,
     }
 }
