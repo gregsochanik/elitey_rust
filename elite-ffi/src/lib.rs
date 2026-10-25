@@ -1022,7 +1022,7 @@ mod tests {
         assert!(board
             .jobs
             .iter()
-            .all(|j| j.locked == !j.lock_reason.is_empty()));
+            .all(|j| j.locked != j.lock_reason.is_empty()));
         assert_eq!(game.jobs().jobs.len(), board.jobs.len());
     }
 
