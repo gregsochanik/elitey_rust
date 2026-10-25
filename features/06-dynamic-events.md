@@ -107,7 +107,7 @@ An outcome can drop the ship somewhere other than the planned destination.
 ## Testing
 - [x] Event creation, phase filtering, contextual modifiers and outcome processing have unit tests
 - [x] Jump fuel cost is measured from the original system, even after a wormhole
-- [ ] Probability and distribution tests for the two phases
+- [x] Probability and distribution tests for the two phases
 
 ## Dependencies
 - Feature 02: Star Systems & Travel ✅

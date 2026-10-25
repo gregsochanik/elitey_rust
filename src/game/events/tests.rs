@@ -627,3 +627,53 @@ fn events_add_a_modest_income_next_to_trading() {
     assert!(poor <= mid, "100cr: {poor:.1}");
     assert!(rich <= 38.0, "2000cr: {rich:.1}");
 }
+
+#[test]
+fn trigger_chances_are_ten_and_twelve_percent_at_a_standard_destination() {
+    let manager = EventManager::new();
+    let standard = system(GovernmentType::Democracy, EconomyType::AverageIndustrial);
+    assert!((manager.trigger_probability(&EventPhase::Jump, &standard) - 0.10).abs() < 1e-9);
+    assert!((manager.trigger_probability(&EventPhase::Approach, &standard) - 0.12).abs() < 1e-9);
+}
+
+#[test]
+fn trigger_chances_scale_with_the_destination() {
+    let manager = EventManager::new();
+    let lawless_poor = system(GovernmentType::Anarchy, EconomyType::PoorAgricultural);
+    let rich_corporate = system(GovernmentType::CorporateState, EconomyType::RichIndustrial);
+    assert!(
+        (manager.trigger_probability(&EventPhase::Jump, &lawless_poor) - 0.10 * 1.3 * 1.4).abs()
+            < 1e-9
+    );
+    assert!(
+        (manager.trigger_probability(&EventPhase::Approach, &rich_corporate) - 0.12 * 0.9 * 0.8)
+            .abs()
+            < 1e-9
+    );
+}
+
+#[test]
+fn each_phase_triggers_at_its_own_rate_and_the_two_roll_independently() {
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    let manager = EventManager::new();
+    let standard = system(GovernmentType::Democracy, EconomyType::AverageIndustrial);
+    let mut rng = StdRng::seed_from_u64(5);
+    let trials = 100_000;
+    let (mut jump, mut approach, mut both) = (0, 0, 0);
+    for _ in 0..trials {
+        let j = manager.should_trigger_event_with(&EventPhase::Jump, &standard, &mut rng);
+        let a = manager.should_trigger_event_with(&EventPhase::Approach, &standard, &mut rng);
+        jump += i32::from(j);
+        approach += i32::from(a);
+        both += i32::from(j && a);
+    }
+    let rate = |count: i32| f64::from(count) / f64::from(trials);
+    assert!((rate(jump) - 0.10).abs() < 0.005, "jump {}", rate(jump));
+    assert!(
+        (rate(approach) - 0.12).abs() < 0.005,
+        "approach {}",
+        rate(approach)
+    );
+    assert!((rate(both) - 0.012).abs() < 0.002, "both {}", rate(both));
+}

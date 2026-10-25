@@ -288,18 +288,28 @@ impl EventManager {
         Self { events }
     }
 
-    /// Check if an event should trigger for a given phase
-    pub fn should_trigger_event(&self, phase: &EventPhase, destination: &StarSystem) -> bool {
+    /// Chance that an event triggers in this phase at this destination
+    pub fn trigger_probability(&self, phase: &EventPhase, destination: &StarSystem) -> f64 {
         let base_probability = match phase {
             EventPhase::Jump => 0.10,     // 10% base chance for jump events
             EventPhase::Approach => 0.12, // 12% base chance for approach events
         };
 
-        let modifier = self.calculate_contextual_modifier(destination);
-        let final_probability = base_probability * modifier;
+        base_probability * self.calculate_contextual_modifier(destination)
+    }
 
-        let mut rng = rand::thread_rng();
-        rng.gen_bool(final_probability)
+    /// Check if an event should trigger for a given phase
+    pub fn should_trigger_event(&self, phase: &EventPhase, destination: &StarSystem) -> bool {
+        self.should_trigger_event_with(phase, destination, &mut rand::thread_rng())
+    }
+
+    pub fn should_trigger_event_with<R: Rng>(
+        &self,
+        phase: &EventPhase,
+        destination: &StarSystem,
+        rng: &mut R,
+    ) -> bool {
+        rng.gen_bool(self.trigger_probability(phase, destination))
     }
 
     /// Calculate contextual modifier based on destination system characteristics
