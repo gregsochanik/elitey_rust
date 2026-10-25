@@ -41,6 +41,26 @@ pub struct MarketData {
 }
 
 #[derive(Debug, Clone)]
+pub struct StatusData {
+    pub commander_name: String,
+    pub credits: u32,
+    pub location: String,
+    pub reputation: i32,
+    pub standing: String,
+    pub combat_rating: String,
+    pub kills: u32,
+    pub ship_name: String,
+    pub cargo_used: u32,
+    pub cargo_capacity: u32,
+    pub fuel_current: u32,
+    pub fuel_capacity: u32,
+    pub hull: u32,
+    pub max_hull: u32,
+    pub power_used: u32,
+    pub power_capacity: u32,
+}
+
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
@@ -55,6 +75,28 @@ impl Game {
         Arc::new(Self {
             state: Mutex::new(GameState::new(commander_name)),
         })
+    }
+
+    pub fn status(&self) -> StatusData {
+        let view = self.state.lock().expect("game state lock").status_view();
+        StatusData {
+            commander_name: view.commander_name,
+            credits: view.credits,
+            location: view.location,
+            reputation: view.reputation,
+            standing: view.standing.name().to_string(),
+            combat_rating: view.combat_rating.name().to_string(),
+            kills: view.kills,
+            ship_name: view.ship_name,
+            cargo_used: view.cargo_used,
+            cargo_capacity: view.cargo_capacity,
+            fuel_current: view.fuel_current,
+            fuel_capacity: view.fuel_capacity,
+            hull: view.hull,
+            max_hull: view.max_hull,
+            power_used: view.power_used,
+            power_capacity: view.power_capacity,
+        }
     }
 
     pub fn market(&self) -> Result<MarketData, GameError> {
@@ -146,6 +188,20 @@ mod tests {
         assert_eq!(market.system_name, "LAVE");
         assert_eq!(market.rows.len(), CommodityType::all().len());
         assert!(market.rows.iter().all(|row| row.buy_price > 0));
+    }
+
+    #[test]
+    fn the_status_describes_the_commander_and_ship() {
+        let game = Game::new("Test".to_string());
+
+        let status = game.status();
+
+        assert_eq!(status.commander_name, "Test");
+        assert_eq!(status.location, "LAVE");
+        assert_eq!(status.standing, "Neutral");
+        assert_eq!(status.combat_rating, "Harmless");
+        assert_eq!((status.power_used, status.power_capacity), (9, 20));
+        assert_eq!((status.fuel_current, status.fuel_capacity), (7, 7));
     }
 
     #[test]
