@@ -1,6 +1,10 @@
 extends Node3D
 ## The space between the jump and the station: a wireframe ship and a starfield that streaks during a jump.
 
+const ModelLoader := preload("res://models/model_loader.gd")
+
+const PLAYER_MODEL := "cobra-mk-iii"
+const ENEMY_MODEL := "raider"
 const STAR_COUNT := 260
 const FIELD := Vector3(60, 36, 120)
 const CRUISE_SPEED := 4.0
@@ -36,11 +40,11 @@ func _ready() -> void:
 	world.environment = environment
 	add_child(world)
 
-	ship.mesh = _ship_mesh()
+	ship.mesh = ModelLoader.line_mesh(PLAYER_MODEL)
 	ship.material_override = _line_material(Color(0.35, 1.0, 0.85))
 	add_child(ship)
 
-	enemy.mesh = _raider_mesh()
+	enemy.mesh = ModelLoader.line_mesh(ENEMY_MODEL)
 	enemy.material_override = _line_material(Color(1.0, 0.35, 0.3))
 	enemy.visible = false
 	add_child(enemy)
@@ -165,29 +169,6 @@ func _sphere_mesh(radius: float) -> ImmediateMesh:
 	return mesh
 
 
-func _raider_mesh() -> ImmediateMesh:
-	var v := [
-		Vector3(0, 0, 2.6),
-		Vector3(-0.6, 0.3, -1.4), Vector3(0.6, 0.3, -1.4),
-		Vector3(-0.6, -0.3, -1.4), Vector3(0.6, -0.3, -1.4),
-		Vector3(-2.4, 0.0, -1.9), Vector3(2.4, 0.0, -1.9),
-		Vector3(0, 0.9, -1.6),
-	]
-	var edges := [
-		[0, 1], [0, 2], [0, 3], [0, 4],
-		[1, 2], [3, 4], [1, 3], [2, 4],
-		[1, 5], [3, 5], [2, 6], [4, 6],
-		[5, 7], [6, 7], [1, 7], [2, 7],
-	]
-	var mesh := ImmediateMesh.new()
-	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	for edge in edges:
-		mesh.surface_add_vertex(v[edge[0]])
-		mesh.surface_add_vertex(v[edge[1]])
-	mesh.surface_end()
-	return mesh
-
-
 func _process(delta: float) -> void:
 	if enemy.visible:
 		enemy.rotation.y = sin(Time.get_ticks_msec() / 1400.0) * 0.5 + 0.35
@@ -227,28 +208,3 @@ func _line_material(color: Color) -> StandardMaterial3D:
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = color
 	return material
-
-
-func _ship_mesh() -> ImmediateMesh:
-	var v := [
-		Vector3(0, 0, -3.2),
-		Vector3(-0.9, 0.35, 0.6), Vector3(0.9, 0.35, 0.6),
-		Vector3(-0.9, -0.2, 0.6), Vector3(0.9, -0.2, 0.6),
-		Vector3(-3.0, 0.0, 1.8), Vector3(3.0, 0.0, 1.8),
-		Vector3(0, 0.7, 1.8), Vector3(0, -0.4, 1.8),
-	]
-	var edges := [
-		[0, 1], [0, 2], [0, 3], [0, 4],
-		[1, 2], [3, 4], [1, 3], [2, 4],
-		[1, 5], [3, 5], [2, 6], [4, 6],
-		[1, 7], [2, 7], [3, 8], [4, 8],
-		[5, 7], [6, 7], [5, 8], [6, 8],
-		[5, 6],
-	]
-	var mesh := ImmediateMesh.new()
-	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	for edge in edges:
-		mesh.surface_add_vertex(v[edge[0]])
-		mesh.surface_add_vertex(v[edge[1]])
-	mesh.surface_end()
-	return mesh
