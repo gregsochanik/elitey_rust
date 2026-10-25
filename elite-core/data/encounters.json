@@ -25,5 +25,15 @@
     {"events": ["BountyHunter"], "standing": ["Criminal"], "weight": 2.0},
     {"events": ["BountyHunter"], "standing": ["Disreputable"], "weight": 0.6},
     {"events": ["BountyHunter"], "standing": ["Neutral", "Trusted", "Respected"], "weight": 0.0}
-  ]
+  ],
+  "groups": [
+    {"events": ["PirateAttack"], "government": ["Anarchy"], "extra_chance": 0.35},
+    {"events": ["PirateAttack"], "government": ["Feudal"], "extra_chance": 0.15},
+    {"events": ["PirateAttack"], "economy": ["Poor Agri", "Poor Ind"], "extra_chance": 0.15}
+  ],
+  "difficulty": {
+    "enemies": ["pirate-raider"],
+    "health_per_rating": 0.06,
+    "nerve_per_rating": 0.04
+  }
 }

@@ -1,5 +1,6 @@
 use crate::data::enemies::{find_enemy, Behaviour, EnemyClass};
 use crate::data::equipment::{CombatStats, EquipmentCategory};
+use crate::game::encounters::Difficulty;
 use crate::game::npc::{decide, NpcAction};
 use crate::game::Ship;
 
@@ -166,7 +167,22 @@ impl Combat {
 
     /// A fight against an enemy from `data/enemies.json`, which behaves as that entry says
     pub fn against(player: Combatant, enemy: &EnemyClass) -> Self {
-        Self::with_behaviour(player, Combatant::from_enemy(enemy), enemy.behaviour)
+        Self::against_scaled(player, enemy, Difficulty::NONE)
+    }
+
+    /// Like `against`, with the enemy toughened and made more nervous by `difficulty`
+    pub fn against_scaled(player: Combatant, enemy: &EnemyClass, difficulty: Difficulty) -> Self {
+        let mut foe = Combatant::from_enemy(enemy);
+        let scale = |points: u32| (f64::from(points) * difficulty.health).round() as u32;
+        foe.hull = scale(foe.hull);
+        foe.max_hull = foe.hull;
+        foe.shield = scale(foe.shield);
+        foe.max_shield = foe.shield;
+        let behaviour = Behaviour {
+            aggression: (enemy.behaviour.aggression - difficulty.nerve).max(0.0),
+            ..enemy.behaviour
+        };
+        Self::with_behaviour(player, foe, behaviour)
     }
 
     pub fn outcome(&self) -> Outcome {
