@@ -143,6 +143,17 @@ impl TradeLog {
             .max_by_key(|t| t.profit)
     }
 
+    /// What each ton of `commodity` in the hold cost on average, or `None` when none was
+    /// bought (cargo from loot or contracts costs nothing and dilutes the average)
+    pub fn average_cost(&self, commodity: &CommodityType, held: u32) -> Option<u32> {
+        let holding = self.holdings.get(commodity)?;
+        let tons = holding.quantity.max(held);
+        if held == 0 || tons == 0 || holding.total_cost <= 0.0 {
+            return None;
+        }
+        Some((holding.total_cost / f64::from(tons)).round() as u32)
+    }
+
     /// Align tracked holdings with the real hold: cargo gained outside trading dilutes
     /// average cost (cost 0); cargo lost leaves average cost unchanged.
     fn sync_holding(&mut self, commodity: &CommodityType, actual_quantity: u32) {
@@ -303,5 +314,18 @@ mod tests {
 
         assert_eq!(restored.transactions().len(), 1);
         assert_eq!(restored.record_sell(FOOD, 5, 12, "LEESTI", 5), 10);
+    }
+
+    #[test]
+    fn average_cost_blends_purchases_and_ignores_free_cargo() {
+        let mut log = TradeLog::new();
+        log.record_buy(CommodityType::Food, 2, 20, "LAVE", 0);
+        log.record_buy(CommodityType::Food, 2, 30, "LAVE", 2);
+
+        assert_eq!(log.average_cost(&CommodityType::Food, 4), Some(25));
+        assert_eq!(log.average_cost(&CommodityType::Food, 0), None);
+        assert_eq!(log.average_cost(&CommodityType::Textiles, 3), None);
+        // two extra free tons dilute the average
+        assert_eq!(log.average_cost(&CommodityType::Food, 6), Some(17));
     }
 }

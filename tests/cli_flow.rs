@@ -76,6 +76,14 @@ fn trading_commands_print_receipts_and_errors() {
     assert!(output.contains("Error: Only "));
     assert!(output.contains("Error: Insufficient cargo. Have 2 tons, trying to sell 5"));
     assert!(output.contains("Cargo Hold (2/20)"));
+    assert!(output.contains("Paid: "));
+}
+
+#[test]
+fn the_market_shows_what_held_cargo_cost() {
+    let output = play("hold", "buy food 2\nmarket");
+
+    assert!(output.contains("Hold: 2t @ "));
 }
 
 #[test]

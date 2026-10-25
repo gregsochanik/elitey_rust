@@ -117,7 +117,7 @@ fn print_market(view: &MarketView) {
         let buy = format!("Buy: {}cr", row.buy_price);
         let sell = format!("Sell: {}cr", row.sell_price);
         let available = format!("Available: {} tons", row.available);
-        let versus_base = format!("{:+}% vs base", row.percent_vs_base);
+        let versus_base = format!("{:<14}", format!("{:+}% vs base", row.percent_vs_base));
         let versus_base = if row.percent_vs_base <= -10 {
             versus_base.green()
         } else if row.percent_vs_base >= 10 {
@@ -125,13 +125,19 @@ fn print_market(view: &MarketView) {
         } else {
             versus_base.normal()
         };
+        let holding = match (row.held, row.paid) {
+            (0, _) => String::new(),
+            (held, Some(paid)) => format!("Hold: {}t @ {}cr", held, paid),
+            (held, None) => format!("Hold: {}t", held),
+        };
         println!(
-            "{:<12} {:<12} {:<12} {:<20} {} {}",
+            "{:<12} {:<12} {:<12} {:<20} {} {} {}",
             name,
             buy,
             sell,
             available,
             versus_base,
+            holding.cyan(),
             markers(row.pushed).yellow()
         );
     }
@@ -149,11 +155,16 @@ fn print_cargo(view: &CargoView) {
         println!("No goods in the hold");
     } else {
         for line in &view.items {
+            let paid = line
+                .paid
+                .map(|paid| format!("  Paid: {}cr/ton", paid))
+                .unwrap_or_default();
             println!(
-                "{:<12} {} tons  Value: {}cr",
+                "{:<12} {} tons  Value: {}cr{}",
                 format!("{}:", line.commodity.name()),
                 line.quantity,
-                line.estimated_value
+                line.estimated_value,
+                paid
             );
         }
         println!("{}", "-".repeat(20));

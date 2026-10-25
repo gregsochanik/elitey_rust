@@ -158,6 +158,9 @@ The trading system foundation is now ready for implementing:
 - [x] A poor choice (or bad luck) still loses money, so choices matter
 - [x] Prices remain stable within a system visit (until the player trades)
 
+### Cost paid
+The cargo view shows the average price paid per ton for each commodity held, and the market view shows it beside the commodities in the hold, so a sale can be judged against what was paid. Cargo that was not bought (loot, contracts) dilutes the average; if nothing was paid for the cargo held, no price is shown.
+
 ### Result and follow-up
 The spread change raised the hindsight measure (best commodity profits on a trip) from 80% to 94%, and the simulation test now asserts at least 90%.
 
