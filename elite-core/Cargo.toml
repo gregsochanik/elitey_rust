@@ -2,6 +2,7 @@
 name = "elite-core"
 description = "Rules, data and state for the Elite-style trading game"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 

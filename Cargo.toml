@@ -6,3 +6,4 @@ resolver = "2"
 version = "0.0.0-dev"
 edition = "2021"
 authors = ["Greg Sochanik"]
+license = "MIT"
