@@ -2,6 +2,7 @@ extends Control
 ## The app shell: header, navigation and the current screen.
 
 const Theme_ := preload("res://theme/elite_theme.gd")
+const Style := preload("res://theme/visual_style.gd")
 const HeaderBar := preload("res://shell/header_bar.gd")
 const MarketScreen := preload("res://screens/market_screen.gd")
 const CargoScreen := preload("res://screens/cargo_screen.gd")
@@ -183,4 +184,8 @@ func _show(key: String) -> void:
 
 
 func _refresh_header() -> void:
-	header.update(game.status())
+	var status: Dictionary = game.status()
+	header.update(status)
+	var here: Dictionary = game.system_detail(status["location"])
+	if not here.is_empty():
+		Style.set_star(here["star_class"])
