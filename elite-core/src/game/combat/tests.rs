@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::npc::NpcAction;
 
 fn fighter(name: &str, hull: u32, shield: u32, recharge: u32, weapons: &[(u32, f64)]) -> Combatant {
     Combatant {
@@ -370,4 +371,89 @@ fn non_combat_equipment_does_not_change_the_fighter() {
     );
 
     assert_eq!(Combatant::from_ship(&ship), before);
+}
+
+fn timid() -> Behaviour {
+    Behaviour {
+        aggression: 0.0,
+        flee_below_hull: 0.5,
+        flee_odds: 0.0,
+        flee_chance: 1.0,
+        surrender_below_hull: 0.0,
+        surrender_chance: 0.0,
+    }
+}
+
+fn wounded_raider(hull: u32) -> Combatant {
+    Combatant {
+        hull,
+        ..fighter("Raider", 60, 0, 0, &[(10, 1.0)])
+    }
+}
+
+#[test]
+fn a_wounded_enemy_can_get_away_and_the_fight_ends() {
+    let mut combat = Combat::with_behaviour(
+        fighter("You", 100, 0, 0, &[(5, 0.1)]),
+        wounded_raider(20),
+        timid(),
+    );
+
+    // player misses, the raider decides to flee, then slips away
+    let outcome = combat
+        .resolve_round(Action::Attack, &mut rolls(&[0.9, 0.0, 0.1]))
+        .unwrap();
+
+    assert_eq!(outcome, Outcome::EnemyFled);
+    assert_eq!(combat.last_npc_action, Some(NpcAction::Flee));
+    assert_eq!(combat.player.hull, 100);
+}
+
+#[test]
+fn an_enemy_that_fails_to_flee_loses_its_turn() {
+    let mut combat = Combat::with_behaviour(
+        fighter("You", 100, 0, 0, &[(5, 0.1)]),
+        wounded_raider(20),
+        timid(),
+    );
+
+    let outcome = combat
+        .resolve_round(Action::Attack, &mut rolls(&[0.9, 0.0, 0.9]))
+        .unwrap();
+
+    assert_eq!(outcome, Outcome::Ongoing);
+    assert_eq!(combat.player.hull, 100);
+    assert!(combat.log.iter().any(|line| line.contains("fails")));
+}
+
+#[test]
+fn a_beaten_enemy_can_surrender() {
+    let behaviour = Behaviour {
+        surrender_below_hull: 0.5,
+        surrender_chance: 1.0,
+        ..timid()
+    };
+    let mut combat = Combat::with_behaviour(
+        fighter("You", 100, 0, 0, &[(5, 0.1)]),
+        wounded_raider(20),
+        behaviour,
+    );
+
+    let outcome = combat
+        .resolve_round(Action::Attack, &mut rolls(&[0.9, 0.0]))
+        .unwrap();
+
+    assert_eq!(outcome, Outcome::EnemySurrendered);
+    assert_eq!(combat.last_npc_action, Some(NpcAction::Surrender));
+}
+
+#[test]
+fn an_enemy_that_never_retreats_uses_no_extra_rolls() {
+    let mut combat = Combat::new(fighter("You", 100, 0, 0, &[(5, 0.1)]), wounded_raider(5));
+
+    combat
+        .resolve_round(Action::Attack, &mut rolls(&[0.9, 0.0]))
+        .unwrap();
+
+    assert_eq!(combat.last_npc_action, Some(NpcAction::Attack));
 }

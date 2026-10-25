@@ -188,6 +188,27 @@ fn winning_a_bounty_pays_the_bounty_instead_of_the_random_payout() {
 }
 
 #[test]
+fn a_surrendering_target_pays_the_bounty_but_a_fleeing_one_does_not() {
+    for (outcome, pays) in [
+        (Outcome::EnemySurrendered, true),
+        (Outcome::EnemyFled, false),
+    ] {
+        let mut commander = Commander::new("Test".to_string());
+        let mut ship = Ship::new_cobra_mk3();
+
+        resolve_bounties(
+            vec![bounty("Proxima Centauri", 150)],
+            &mut commander,
+            &mut ship,
+            &mut fights(vec![(outcome, 70)]),
+            &mut StdRng::seed_from_u64(1),
+        );
+
+        assert_eq!(commander.credits() >= 250, pays, "{:?}", outcome);
+    }
+}
+
+#[test]
 fn escaping_surrendering_or_losing_fails_the_bounty() {
     for outcome in [Outcome::Escaped, Outcome::Surrendered, Outcome::Defeat] {
         let mut commander = Commander::new("Test".to_string());

@@ -615,6 +615,7 @@ fn fight_to_dictionary(fight: FightData) -> VarDictionary {
         "enemy": fighter_to_dictionary(fight.enemy),
         "outcome": fight.outcome,
         "log": log,
+        "enemy_action": fight.enemy_action,
         "message": fight.message,
     }
 }

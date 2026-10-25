@@ -364,7 +364,7 @@ pub fn finish_bounty_fight(
                 rng,
                 Some(entry.job.reward),
             ));
-            if outcome == Outcome::Victory {
+            if matches!(outcome, Outcome::Victory | Outcome::EnemySurrendered) {
                 messages.push(format!(
                     "Bounty claimed near {}: {}cr.",
                     entry.job.destination, entry.job.reward

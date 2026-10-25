@@ -50,11 +50,19 @@ pub fn settle_with_reward(
     let mut messages = Vec::new();
 
     match outcome {
-        Outcome::Victory => {
-            let reward = victory_reward.unwrap_or_else(|| rng.gen_range(VICTORY_REWARD));
+        Outcome::Victory | Outcome::EnemySurrendered => {
+            let surrendered = outcome == Outcome::EnemySurrendered;
+            let mut reward = victory_reward.unwrap_or_else(|| rng.gen_range(VICTORY_REWARD));
+            if surrendered && victory_reward.is_none() {
+                reward /= 2;
+            }
             commander.add_credits(reward);
             let reputation = commander.change_reputation(5);
-            messages.push(format!("You claim {} credits from the wreck.", reward));
+            messages.push(if surrendered {
+                format!("They pay {} credits for their lives.", reward)
+            } else {
+                format!("You claim {} credits from the wreck.", reward)
+            });
 
             let commodities = TradingSystem::new().get_commodities().to_vec();
             let loot = CargoGain {
@@ -99,7 +107,7 @@ pub fn settle_with_reward(
                 tons, credits
             ));
         }
-        Outcome::Escaped | Outcome::Ongoing => {}
+        Outcome::Escaped | Outcome::EnemyFled | Outcome::Ongoing => {}
     }
 
     messages
@@ -124,6 +132,47 @@ mod tests {
 
     fn rng() -> StdRng {
         StdRng::seed_from_u64(11)
+    }
+
+    #[test]
+    fn a_surrendering_enemy_pays_half_and_counts_as_a_kill() {
+        for seed in 0..50 {
+            let (mut commander, mut ship) = setup(100, &[]);
+            settle(
+                Outcome::EnemySurrendered,
+                80,
+                &mut commander,
+                &mut ship,
+                &mut StdRng::seed_from_u64(seed),
+            );
+
+            let reward = commander.credits() - 100;
+            assert!(
+                (VICTORY_REWARD.start() / 2..=VICTORY_REWARD.end() / 2).contains(&reward),
+                "{}",
+                reward
+            );
+            assert_eq!(commander.kills, 1);
+            assert_eq!(commander.reputation, 5);
+        }
+    }
+
+    #[test]
+    fn an_enemy_that_flees_changes_nothing_but_the_hull() {
+        let (mut commander, mut ship) = setup(100, &[]);
+
+        let messages = settle(
+            Outcome::EnemyFled,
+            65,
+            &mut commander,
+            &mut ship,
+            &mut rng(),
+        );
+
+        assert!(messages.is_empty());
+        assert_eq!(commander.credits(), 100);
+        assert_eq!(commander.kills, 0);
+        assert_eq!(ship.hull_percentage, 65);
     }
 
     #[test]
