@@ -1,5 +1,6 @@
-use crate::data::enemies::{find_enemy, EnemyClass};
+use crate::data::enemies::{find_enemy, Behaviour, EnemyClass};
 use crate::data::equipment::{CombatStats, EquipmentCategory};
+use crate::game::npc::{decide, NpcAction};
 use crate::game::Ship;
 
 /// Chance of escaping when fleeing
@@ -112,6 +113,10 @@ pub enum Outcome {
     Defeat,
     Escaped,
     Surrendered,
+    /// The enemy got away
+    EnemyFled,
+    /// The enemy gave in
+    EnemySurrendered,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -136,17 +141,32 @@ pub struct Combat {
     pub player: Combatant,
     pub enemy: Combatant,
     pub log: Vec<String>,
+    /// What the enemy chose in the latest round
+    pub last_npc_action: Option<NpcAction>,
+    behaviour: Behaviour,
     outcome: Outcome,
 }
 
 impl Combat {
+    /// An enemy that fights to the end
     pub fn new(player: Combatant, enemy: Combatant) -> Self {
+        Self::with_behaviour(player, enemy, Behaviour::NEVER_RETREATS)
+    }
+
+    pub fn with_behaviour(player: Combatant, enemy: Combatant, behaviour: Behaviour) -> Self {
         Self {
             player,
             enemy,
             log: Vec::new(),
+            last_npc_action: None,
+            behaviour,
             outcome: Outcome::Ongoing,
         }
+    }
+
+    /// A fight against an enemy from `data/enemies.json`, which behaves as that entry says
+    pub fn against(player: Combatant, enemy: &EnemyClass) -> Self {
+        Self::with_behaviour(player, Combatant::from_enemy(enemy), enemy.behaviour)
     }
 
     pub fn outcome(&self) -> Outcome {
@@ -190,10 +210,30 @@ impl Combat {
             }
         }
 
-        fire(&self.enemy, &mut self.player, roll, &mut self.log);
-        if self.player.is_destroyed() {
-            self.log.push("Your ship is crippled!".to_string());
-            return Ok(self.finish(Outcome::Defeat));
+        let action = decide(&self.behaviour, &self.enemy, &self.player, &mut *roll);
+        self.last_npc_action = Some(action);
+        match action {
+            NpcAction::Attack => {
+                fire(&self.enemy, &mut self.player, roll, &mut self.log);
+                if self.player.is_destroyed() {
+                    self.log.push("Your ship is crippled!".to_string());
+                    return Ok(self.finish(Outcome::Defeat));
+                }
+            }
+            NpcAction::Flee => {
+                if roll() < FLEE_CHANCE {
+                    self.log
+                        .push(format!("The {} breaks off and escapes!", self.enemy.name));
+                    return Ok(self.finish(Outcome::EnemyFled));
+                }
+                self.log
+                    .push(format!("The {} tries to flee but fails.", self.enemy.name));
+            }
+            NpcAction::Surrender => {
+                self.log
+                    .push(format!("The {} surrenders!", self.enemy.name));
+                return Ok(self.finish(Outcome::EnemySurrendered));
+            }
         }
 
         self.player.recharge_shield();

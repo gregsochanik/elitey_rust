@@ -8,6 +8,7 @@ use elite_core::game::equipment;
 use elite_core::game::events::EventPhase;
 use elite_core::game::jobs::{ABANDON_REPUTATION, MAX_ACTIVE_JOBS};
 use elite_core::game::journey::{auto_fight, Input, Journey, Notice, Step};
+use elite_core::game::npc::NpcAction;
 use elite_core::game::refuel::{RefuelError, RefuelOutcome, CREDITS_PER_UNIT};
 use elite_core::game::repair::CREDITS_PER_POINT;
 use elite_core::game::smuggling::InspectionChoice;
@@ -326,9 +327,11 @@ pub struct FightData {
     pub active: bool,
     pub player: FighterData,
     pub enemy: FighterData,
-    /// `ongoing`, `victory`, `defeat`, `escaped` or `surrendered`
+    /// `ongoing`, `victory`, `defeat`, `escaped`, `surrendered`, `enemy_fled` or `enemy_surrendered`
     pub outcome: String,
     pub log: Vec<String>,
+    /// What the enemy did in the latest round: `attack`, `flee`, `surrender`, or empty
+    pub enemy_action: String,
     /// Why the last action was refused, if it was
     pub message: String,
 }
@@ -1167,9 +1170,18 @@ fn fight_data(combat: &Combat, message: String) -> FightData {
             Outcome::Defeat => "defeat",
             Outcome::Escaped => "escaped",
             Outcome::Surrendered => "surrendered",
+            Outcome::EnemyFled => "enemy_fled",
+            Outcome::EnemySurrendered => "enemy_surrendered",
         }
         .to_string(),
         log: combat.log.clone(),
+        enemy_action: match combat.last_npc_action {
+            Some(NpcAction::Attack) => "attack",
+            Some(NpcAction::Flee) => "flee",
+            Some(NpcAction::Surrender) => "surrender",
+            None => "",
+        }
+        .to_string(),
         message,
     }
 }

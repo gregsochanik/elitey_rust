@@ -1,3 +1,4 @@
+use crate::data::enemies::find_enemy;
 use crate::data::systems::StarSystem;
 use crate::game::combat::{Combat, Combatant, Outcome};
 use crate::game::events::{Event, EventPhase, EventReport};
@@ -184,7 +185,7 @@ impl GameState {
                     let starts_combat = self.report_event(journey, &report, rng);
                     if starts_combat {
                         journey.stage = Stage::AwaitEventFight { phase };
-                        return Ok(Step::Fight(self.fight_against(Combatant::pirate_raider())));
+                        return Ok(Step::Fight(self.fight_against("pirate-raider")));
                     }
                     journey.stage = after_event(&phase);
                 }
@@ -277,7 +278,7 @@ impl GameState {
                         }
                         Answer::Fight => {
                             journey.stage = Stage::AwaitPatrolFight { jobs };
-                            return Ok(Step::Fight(self.fight_against(Combatant::patrol_vessel())));
+                            return Ok(Step::Fight(self.fight_against("patrol-vessel")));
                         }
                     }
                 }
@@ -309,7 +310,7 @@ impl GameState {
                     }
                     Some(entry) => {
                         journey.stage = Stage::AwaitBountyFight { entry };
-                        return Ok(Step::Fight(self.fight_against(Combatant::pirate_raider())));
+                        return Ok(Step::Fight(self.fight_against("pirate-raider")));
                     }
                 },
                 Stage::AwaitBountyFight { entry } => {
@@ -368,8 +369,9 @@ impl GameState {
             .cloned()
     }
 
-    fn fight_against(&self, enemy: Combatant) -> Combat {
-        Combat::new(Combatant::from_ship(&self.ship), enemy)
+    fn fight_against(&self, enemy_id: &str) -> Combat {
+        let enemy = find_enemy(enemy_id).expect("enemy is in data/enemies.json");
+        Combat::against(Combatant::from_ship(&self.ship), enemy)
     }
 
     /// Turn an applied event outcome into notices and apply any redirect; true when it starts a fight

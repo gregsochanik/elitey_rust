@@ -193,6 +193,17 @@ pub fn finish_patrol_fight(
                 &mut messages,
             );
         }
+        Ok((Outcome::EnemyFled | Outcome::EnemySurrendered, hull)) => {
+            ship.hull_percentage = hull.min(ship.ship_type.max_hull());
+            messages.push("The patrol vessel backs off and you make the drop.".to_string());
+            pay_all(
+                jobs,
+                commander,
+                ship,
+                ATTACKING_THE_LAW_REPUTATION,
+                &mut messages,
+            );
+        }
         Ok((Outcome::Defeat, hull)) => {
             messages.extend(settle_with_reward(
                 Outcome::Defeat,

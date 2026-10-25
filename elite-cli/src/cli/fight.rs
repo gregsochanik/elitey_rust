@@ -92,6 +92,8 @@ fn ending(outcome: Outcome) -> String {
         Outcome::Defeat => "Defeat. Your ship is disabled.".red().to_string(),
         Outcome::Escaped => "You escaped the fight.".yellow().to_string(),
         Outcome::Surrendered => "You surrendered.".yellow().to_string(),
+        Outcome::EnemyFled => "The enemy ship got away.".yellow().to_string(),
+        Outcome::EnemySurrendered => "The enemy ship surrenders.".green().to_string(),
         Outcome::Ongoing => String::new(),
     }
 }
