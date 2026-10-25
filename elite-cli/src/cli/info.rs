@@ -1,4 +1,4 @@
-use crate::utils::display::show_error;
+use crate::utils::display::{credits, icon, show_error, system_name, Icon};
 use colored::*;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::views::{StatusView, SystemInfoView, TradeLogView};
@@ -44,7 +44,7 @@ pub fn systems(game: &GameState) {
         for destination in reachable {
             println!(
                 "{} - {:.1} light years, {} fuel",
-                destination.name.yellow(),
+                system_name(&destination.name, false),
                 destination.distance,
                 destination.fuel
             );
@@ -76,8 +76,8 @@ fn print_status(view: &StatusView) {
     println!("{}", "Commander Status".cyan().bold());
     println!("{}", "================".cyan());
     println!("Commander: {}", view.commander_name.yellow());
-    println!("Credits: {} cr", view.credits.to_string().green());
-    println!("Location: {}", view.location.blue());
+    println!("Credits: {}", credits(i64::from(view.credits)));
+    println!("Location: {}", system_name(&view.location, true));
     println!("Reputation: {} ({})", view.reputation, view.standing.name());
     match view.combat_rating.next() {
         Some((next, needed)) => println!(
@@ -106,13 +106,22 @@ fn print_status(view: &StatusView) {
     println!("Power: {}/{}", view.power_used, view.power_capacity);
 
     if view.damaged {
-        println!("{}", "⚠️  Hull damage detected!".red());
+        println!(
+            "{}",
+            format!("{}Hull damage detected!", icon(Icon::Warning)).red()
+        );
     }
     if view.fuel_current < view.fuel_capacity / 3 {
-        println!("{}", "⚠️  Low fuel warning!".yellow());
+        println!(
+            "{}",
+            format!("{}Low fuel warning!", icon(Icon::Warning)).yellow()
+        );
     }
     if view.cargo_used > view.cargo_capacity * 3 / 4 {
-        println!("{}", "⚠️  Cargo hold nearly full!".yellow());
+        println!(
+            "{}",
+            format!("{}Cargo hold nearly full!", icon(Icon::Warning)).yellow()
+        );
     }
     println!();
 }

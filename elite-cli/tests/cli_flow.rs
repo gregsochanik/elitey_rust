@@ -39,6 +39,10 @@ fn the_game_saves_and_exits_when_input_ends() {
 }
 
 fn play(label: &str, commands: &str) -> String {
+    play_with(label, commands, &[("NO_COLOR", "1")])
+}
+
+fn play_with(label: &str, commands: &str, env: &[(&str, &str)]) -> String {
     let home =
         std::env::temp_dir().join(format!("elitey_rust_cli_{}_{}", label, std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
@@ -47,7 +51,7 @@ fn play(label: &str, commands: &str) -> String {
     let mut child = Command::new(env!("CARGO_BIN_EXE_elitey_rust"))
         .arg("--new")
         .env("HOME", &home)
-        .env("NO_COLOR", "1")
+        .envs(env.iter().copied())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -170,4 +174,14 @@ fn unknown_commands_are_reported() {
     let output = play("unknown", "dance");
 
     assert!(output.contains("Unknown command. Type 'help' for available commands."));
+}
+
+#[test]
+fn messages_carry_icons_with_colour_and_none_without() {
+    let plain = play("plain_icons", "buy gold 1");
+    assert!(plain.contains("Error: Unknown commodity: gold"));
+    assert!(!plain.contains('❌'));
+
+    let coloured = play_with("coloured_icons", "buy gold 1", &[("CLICOLOR_FORCE", "1")]);
+    assert!(coloured.contains("❌"));
 }
