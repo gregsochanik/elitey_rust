@@ -1,6 +1,6 @@
 use elite_ffi::{
-    ActionResult, CargoData, Game, MarketData, StatusData, TradeLogData, TradeRecordData,
-    TradeResult,
+    ActionResult, CargoData, GalaxyData, Game, JumpPlanData, MarketData, StatusData,
+    SystemDetailData, TradeLogData, TradeRecordData, TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -34,6 +34,26 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    /// Every system: `current`, `fuel` and `systems` with position, distance, fuel cost and flags
+    #[func]
+    fn galaxy(&self) -> VarDictionary {
+        galaxy_to_dictionary(self.game.galaxy())
+    }
+
+    /// Details of one system; empty when unknown
+    #[func]
+    fn system_detail(&self, name: GString) -> VarDictionary {
+        self.game
+            .system_detail(name.to_string())
+            .map_or_else(VarDictionary::new, detail_to_dictionary)
+    }
+
+    /// Check a jump without making it: `ok`, `message`, `origin`, `destination`, `distance`, `fuel_cost`
+    #[func]
+    fn plan_jump(&self, destination: GString) -> VarDictionary {
+        plan_to_dictionary(self.game.plan_jump(destination.to_string()))
     }
 
     /// Prices and what is missing: `fuel_missing`, `hull_missing`, `fuel_price`, `repair_price`, `credits`
@@ -207,4 +227,50 @@ fn positive(amount: i64) -> Option<u32> {
 
 fn action_to_dictionary(result: ActionResult) -> VarDictionary {
     vdict! { "ok": result.ok, "message": result.message }
+}
+
+fn galaxy_to_dictionary(galaxy: GalaxyData) -> VarDictionary {
+    let mut systems = VarArray::new();
+    for system in galaxy.systems {
+        systems.push(
+            &vdict! {
+                "name": system.name,
+                "x": system.x,
+                "y": system.y,
+                "distance": system.distance,
+                "fuel_cost": system.fuel_cost,
+                "reachable": system.reachable,
+                "is_current": system.is_current,
+                "industrial": system.industrial,
+            }
+            .to_variant(),
+        );
+    }
+    vdict! { "current": galaxy.current, "fuel": galaxy.fuel, "systems": systems }
+}
+
+fn detail_to_dictionary(detail: SystemDetailData) -> VarDictionary {
+    vdict! {
+        "name": detail.name,
+        "economy": detail.economy,
+        "government": detail.government,
+        "tech_level": detail.tech_level,
+        "population": detail.population,
+        "description": detail.description,
+        "distance": detail.distance,
+        "fuel_cost": detail.fuel_cost,
+        "reachable": detail.reachable,
+        "is_current": detail.is_current,
+    }
+}
+
+fn plan_to_dictionary(plan: JumpPlanData) -> VarDictionary {
+    vdict! {
+        "ok": plan.ok,
+        "message": plan.message,
+        "origin": plan.origin,
+        "destination": plan.destination,
+        "distance": plan.distance,
+        "fuel_cost": plan.fuel_cost,
+    }
 }

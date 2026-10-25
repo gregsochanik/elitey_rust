@@ -12,7 +12,7 @@ var bars := {}
 
 func _ready() -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
+	row.add_theme_constant_override("separation", 16)
 	add_child(row)
 
 	identity.add_theme_font_size_override("font_size", 24)
@@ -34,12 +34,12 @@ func _bar(key: String) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", Theme_.MUTED)
 	box.add_child(label)
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(130, 12)
+	bar.custom_minimum_size = Vector2(80, 12)
 	bar.add_theme_stylebox_override("fill", StyleBoxFlat.new())
 	box.add_child(bar)
 	bars[key] = {"label": label, "bar": bar}
@@ -47,10 +47,11 @@ func _bar(key: String) -> Control:
 
 
 func update(status: Dictionary) -> void:
-	identity.text = "🚀  %s — %s" % [status["commander_name"], status["ship_name"]]
+	identity.text = "🚀  %s" % status["commander_name"]
 	location.text = "📍 %s" % status["location"]
 	credits.text = "💰 %d cr" % status["credits"]
 	standing.text = "⭐ %s · ⚔️ %s" % [status["standing"], status["combat_rating"]]
+	identity.tooltip_text = status["ship_name"]
 	_set_bar("fuel", "⛽ Fuel", status["fuel_current"], status["fuel_capacity"], true)
 	_set_bar("hull", "🛡️ Hull", status["hull"], status["max_hull"], true)
 	_set_bar("cargo", "📦 Cargo", status["cargo_used"], status["cargo_capacity"], false)
