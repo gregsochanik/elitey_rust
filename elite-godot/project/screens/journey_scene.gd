@@ -1,7 +1,7 @@
 extends Node3D
 ## The space between the jump and the station: a wireframe ship and a starfield that streaks during a jump.
 
-const ModelLoader := preload("res://models/model_loader.gd")
+const Style := preload("res://theme/visual_style.gd")
 
 const PLAYER_MODEL := "cobra-mk-iii"
 const ENEMY_MODEL := "raider"
@@ -14,8 +14,9 @@ const JUMP_SECONDS := 3.0
 const PLAYER_ENCOUNTER := Vector3(-3.4, -0.7, 0.0)
 const ENEMY_ENCOUNTER := Vector3(4.4, 0.9, -15.0)
 
-var ship := MeshInstance3D.new()
-var enemy := MeshInstance3D.new()
+var ship: MeshInstance3D
+var enemy: MeshInstance3D
+var world := WorldEnvironment.new()
 var in_encounter := false
 var stars := MeshInstance3D.new()
 var star_mesh := ImmediateMesh.new()
@@ -30,30 +31,29 @@ func _ready() -> void:
 	camera.rotation_degrees = Vector3(-8, 0, 0)
 	add_child(camera)
 
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color.BLACK
-	environment.glow_enabled = true
-	environment.glow_intensity = 2.0
-	environment.glow_bloom = 0.15
-	var world := WorldEnvironment.new()
-	world.environment = environment
+	world.environment = Style.environment()
 	add_child(world)
 
-	ship.mesh = ModelLoader.line_mesh(PLAYER_MODEL)
-	ship.material_override = _line_material(Color(0.35, 1.0, 0.85))
+	ship = Style.model_node(PLAYER_MODEL, "player")
 	add_child(ship)
 
-	enemy.mesh = ModelLoader.line_mesh(ENEMY_MODEL)
-	enemy.material_override = _line_material(Color(1.0, 0.35, 0.3))
+	enemy = Style.model_node(ENEMY_MODEL, "enemy")
 	enemy.visible = false
 	add_child(enemy)
 
 	stars.mesh = star_mesh
-	stars.material_override = _line_material(Color(0.8, 0.9, 1.0))
+	stars.material_override = Style.material("stars")
 	add_child(stars)
 	for i in STAR_COUNT:
 		star_positions.append(_random_star(true))
+	Style.events.changed.connect(_restyle)
+
+
+func _restyle() -> void:
+	world.environment = Style.environment()
+	Style.restyle(ship, PLAYER_MODEL, "player")
+	Style.restyle(enemy, ENEMY_MODEL, "enemy")
+	stars.material_override = Style.material("stars")
 
 
 func start_jump() -> void:
@@ -85,8 +85,7 @@ func fire_beam(from_player: bool, hit: bool) -> void:
 	var target := point_of(not from_player)
 	if not hit:
 		target += Vector3(randf_range(-4.0, 4.0), randf_range(2.0, 4.0), 0.0)
-	var colour := Color(0.5, 1.0, 0.9) if from_player else Color(1.0, 0.45, 0.3)
-	var material := _glow_material(colour)
+	var material := Style.material("beam_player" if from_player else "beam_enemy", true)
 	var mesh := ImmediateMesh.new()
 	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	for offset in [Vector3.ZERO, Vector3(0.05, 0.05, 0), Vector3(-0.05, 0.05, 0), Vector3(0, -0.06, 0)]:
@@ -102,7 +101,7 @@ func fire_beam(from_player: bool, hit: bool) -> void:
 
 ## A shimmering wireframe shield around the ship that was hit.
 func flash_shield(on_player: bool) -> void:
-	var material := _glow_material(Color(0.4, 0.7, 1.0))
+	var material := Style.material("shield", true)
 	var bubble := MeshInstance3D.new()
 	bubble.mesh = _sphere_mesh(2.6)
 	bubble.material_override = material
@@ -113,7 +112,7 @@ func flash_shield(on_player: bool) -> void:
 
 func explode(on_player: bool) -> void:
 	var at := point_of(on_player)
-	var material := _glow_material(Color(1.0, 0.7, 0.3))
+	var material := Style.material("explosion", true)
 	var burst := MeshInstance3D.new()
 	var mesh := ImmediateMesh.new()
 	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
@@ -138,12 +137,6 @@ func _fade_and_free(node: Node3D, material: StandardMaterial3D, seconds: float, 
 	tween.tween_property(material, "albedo_color:a", 0.0, seconds)
 	tween.parallel().tween_property(node, "scale", Vector3.ONE * grow, seconds)
 	tween.tween_callback(node.queue_free)
-
-
-func _glow_material(color: Color) -> StandardMaterial3D:
-	var material := _line_material(color)
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	return material
 
 
 func _sphere_mesh(radius: float) -> ImmediateMesh:
@@ -201,10 +194,3 @@ func _random_star(anywhere: bool) -> Vector3:
 	if absf(x) < 3.0 and absf(y) < 2.0:
 		x += 6.0
 	return Vector3(x, y, z)
-
-
-func _line_material(color: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
-	return material
