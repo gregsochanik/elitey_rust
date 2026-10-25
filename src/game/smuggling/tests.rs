@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::commodities::CommodityType;
+use crate::game::commander::CombatRating;
 use crate::game::jobs::{Job, JobKind};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -15,6 +16,7 @@ fn run(destination: &str, tons: u32, reward: u32) -> ActiveJob {
             fuel_cost: 3,
             reward,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left: 1,
     }

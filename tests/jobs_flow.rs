@@ -274,7 +274,7 @@ fn smuggling_ends_with_the_job_gone_the_hold_empty_and_either_pay_or_a_fine() {
 }
 
 #[test]
-fn a_neutral_commander_is_not_offered_smuggling() {
+fn smuggling_is_locked_for_a_neutral_commander() {
     use elitey_rust::game::jobs::JobKind;
 
     let mut game = new_game(500);
@@ -287,10 +287,10 @@ fn a_neutral_commander_is_not_offered_smuggling() {
         .unwrap();
     for seed in 0..100u64 {
         game.job_board.clear();
-        game.jobs_here(&mut StdRng::seed_from_u64(seed)).unwrap();
-        assert!(game
-            .job_board_jobs()
+        let listings = game.jobs_here(&mut StdRng::seed_from_u64(seed)).unwrap();
+        assert!(listings
             .iter()
-            .all(|job| job.kind != JobKind::Smuggling));
+            .filter(|listing| listing.job.kind == JobKind::Smuggling)
+            .all(|listing| listing.lock.is_some()));
     }
 }

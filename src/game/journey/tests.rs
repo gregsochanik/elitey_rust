@@ -1,5 +1,6 @@
 use super::*;
 use crate::game::combat::{Action, Weapon};
+use crate::game::commander::CombatRating;
 use crate::game::events::EventType;
 use crate::game::jobs::{Job, JobKind};
 use crate::game::smuggling;
@@ -135,6 +136,7 @@ fn a_bounty_at_the_destination_needs_a_fight_and_pays_on_victory() {
             fuel_cost: 3,
             reward: 300,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left: 3,
     });
@@ -172,6 +174,7 @@ fn an_interrupted_bounty_fight_fails_the_job() {
             fuel_cost: 3,
             reward: 300,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left: 3,
     });
@@ -206,6 +209,7 @@ fn settling_jobs_without_a_jump_delivers_a_parcel() {
             fuel_cost: 3,
             reward: 40,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left: 3,
     });
@@ -246,6 +250,7 @@ fn game_with_contraband() -> GameState {
             fuel_cost: 3,
             reward: 200,
             deadline_jumps: 3,
+            min_rating: CombatRating::Harmless,
         },
         jumps_left: 3,
     });
