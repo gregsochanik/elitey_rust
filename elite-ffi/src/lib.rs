@@ -3,9 +3,7 @@ use elite_core::game::trade_log::TradeKind;
 use elite_core::game::GameState;
 use std::sync::{Arc, Mutex};
 
-uniffi::setup_scaffolding!();
-
-#[derive(Debug, thiserror::Error, uniffi::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum GameError {
     #[error("{message}")]
     Refused { message: String },
@@ -19,7 +17,7 @@ impl GameError {
     }
 }
 
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Debug, Clone)]
 pub struct MarketRowData {
     pub id: String,
     pub name: String,
@@ -33,7 +31,7 @@ pub struct MarketRowData {
     pub sold_here: bool,
 }
 
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Debug, Clone)]
 pub struct MarketData {
     pub system_name: String,
     pub credits: u32,
@@ -42,20 +40,17 @@ pub struct MarketData {
     pub rows: Vec<MarketRowData>,
 }
 
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
 }
 
-#[derive(uniffi::Object)]
 pub struct Game {
     state: Mutex<GameState>,
 }
 
-#[uniffi::export]
 impl Game {
-    #[uniffi::constructor]
     pub fn new(commander_name: String) -> Arc<Self> {
         Arc::new(Self {
             state: Mutex::new(GameState::new(commander_name)),
