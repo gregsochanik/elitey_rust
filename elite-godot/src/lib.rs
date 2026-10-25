@@ -1,4 +1,6 @@
-use elite_ffi::{Game, MarketData, StatusData, TradeResult};
+use elite_ffi::{
+    CargoData, Game, MarketData, StatusData, TradeLogData, TradeRecordData, TradeResult,
+};
 use godot::prelude::*;
 use std::sync::Arc;
 
@@ -31,6 +33,16 @@ impl EliteGame {
     #[func]
     fn status(&self) -> VarDictionary {
         status_to_dictionary(self.game.status())
+    }
+
+    #[func]
+    fn cargo(&self) -> VarDictionary {
+        cargo_to_dictionary(self.game.cargo())
+    }
+
+    #[func]
+    fn trade_log(&self, count: i64) -> VarDictionary {
+        log_to_dictionary(self.game.trade_log(count.max(0) as u32))
     }
 
     /// The market here: system, credits, cargo and one dictionary per commodity
@@ -109,5 +121,56 @@ fn status_to_dictionary(status: StatusData) -> VarDictionary {
         "max_hull": status.max_hull,
         "power_used": status.power_used,
         "power_capacity": status.power_capacity,
+    }
+}
+
+fn cargo_to_dictionary(cargo: CargoData) -> VarDictionary {
+    let mut items = VarArray::new();
+    for line in cargo.items {
+        items.push(
+            &vdict! {
+                "id": line.id,
+                "name": line.name,
+                "quantity": line.quantity,
+                "estimated_value": line.estimated_value,
+                "paid": line.paid.map_or(-1, i64::from),
+            }
+            .to_variant(),
+        );
+    }
+    vdict! {
+        "weight": cargo.weight,
+        "capacity": cargo.capacity,
+        "reserved": cargo.reserved,
+        "items": items,
+        "total_value": cargo.total_value,
+    }
+}
+
+fn record_to_dictionary(record: &TradeRecordData) -> VarDictionary {
+    vdict! {
+        "bought": record.bought,
+        "commodity": record.commodity.clone(),
+        "quantity": record.quantity,
+        "location": record.location.clone(),
+        "total": record.total,
+        "has_profit": record.profit.is_some(),
+        "profit": record.profit.unwrap_or(0),
+    }
+}
+
+fn log_to_dictionary(log: TradeLogData) -> VarDictionary {
+    let mut recent = VarArray::new();
+    for record in &log.recent {
+        recent.push(&record_to_dictionary(record).to_variant());
+    }
+    vdict! {
+        "recent": recent,
+        "total_trades": log.total_trades,
+        "net_profit": log.net_profit,
+        "has_success_rate": log.success_rate.is_some(),
+        "success_rate": log.success_rate.unwrap_or(0.0),
+        "has_best": log.best.is_some(),
+        "best": log.best.as_ref().map_or_else(VarDictionary::new, record_to_dictionary),
     }
 }
