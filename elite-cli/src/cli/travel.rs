@@ -1,5 +1,5 @@
 use crate::cli::fight::run_fight;
-use crate::utils::display::{show_error, show_info, show_success};
+use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use crate::utils::input;
 use colored::*;
 use elite_core::game::combat::Combat;
@@ -72,9 +72,7 @@ fn print_notices(journey: &mut Journey) {
 }
 
 fn print_confirmation(plan: &JumpPlan) {
-    println!();
-    println!("{}", "Travel Confirmation".cyan().bold());
-    println!("{}", "===================".cyan());
+    header(Icon::Ship, "Travel Confirmation");
     println!("From: {}", plan.origin.yellow());
     println!("To: {}", plan.destination.yellow());
     println!("Distance: {:.1} light years", plan.distance);

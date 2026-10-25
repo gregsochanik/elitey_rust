@@ -185,3 +185,19 @@ fn messages_carry_icons_with_colour_and_none_without() {
     let coloured = play_with("coloured_icons", "buy gold 1", &[("CLICOLOR_FORCE", "1")]);
     assert!(coloured.contains("❌"));
 }
+
+#[test]
+fn screens_open_with_an_icon_header_when_colour_is_on() {
+    let plain = play("plain_headers", "status\nmarket\njobs\nhelp");
+    assert!(plain.contains("Commander Status\n================"));
+    assert!(!plain.contains('🚀'));
+
+    let coloured = play_with(
+        "coloured_headers",
+        "status\nmarket\njobs\ncargo\nhelp",
+        &[("CLICOLOR_FORCE", "1")],
+    );
+    for icon in ["🚀", "📊", "💼", "📦", "❓", "💰", "⛽", "⚡"] {
+        assert!(coloured.contains(icon), "missing {}", icon);
+    }
+}

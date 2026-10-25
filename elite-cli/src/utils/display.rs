@@ -20,6 +20,9 @@ pub enum Icon {
     Error,
     Warning,
     Info,
+    Equipment,
+    Save,
+    Help,
 }
 
 impl Icon {
@@ -41,6 +44,9 @@ impl Icon {
             Icon::Error => "❌",
             Icon::Warning => "⚠️",
             Icon::Info => "ℹ️",
+            Icon::Equipment => "🧰",
+            Icon::Save => "💾",
+            Icon::Help => "❓",
         }
     }
 }
@@ -56,6 +62,15 @@ fn icon_prefix(icon: Icon, enabled: bool) -> String {
 /// The icon and a gap, or nothing when colour is off (NO_COLOR or not a terminal)
 pub fn icon(icon: Icon) -> String {
     icon_prefix(icon, control::SHOULD_COLORIZE.should_colorize())
+}
+
+/// A screen title with its icon, underlined to the width of the title
+pub fn header(icon_kind: Icon, title: &str) {
+    println!();
+    let icon = icon(icon_kind);
+    let width = title.chars().count() + if icon.is_empty() { 0 } else { 4 };
+    println!("{}", format!("{}{}", icon, title).cyan().bold());
+    println!("{}", "=".repeat(width).cyan());
 }
 
 /// Credits in green, or red when negative
@@ -94,7 +109,12 @@ pub fn category_name(category: EquipmentCategory) -> ColoredString {
 /// Print welcome message
 pub fn print_welcome(commander_name: &str) {
     println!();
-    println!("{}", "Welcome to Elite Rust!".green().bold());
+    println!(
+        "{}",
+        format!("{}Welcome to Elite Rust!", icon(Icon::Ship))
+            .green()
+            .bold()
+    );
     println!("{}", "=====================".green());
     println!(
         "Commander {}, your journey begins!",
@@ -113,9 +133,7 @@ pub fn print_goodbye(commander_name: &str) {
 
 /// Show help menu with available commands
 pub fn show_help() {
-    println!();
-    println!("{}", "Available Commands:".cyan().bold());
-    println!("{}", "==================".cyan());
+    header(Icon::Help, "Available Commands");
     println!("{} - Show this help menu", "help".yellow());
     println!("{} - Display ship and commander status", "status".yellow());
     println!("{} - List all available star systems", "systems".yellow());
@@ -127,9 +145,7 @@ pub fn show_help() {
         "{} - Travel to a star system (with events!)",
         "jump <system>".yellow()
     );
-    println!();
-    println!("{}", "Trading Commands:".cyan().bold());
-    println!("{}", "=================".cyan());
+    header(Icon::Market, "Trading Commands");
     println!(
         "{} - Show current system's market prices",
         "market".yellow()
@@ -141,15 +157,11 @@ pub fn show_help() {
         "{} - Show trading history and statistics",
         "log [count]".yellow()
     );
-    println!();
-    println!("{}", "Ship Upgrade Commands:".cyan().bold());
-    println!("{}", "=====================".cyan());
+    header(Icon::Ship, "Ship Upgrade Commands");
     println!("{} - Show available ship upgrades", "upgrade".yellow());
     println!("{} - Purchase ship upgrade", "upgrade <ship>".yellow());
     println!("{} - List all available ships", "ships".yellow());
-    println!();
-    println!("{}", "Equipment Commands:".cyan().bold());
-    println!("{}", "===================".cyan());
+    header(Icon::Equipment, "Equipment Commands");
     println!("{} - Show equipment for sale", "equipment".yellow());
     println!(
         "{} - Buy and install equipment",
@@ -163,9 +175,7 @@ pub fn show_help() {
         "{} - Show installed equipment, slots and power",
         "equipment installed".yellow()
     );
-    println!();
-    println!("{}", "Job Commands:".cyan().bold());
-    println!("{}", "=============".cyan());
+    header(Icon::Jobs, "Job Commands");
     println!("{} - Show the jobs on offer here", "jobs".yellow());
     println!("{} - Take a job from the board", "accept <number>".yellow());
     println!("{} - List your active jobs", "missions".yellow());
@@ -173,9 +183,7 @@ pub fn show_help() {
         "{} - Drop an active job (-3 reputation)",
         "abandon <number>".yellow()
     );
-    println!();
-    println!("{}", "Repair and Refuel Commands:".cyan().bold());
-    println!("{}", "============================".cyan());
+    header(Icon::Repair, "Repair and Refuel Commands");
     println!(
         "{} - Repair hull damage (2 credits per point)",
         "repair [points]".yellow()
@@ -184,9 +192,7 @@ pub fn show_help() {
         "{} - Refuel (2 credits per light year)",
         "refuel [units]".yellow()
     );
-    println!();
-    println!("{}", "Save/Load Commands:".cyan().bold());
-    println!("{}", "===================".cyan());
+    header(Icon::Save, "Save/Load Commands");
     println!("{} - Save game to slot", "save <slot>".yellow());
     println!("{} - Load game from slot", "load <slot>".yellow());
     println!("{} - List all save files", "saves".yellow());
@@ -249,27 +255,27 @@ mod tests {
             Icon::Error,
             Icon::Warning,
             Icon::Info,
+            Icon::Equipment,
+            Icon::Save,
+            Icon::Help,
         ];
         let glyphs: std::collections::HashSet<_> = icons.iter().map(Icon::glyph).collect();
         assert_eq!(glyphs.len(), icons.len());
     }
 
     #[test]
-    fn negative_credits_are_red_and_the_rest_green() {
+    fn colour_roles_use_distinct_colours() {
         control::set_override(true);
-        assert!(credits(-5).to_string().contains("31m"));
-        assert!(credits(5).to_string().contains("32m"));
-        control::unset_override();
-    }
-
-    #[test]
-    fn every_equipment_category_has_a_distinct_colour() {
-        control::set_override(true);
+        let negative = credits(-5).to_string();
+        let positive = credits(5).to_string();
         let colours: std::collections::HashSet<_> = EquipmentCategory::ALL
             .iter()
             .map(|c| category_name(*c).to_string().replace(c.name(), ""))
             .collect();
         control::unset_override();
+
+        assert!(negative.contains("31m"));
+        assert!(positive.contains("32m"));
         assert_eq!(colours.len(), EquipmentCategory::ALL.len());
     }
 

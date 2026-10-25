@@ -1,4 +1,4 @@
-use crate::utils::display::{show_error, show_info, show_success};
+use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use colored::*;
 use elite_core::game::commander::Standing;
 use elite_core::game::trade_log::TradeKind;
@@ -102,8 +102,7 @@ fn markers(pushed: Pushed) -> String {
 }
 
 fn print_market(view: &MarketView) {
-    println!("\n{} Market", view.system_name.yellow());
-    println!("{}", "=".repeat(view.system_name.len() + 7));
+    header(Icon::Market, &format!("{} Market", view.system_name));
     if view.standing != Standing::Neutral {
         println!(
             "Prices adjusted for your standing: {} ({:+}% on trades)",
@@ -145,8 +144,10 @@ fn print_market(view: &MarketView) {
 }
 
 fn print_cargo(view: &CargoView) {
-    println!("\nCargo Hold ({}/{})", view.weight, view.capacity);
-    println!("{}", "=".repeat(20));
+    header(
+        Icon::Cargo,
+        &format!("Cargo Hold ({}/{})", view.weight, view.capacity),
+    );
 
     if view.reserved > 0 {
         println!("Contract cargo: {} tons (not for sale)", view.reserved);

@@ -1,4 +1,4 @@
-use crate::utils::display::{self, show_error, show_success};
+use crate::utils::display::{self, credits, header, icon, show_error, show_success, Icon};
 use colored::*;
 use elite_core::data::equipment::Equipment;
 use elite_core::game::equipment::{self, InstalledView, ShopView};
@@ -106,10 +106,17 @@ fn power_line(used: u32, capacity: u32) -> String {
 }
 
 fn print_shop(view: &ShopView) {
-    println!("\n{}", "Equipment Shop".cyan().bold());
-    println!("{}", "==============".cyan());
-    println!("Credits: {}cr", view.credits.to_string().green());
-    println!("{}", power_line(view.power_used, view.power_capacity));
+    header(Icon::Equipment, "Equipment Shop");
+    println!(
+        "{}Credits: {}",
+        icon(Icon::Credits),
+        credits(i64::from(view.credits))
+    );
+    println!(
+        "{}{}",
+        icon(Icon::Power),
+        power_line(view.power_used, view.power_capacity)
+    );
 
     for group in &view.categories {
         println!("\n{}", display::category_name(group.category));
@@ -134,9 +141,12 @@ fn print_shop(view: &ShopView) {
 }
 
 fn print_installed(view: &InstalledView) {
-    println!("\n{}", "Installed Equipment".cyan().bold());
-    println!("{}", "===================".cyan());
-    println!("{}", power_line(view.power_used, view.power_capacity));
+    header(Icon::Equipment, "Installed Equipment");
+    println!(
+        "{}{}",
+        icon(Icon::Power),
+        power_line(view.power_used, view.power_capacity)
+    );
 
     for group in &view.categories {
         println!(

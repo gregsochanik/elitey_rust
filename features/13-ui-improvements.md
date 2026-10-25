@@ -29,10 +29,10 @@ Enhance the visual appeal and usability of the CLI interface with minimal code c
 - [ ] Power Usage: `[████░░░░░░] 40/100 MW` format
 
 ### Consistent Screens and Emoji
-- [ ] One header helper (icon, title, rule of matching width) used by every screen
-- [ ] One emoji set, defined once: 💰 credits, 🚀 ship and travel, ⛽ fuel, 📦 cargo, 🛡️ hull and shields, ⚡ power, ⚔️ combat, 📊 market, 🔧 repair, 💼 jobs, 🔒 locked, ⭐ rating, ✅ success, ❌ error, ⚠️ warning
-- [ ] The same icon always means the same thing, in headers, list rows, `help` and messages
-- [ ] No emoji when `NO_COLOR` is set or output is not a tty
+- [x] One header helper (icon, title, rule of matching width) used by every screen
+- [x] One emoji set, defined once: 💰 credits, 🚀 ship and travel, ⛽ fuel, 📦 cargo, 🛡️ hull and shields, ⚡ power, ⚔️ combat, 📊 market, 🔧 repair, 💼 jobs, 🔒 locked, ⭐ rating, ✅ success, ❌ error, ⚠️ warning
+- [x] The same icon always means the same thing, in headers, list rows, `help` and messages
+- [x] No emoji when `NO_COLOR` is set or output is not a tty
 
 ### Numbered Menu Options
 - [ ] Sequential numbering for all menu options

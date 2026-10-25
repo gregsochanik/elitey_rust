@@ -1,4 +1,4 @@
-use crate::utils::display::{show_error, show_info, show_success};
+use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use crate::utils::input;
 use colored::*;
 use elite_core::data::save_load::{SaveLoadManager, SaveMetadata};
@@ -72,8 +72,7 @@ pub fn list(game: &GameState) {
             println!("Use 'save <slot_name>' to create your first save.");
         }
         Ok(saves) => {
-            println!("\n{}", "Available Save Files".cyan().bold());
-            println!("{}", "===================".cyan());
+            header(Icon::Save, "Available Save Files");
 
             for (i, save) in saves.iter().enumerate() {
                 let timestamp = SaveLoadManager::format_timestamp(save.timestamp);
@@ -191,8 +190,7 @@ fn confirm_delete() -> bool {
 fn print_save_info(metadata: &SaveMetadata) {
     let timestamp = SaveLoadManager::format_timestamp(metadata.timestamp);
 
-    println!("\n{}", "Save Information".cyan().bold());
-    println!("{}", "================".cyan());
+    header(Icon::Save, "Save Information");
     println!("Commander: {}", metadata.commander_name.green());
     println!("Location: {}", metadata.location.cyan());
     println!("Credits: {}cr", metadata.credits.to_string().green());
