@@ -25,10 +25,25 @@ const STYLES := {
 	"flat": {"draws": "flat", "glow_intensity": 0.4, "glow_bloom": 0.05, "ambient": Color(0.22, 0.27, 0.34)},
 }
 
+## Key light colour and strength by spectral class letter
+const STAR_LIGHT := {
+	"O": [Color(0.7, 0.8, 1.0), 1.7],
+	"B": [Color(0.75, 0.85, 1.0), 1.6],
+	"A": [Color(0.95, 0.97, 1.0), 1.5],
+	"F": [Color(1.0, 0.97, 0.88), 1.4],
+	"G": [Color(1.0, 0.93, 0.78), 1.3],
+	"K": [Color(1.0, 0.8, 0.55), 1.1],
+	"M": [Color(1.0, 0.6, 0.4), 0.9],
+	"D": [Color(0.9, 0.95, 1.0), 0.8],
+	"L": [Color(0.9, 0.4, 0.3), 0.5],
+}
+const DEFAULT_STAR := "G"
+
 const HIDDEN_LINE_FILL_SCALE := 0.994
 
 static var events := Events.new()
 static var current_name := ""
+static var star_letter := DEFAULT_STAR
 
 
 static func current() -> String:
@@ -50,6 +65,17 @@ static func use(name: String) -> void:
 	config.load(PREFERENCES)
 	config.set_value("visual", "style", name)
 	config.save(PREFERENCES)
+	events.changed.emit()
+
+
+## Light ships by the star of the system the commander is in; `code` is a class such as "M3V".
+static func set_star(code: String) -> void:
+	var letter := code.substr(0, 1).to_upper()
+	if not STAR_LIGHT.has(letter):
+		letter = DEFAULT_STAR
+	if letter == star_letter:
+		return
+	star_letter = letter
 	events.changed.emit()
 
 
@@ -75,13 +101,15 @@ static func environment() -> Environment:
 static func lights() -> Array:
 	if _settings()["draws"] != "flat":
 		return []
+	var star: Array = STAR_LIGHT[star_letter]
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-40, -35, 0)
-	key.light_energy = 1.4
+	key.light_color = star[0]
+	key.light_energy = star[1]
 	var fill := DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(-10, 145, 0)
-	fill.light_energy = 0.45
-	fill.light_color = Color(0.6, 0.75, 1.0)
+	fill.light_energy = 0.3
+	fill.light_color = Color(0.7, 0.8, 1.0)
 	return [key, fill]
 
 
@@ -120,7 +148,7 @@ static func restyle(node: MeshInstance3D, model_id: String, role: String) -> voi
 			node.add_child(fill)
 		"flat":
 			node.mesh = solid
-			node.material_override = _fill_material(colour(role).darkened(0.35), false)
+			node.material_override = _fill_material(colour(role).lerp(Color(0.75, 0.78, 0.8), 0.55).darkened(0.25), false)
 
 
 static func _fill_material(colour: Color, unshaded: bool) -> StandardMaterial3D:
