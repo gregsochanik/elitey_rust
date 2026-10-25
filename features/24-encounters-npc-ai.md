@@ -4,7 +4,7 @@
 Enemies and other ships decide what to do instead of always shooting. A pirate who is losing can run or beg for mercy; police act on who you are; encounter tables decide who shows up where. All of it is a pure, deterministic Rust function over game state with injected randomness, so it behaves the same from the CLI and the Godot GUI. The GUI only dramatises the outcome.
 
 ## Status
-Spec only. Nothing is built.
+Approved; sliced into issues (umbrella #224). Nothing is built.
 
 The brief for this spec asked for `features/16-encounters-npc-ai.md`; 16 is Jobs, so this is Feature 24.
 
@@ -128,11 +128,11 @@ For a real-time flight view (#187, Feature 23), NPC ships are animated toward th
 - Multi-target combat
 - Balance changes beyond what this spec states
 
-## Open questions
-- **NPC types in v1**: pirate and police (suggested), or add trader at once
-- **Bribes**: can NPCs bribe or be bribed? Inspections already have a bribe (Feature 18); suggest NPC surrender replaces it for v1
-- **Police and bounty hunters**: here (profiles and fights) with triggers in reputation (10), or all in 10. Suggest profiles here, triggers by standing in the encounter table
-- **NPC actions**: share the player's `Action` enum, or a separate `NpcAction`. Suggest separate: the player's `Action` carries rules such as `NoWeapons` and a flee chance that don't apply to NPCs
+## Decisions
+- **Types in v1**: pirate, police and trader. A trader never attacks and flees at the first hit; how the player meets traders (help, trade, rob) is settled when Phase 2 starts, since there is no player-initiated combat yet
+- **Bribes**: NPC surrender replaces bribing for v1; inspection bribes (Feature 18) are unchanged
+- **Police and bounty hunters**: profiles and fights live here; triggers by standing sit in the encounter table
+- **NPC actions**: a separate `NpcAction` enum, sharing the round engine with the player's `Action`
 
 ## Dependencies
 - Features 06, 07, 08, 10 and the completed core refactor in Feature 15
