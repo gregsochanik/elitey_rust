@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 pub const STARTING_CREDITS: u32 = 100;
 pub const MIN_REPUTATION: i32 = -100;
@@ -147,6 +148,9 @@ pub struct Commander {
     /// Enemy ships destroyed
     #[serde(default)]
     pub kills: u32,
+    /// Systems the commander has been to
+    #[serde(default)]
+    pub visited: BTreeSet<String>,
 }
 
 impl Commander {
@@ -188,7 +192,25 @@ impl Commander {
             location: "Sol".to_string(), // Starting location as per spec
             reputation: 0,
             kills: 0,
+            visited: BTreeSet::from(["Sol".to_string()]),
         }
+    }
+
+    /// Note that the commander has been to a system
+    pub fn visit(&mut self, system: &str) {
+        if !self.visited.contains(system) {
+            self.visited.insert(system.to_string());
+        }
+    }
+
+    /// Note the system the commander is in, for saves made before visits were kept
+    pub fn visit_here(&mut self) {
+        let here = self.location.clone();
+        self.visit(&here);
+    }
+
+    pub fn has_visited(&self, system: &str) -> bool {
+        self.visited.contains(system)
     }
 
     /// Get the commander's name

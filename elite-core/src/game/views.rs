@@ -1,6 +1,7 @@
 use crate::data::star_class::StarClass;
 use crate::data::systems::{EconomyType, GovernmentType};
 use crate::game::commander::{CombatRating, Standing};
+use crate::game::exploration::Exploration;
 use crate::game::trade_log::{TradeStats, Transaction};
 
 /// The commander and ship at a glance
@@ -23,6 +24,7 @@ pub struct StatusView {
     pub power_used: u32,
     pub power_capacity: u32,
     pub damaged: bool,
+    pub exploration: Exploration,
 }
 
 /// How far a system is from where the ship is
@@ -42,6 +44,7 @@ pub struct SystemInfoView {
     pub population: String,
     pub description: String,
     pub star: Option<StarClass>,
+    pub visited: bool,
     pub from_here: Option<JumpFromHere>,
 }
 

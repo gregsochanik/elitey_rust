@@ -86,6 +86,8 @@ func _draw() -> void:
 			continue
 		var at: Vector2 = positions[system["name"]]
 		var colour := Theme_.MUTED.darkened(0.3)
+		if system["visited"]:
+			colour = Theme_.MUTED.lightened(0.15)
 		var radius := 3.0
 		var labelled := false
 		if system["reachable"]:
@@ -102,6 +104,8 @@ func _draw() -> void:
 		if system["name"] == hovered:
 			labelled = true
 		draw_circle(at, radius, colour)
+		if not system["visited"] and not system["is_current"]:
+			draw_arc(at, radius + 3.0, 0.0, TAU, 24, Theme_.WARNING.darkened(0.2), 1.5)
 		if system["is_current"] and local_view:
 			draw_arc(current_at, radius + 4.0, 0.0, TAU, 32, Theme_.ACCENT, 2.0)
 		if labelled:

@@ -126,6 +126,7 @@ impl SaveLoadManager {
 
         let mut game_state = save_file.game_state;
         game_state.relocate_if_lost();
+        game_state.commander.visit_here();
         Ok(game_state)
     }
 

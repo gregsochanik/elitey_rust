@@ -4,6 +4,7 @@ pub mod commander;
 pub mod encounters;
 pub mod equipment;
 pub mod events;
+pub mod exploration;
 
 pub mod game_state;
 pub mod jobs;

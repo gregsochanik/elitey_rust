@@ -186,6 +186,19 @@ mod tests {
     }
 
     #[test]
+    fn a_save_made_before_visits_were_kept_counts_where_the_commander_is() {
+        let handler = temp_handler("visits");
+        let mut game = GameState::new("Test".to_string());
+        game.commander.visited.clear();
+        handler.save(&game, "old").unwrap();
+
+        let loaded = handler.load("old").unwrap();
+
+        assert!(loaded.commander.has_visited("Sol"));
+        assert_eq!(loaded.exploration().visited, 1);
+    }
+
+    #[test]
     fn saves_round_trip_through_a_chosen_directory() {
         let handler = temp_handler("round-trip");
         let mut game = GameState::new("Test".to_string());

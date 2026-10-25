@@ -10,6 +10,7 @@ var game: EliteGame
 var confirm := ConfirmationDialog.new()
 var map := GalaxyMap.new()
 var title := Label.new()
+var explored := Label.new()
 var details := RichTextLabel.new()
 var plan := Label.new()
 var jump := Button.new()
@@ -34,6 +35,8 @@ func _ready() -> void:
 	heading.add_theme_font_size_override("font_size", Theme_.FONT_TITLE)
 	heading.add_theme_color_override("font_color", Theme_.ACCENT)
 	left.add_child(heading)
+	explored.add_theme_color_override("font_color", Theme_.MUTED)
+	left.add_child(explored)
 
 	map.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -78,10 +81,12 @@ func _ready() -> void:
 func refresh() -> void:
 	var data: Dictionary = game.galaxy()
 	map.show_galaxy(data)
+	var status: Dictionary = game.status()
+	explored.text = "🧭  Explored %d%% · %s · %d of %d stars visited" % [status["explored_percent"], status["explorer_rating"], status["systems_visited"], status["systems_total"]]
 	if selected == "" or selected == data["current"]:
 		selected = ""
 		title.text = "Select a system"
-		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel."
+		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel. A yellow ring marks a star you have not visited."
 		plan.text = ""
 		jump.disabled = true
 		return
@@ -108,6 +113,7 @@ func _select(name: String) -> void:
 	text += "[color=#7d8da3]Government[/color]  %s\n" % info["government"]
 	text += "[color=#7d8da3]Tech level[/color]  %d\n" % info["tech_level"]
 	text += "[color=#7d8da3]Population[/color]  %s\n" % info["population"]
+	text += "[color=#7d8da3]Visited[/color]  %s\n" % ("yes" if info["visited"] else "not yet")
 	if info["star_class"] != "":
 		text += "[color=#7d8da3]Star[/color]  %s (%s)\n" % [info["star_type"], info["star_class"]]
 		text += "[color=#7d8da3]%s[/color]\n" % info["star_note"]

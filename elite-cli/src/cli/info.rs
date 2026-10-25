@@ -125,6 +125,14 @@ fn print_status(view: &StatusView) {
             view.kills
         ),
     }
+    println!(
+        "{}Explored: {}% — {} ({} of {} stars)",
+        icon(Icon::Explore),
+        view.exploration.percent,
+        view.exploration.rating.name(),
+        view.exploration.visited,
+        view.exploration.total
+    );
     header(Icon::Hull, "Ship Status");
     println!("{}Ship: {}", icon(Icon::Ship), view.ship_name.yellow());
     println!(
@@ -191,6 +199,7 @@ fn print_system_info(view: &SystemInfoView) {
     );
     println!("Tech Level: {}", view.tech_level);
     println!("Population: {}", view.population);
+    println!("Visited: {}", if view.visited { "yes" } else { "not yet" });
     if let Some(star) = &view.star {
         println!("Star: {} ({})", star.type_name, star.code);
         println!("      {}", star.note);
