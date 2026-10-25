@@ -10,10 +10,10 @@ Terminal-based Elite-style space trading game in Rust: exploration, commodity tr
 
 ## Commands
 
-- Build: `cargo build` or `make build`
-- Test: `cargo test` or `make test`
-- Lint: `cargo clippy` or `make lint`
-- Format: `cargo fmt` or `make format`
+- Build: `cargo build`
+- Test: `cargo test`
+- Lint: `cargo clippy --all-targets -- -D warnings`
+- Format: `cargo fmt`
 
 Run tests and lint before committing.
 
