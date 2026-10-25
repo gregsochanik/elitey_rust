@@ -18,20 +18,20 @@ fn prices_are_stable_across_arrivals_within_a_period_and_reroll_after_it() {
     let mut handler = TradingHandler::new();
     let economy = EconomyType::RichIndustrial;
 
-    let first = handler.market_for("LAVE", &economy, 0);
-    let seed = handler.markets["LAVE"].seed;
-    handler.market_for("DISO", &economy, 1);
-    let back = handler.market_for("LAVE", &economy, 2);
+    let first = handler.market_for("Sol", &economy, 0);
+    let seed = handler.markets["Sol"].seed;
+    handler.market_for("Proxima Centauri", &economy, 1);
+    let back = handler.market_for("Sol", &economy, 2);
     assert_eq!(first.buy_prices, back.buy_prices);
     assert_eq!(first.availability, back.availability);
-    assert_eq!(handler.markets["LAVE"].seed, seed);
+    assert_eq!(handler.markets["Sol"].seed, seed);
 
-    handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS - 1);
-    assert_eq!(handler.markets["LAVE"].seed, seed);
+    handler.market_for("Sol", &economy, MARKET_REFRESH_JUMPS - 1);
+    assert_eq!(handler.markets["Sol"].seed, seed);
 
-    handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
-    assert_ne!(handler.markets["LAVE"].seed, seed);
-    assert_eq!(handler.markets["LAVE"].rolled_at, MARKET_REFRESH_JUMPS);
+    handler.market_for("Sol", &economy, MARKET_REFRESH_JUMPS);
+    assert_ne!(handler.markets["Sol"].seed, seed);
+    assert_eq!(handler.markets["Sol"].rolled_at, MARKET_REFRESH_JUMPS);
 }
 
 #[test]
@@ -131,7 +131,7 @@ fn buying_reduces_stock_until_the_market_refreshes() {
     let mut ship = Ship::new_cobra_mk3();
     let mut log = TradeLog::new();
 
-    let before = handler.market_for("LAVE", &economy, 0);
+    let before = handler.market_for("Sol", &economy, 0);
     let stock = before.get_availability(&CommodityType::Food).unwrap();
     assert!(handler
         .execute_buy(
@@ -144,7 +144,7 @@ fn buying_reduces_stock_until_the_market_refreshes() {
         )
         .is_ok());
 
-    let after = handler.market_for("LAVE", &economy, 0);
+    let after = handler.market_for("Sol", &economy, 0);
     assert_eq!(
         after.get_availability(&CommodityType::Food),
         Some(stock - 1)
@@ -154,13 +154,13 @@ fn buying_reduces_stock_until_the_market_refreshes() {
         before.get_availability(&CommodityType::Textiles)
     );
 
-    assert_eq!(handler.markets["LAVE"].purchased.len(), 1);
-    handler.market_for("DISO", &economy, 1);
-    let back = handler.market_for("LAVE", &economy, 2);
+    assert_eq!(handler.markets["Sol"].purchased.len(), 1);
+    handler.market_for("Proxima Centauri", &economy, 1);
+    let back = handler.market_for("Sol", &economy, 2);
     assert_eq!(back.get_availability(&CommodityType::Food), Some(stock - 1));
 
-    handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
-    assert!(handler.markets["LAVE"].purchased.is_empty());
+    handler.market_for("Sol", &economy, MARKET_REFRESH_JUMPS);
+    assert!(handler.markets["Sol"].purchased.is_empty());
 }
 
 #[test]
@@ -199,21 +199,21 @@ fn cannot_buy_more_than_remaining_stock() {
 fn system_markets_remember_their_state_across_visits() {
     let mut handler = TradingHandler::new();
     let economy = EconomyType::RichIndustrial;
-    handler.market_for("LAVE", &economy, 3);
-    handler.market_for("DISO", &economy, 4);
+    handler.market_for("Sol", &economy, 3);
+    handler.market_for("Proxima Centauri", &economy, 4);
 
     assert_eq!(handler.markets.len(), 2);
-    assert_eq!(handler.markets["LAVE"].rolled_at, 3);
-    assert_eq!(handler.markets["DISO"].rolled_at, 4);
+    assert_eq!(handler.markets["Sol"].rolled_at, 3);
+    assert_eq!(handler.markets["Proxima Centauri"].rolled_at, 4);
 }
 
 #[test]
 fn markets_survive_serialization() {
     let mut handler = TradingHandler::new();
-    handler.market_for("LAVE", &EconomyType::RichIndustrial, 7);
+    handler.market_for("Sol", &EconomyType::RichIndustrial, 7);
     handler
         .markets
-        .get_mut("LAVE")
+        .get_mut("Sol")
         .unwrap()
         .purchased
         .insert(CommodityType::Food, 4.0);
@@ -221,17 +221,17 @@ fn markets_survive_serialization() {
     let json = serde_json::to_string(&handler).unwrap();
     let restored: TradingHandler = serde_json::from_str(&json).unwrap();
 
-    assert_eq!(restored.markets["LAVE"].seed, handler.markets["LAVE"].seed);
-    assert_eq!(restored.markets["LAVE"].rolled_at, 7);
+    assert_eq!(restored.markets["Sol"].seed, handler.markets["Sol"].seed);
+    assert_eq!(restored.markets["Sol"].rolled_at, 7);
     assert_eq!(
-        restored.markets["LAVE"].purchased.get(&CommodityType::Food),
+        restored.markets["Sol"].purchased.get(&CommodityType::Food),
         Some(&4.0)
     );
 }
 
 #[test]
 fn old_saves_with_the_single_market_fields_load_with_no_markets() {
-    let json = r#"{"trading_system":{"commodities":["Food"]},"market_seed":5,"market_location":"LAVE","purchased":{"Food":2}}"#;
+    let json = r#"{"trading_system":{"commodities":["Food"]},"market_seed":5,"market_location":"Sol","purchased":{"Food":2}}"#;
     let restored: TradingHandler = serde_json::from_str(json).unwrap();
     assert!(restored.markets.is_empty());
 }
@@ -294,17 +294,17 @@ fn impact_and_stock_recover_ten_percent_of_the_gap_per_jump() {
 fn recovery_happens_at_systems_the_player_is_not_in() {
     let mut handler = TradingHandler::new();
     let economy = EconomyType::RichIndustrial;
-    handler.market_for("LAVE", &economy, 0);
+    handler.market_for("Sol", &economy, 0);
     handler
         .markets
-        .get_mut("LAVE")
+        .get_mut("Sol")
         .unwrap()
         .record_sell(&CommodityType::Food, 20);
 
-    handler.market_for("DISO", &economy, 3);
-    handler.market_for("LAVE", &economy, 3);
+    handler.market_for("Proxima Centauri", &economy, 3);
+    handler.market_for("Sol", &economy, 3);
 
-    let impact = handler.markets["LAVE"].sold_impact[&CommodityType::Food];
+    let impact = handler.markets["Sol"].sold_impact[&CommodityType::Food];
     assert!((impact - 0.30 * 0.9_f64.powi(3)).abs() < 1e-9);
 }
 
@@ -312,16 +312,16 @@ fn recovery_happens_at_systems_the_player_is_not_in() {
 fn a_refresh_clears_the_impact() {
     let mut handler = TradingHandler::new();
     let economy = EconomyType::RichIndustrial;
-    handler.market_for("LAVE", &economy, 0);
+    handler.market_for("Sol", &economy, 0);
     handler
         .markets
-        .get_mut("LAVE")
+        .get_mut("Sol")
         .unwrap()
         .record_sell(&CommodityType::Food, 20);
 
-    handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
+    handler.market_for("Sol", &economy, MARKET_REFRESH_JUMPS);
 
-    assert!(handler.markets["LAVE"].sold_impact.is_empty());
+    assert!(handler.markets["Sol"].sold_impact.is_empty());
 }
 
 #[test]
@@ -376,18 +376,18 @@ fn a_commodity_both_bought_and_sold_shows_both_markers() {
 fn a_refresh_clears_the_markers() {
     let mut handler = TradingHandler::new();
     let economy = EconomyType::RichIndustrial;
-    handler.market_for("LAVE", &economy, 0);
+    handler.market_for("Sol", &economy, 0);
     handler
         .markets
-        .get_mut("LAVE")
+        .get_mut("Sol")
         .unwrap()
         .record_sell(&CommodityType::Food, 3);
-    assert!(!handler.pushed_commodities("LAVE", 1).is_empty());
+    assert!(!handler.pushed_commodities("Sol", 1).is_empty());
 
-    handler.market_for("LAVE", &economy, MARKET_REFRESH_JUMPS);
+    handler.market_for("Sol", &economy, MARKET_REFRESH_JUMPS);
 
     assert!(handler
-        .pushed_commodities("LAVE", MARKET_REFRESH_JUMPS)
+        .pushed_commodities("Sol", MARKET_REFRESH_JUMPS)
         .is_empty());
 }
 
@@ -492,7 +492,7 @@ fn the_market_overview_lists_every_commodity_with_prices() {
     let view = handler
         .market_overview(
             &systems,
-            "LAVE",
+            "Sol",
             Standing::Neutral,
             0,
             &Ship::new_cobra_mk3(),
@@ -500,7 +500,7 @@ fn the_market_overview_lists_every_commodity_with_prices() {
         )
         .unwrap();
 
-    assert_eq!(view.system_name, "LAVE");
+    assert_eq!(view.system_name, "Sol");
     assert_eq!(view.rows.len(), 8);
     assert!(view.rows.iter().all(|row| row.sell_price <= row.buy_price));
     assert!(handler
@@ -536,18 +536,18 @@ fn a_seeded_handler_rolls_the_same_markets_every_time() {
     let mut second = TradingHandler::with_seed(7);
     let mut other = TradingHandler::with_seed(8);
 
-    let a = first.market_for("LAVE", &economy, 0);
+    let a = first.market_for("Sol", &economy, 0);
     assert_eq!(
         a.buy_prices,
-        second.market_for("LAVE", &economy, 0).buy_prices
+        second.market_for("Sol", &economy, 0).buy_prices
     );
     assert_ne!(
         a.buy_prices,
-        other.market_for("LAVE", &economy, 0).buy_prices
+        other.market_for("Sol", &economy, 0).buy_prices
     );
     assert_ne!(
         first
-            .market_for("LAVE", &economy, MARKET_REFRESH_JUMPS)
+            .market_for("Sol", &economy, MARKET_REFRESH_JUMPS)
             .buy_prices,
         a.buy_prices
     );
@@ -561,15 +561,15 @@ fn the_views_show_what_held_cargo_cost_on_average() {
     let mut ship = Ship::new_cobra_mk3();
     let mut log = TradeLog::new();
     ship.add_cargo(CommodityType::Food, 2);
-    log.record_buy(CommodityType::Food, 2, 20, "LAVE", 0);
+    log.record_buy(CommodityType::Food, 2, 20, "Sol", 0);
     ship.add_cargo(CommodityType::Food, 2);
-    log.record_buy(CommodityType::Food, 2, 30, "LAVE", 2);
+    log.record_buy(CommodityType::Food, 2, 30, "Sol", 2);
 
     let cargo = handler.cargo_view(&ship, &log);
     assert_eq!(cargo.items[0].paid, Some(25));
 
     let market = handler
-        .market_overview(&systems, "LAVE", Standing::Neutral, 0, &ship, &log)
+        .market_overview(&systems, "Sol", Standing::Neutral, 0, &ship, &log)
         .unwrap();
     let food = market
         .rows

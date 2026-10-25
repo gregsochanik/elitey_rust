@@ -83,7 +83,7 @@ The journey scene is part of every jump, so the engine's 3D, camera, effects and
 
 **Run the spike.** Install Godot 4, run `cargo build -p elite-godot`, then open `elite-godot/project` in Godot (macOS only for now).
 
-Releases attach the GUI builds (`gui.yml` exports on macOS, Linux and Windows runners). Set `ELITE_SEED=<number>` to make jobs, events and fights repeatable. With `ELITE_SEED=9`, a new game that goes straight to a jump to DISO meets a pirate attack; choosing the first option starts a fight.
+Releases attach the GUI builds (`gui.yml` exports on macOS, Linux and Windows runners). Set `ELITE_SEED=<number>` to make jobs, events and fights repeatable.
 
 ## Toolkit options (considered)
 The game is mostly menus, tables and dialogs, with a wireframe galaxy map later. Targets are macOS now and iOS later. Check each option's current iOS status before choosing; these tools move quickly.

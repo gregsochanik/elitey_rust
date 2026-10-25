@@ -1276,7 +1276,7 @@ mod tests {
 
         let market = game.market().unwrap();
 
-        assert_eq!(market.system_name, "LAVE");
+        assert_eq!(market.system_name, "Sol");
         assert_eq!(market.rows.len(), CommodityType::all().len());
         assert!(market.rows.iter().all(|row| row.buy_price > 0));
     }
@@ -1288,7 +1288,7 @@ mod tests {
         let status = game.status();
 
         assert_eq!(status.commander_name, "Test");
-        assert_eq!(status.location, "LAVE");
+        assert_eq!(status.location, "Sol");
         assert_eq!(status.standing, "Neutral");
         assert_eq!(status.combat_rating, "Harmless");
         assert_eq!((status.power_used, status.power_capacity), (9, 20));
@@ -1367,45 +1367,45 @@ mod tests {
 
         let galaxy = game.galaxy();
 
-        assert_eq!(galaxy.current, "LAVE");
+        assert_eq!(galaxy.current, "Sol");
         assert!(galaxy.systems.len() > 200);
-        let lave = galaxy.systems.iter().find(|s| s.is_current).unwrap();
-        assert!(!lave.reachable);
+        let sol = galaxy.systems.iter().find(|s| s.is_current).unwrap();
+        assert!(!sol.reachable);
         let reachable: Vec<_> = galaxy.systems.iter().filter(|s| s.reachable).collect();
         assert!(!reachable.is_empty());
         assert!(reachable.iter().all(|s| s.fuel_cost <= galaxy.fuel));
         assert!(galaxy
             .systems
             .iter()
-            .any(|s| s.name == "DISO" && s.reachable));
+            .any(|s| s.name == "Proxima Centauri" && s.reachable));
     }
 
     #[test]
     fn a_system_detail_says_what_the_jump_costs() {
         let game = Game::new("Test".to_string());
 
-        let diso = game.system_detail("DISO".to_string()).unwrap();
+        let proxima = game.system_detail("Proxima Centauri".to_string()).unwrap();
 
-        assert_eq!(diso.fuel_cost, 3);
-        assert!(diso.reachable && !diso.is_current);
-        assert_eq!(diso.economy, "Average Agricultural");
+        assert_eq!(proxima.fuel_cost, 3);
+        assert!(proxima.reachable && !proxima.is_current);
+        assert_eq!(proxima.economy, "Mainly Industrial");
         assert!(game.system_detail("NOWHERE".to_string()).is_none());
-        assert!(game.system_detail("LAVE".to_string()).unwrap().is_current);
+        assert!(game.system_detail("Sol".to_string()).unwrap().is_current);
     }
 
     #[test]
     fn planning_a_jump_reports_cost_or_the_reason_it_cannot_be_made() {
         let game = Game::new("Test".to_string());
 
-        let plan = game.plan_jump("diso".to_string());
+        let plan = game.plan_jump("proxima centauri".to_string());
         assert!(plan.ok);
         assert_eq!(
             (plan.origin.as_str(), plan.destination.as_str()),
-            ("LAVE", "DISO")
+            ("Sol", "Proxima Centauri")
         );
         assert_eq!(plan.fuel_cost, 3);
 
-        assert!(!game.plan_jump("LAVE".to_string()).ok);
+        assert!(!game.plan_jump("Sol".to_string()).ok);
         assert!(!game.plan_jump("nowhere".to_string()).ok);
         let far = game
             .galaxy()
@@ -1486,7 +1486,7 @@ mod tests {
 
         let board = game.jobs();
 
-        assert_eq!(board.location, "LAVE");
+        assert_eq!(board.location, "Sol");
         assert!((3..=5).contains(&board.jobs.len()));
         assert_eq!(board.jobs[0].number, 1);
         assert!(board
@@ -1557,13 +1557,13 @@ mod tests {
     fn a_jump_runs_to_arrival_and_spends_fuel() {
         let game = Game::with_seed("Test".to_string(), 1);
 
-        let first = game.begin_jump("DISO".to_string());
+        let first = game.begin_jump("Proxima Centauri".to_string());
         assert!(game.journey_in_progress() || first.kind == "arrived");
         let (last, _) = play_out(&game, first);
 
         assert_eq!(last.kind, "arrived", "{}", last.message);
         assert!(!game.journey_in_progress());
-        assert_eq!(last.planned, "DISO");
+        assert_eq!(last.planned, "Proxima Centauri");
         let status = game.status();
         assert!(status.fuel_current < 7);
         assert_eq!(status.location, last.arrived_at);
@@ -1574,7 +1574,7 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for seed in 0..60 {
             let game = Game::with_seed("Test".to_string(), seed);
-            let first = game.begin_jump("DISO".to_string());
+            let first = game.begin_jump("Proxima Centauri".to_string());
             let (last, kinds) = play_out(&game, first);
             assert_eq!(last.kind, "arrived", "seed {}", seed);
             seen.extend(kinds);
@@ -1586,7 +1586,7 @@ mod tests {
     fn events_describe_their_choices() {
         for seed in 0..60 {
             let game = Game::with_seed("Test".to_string(), seed);
-            let step = game.begin_jump("DISO".to_string());
+            let step = game.begin_jump("Proxima Centauri".to_string());
             if step.kind == "event" {
                 assert!(!step.title.is_empty());
                 assert!(!step.choices.is_empty());
@@ -1602,7 +1602,7 @@ mod tests {
     fn a_journey_refuses_bad_requests() {
         let game = Game::with_seed("Test".to_string(), 1);
 
-        assert_eq!(game.begin_jump("LAVE".to_string()).kind, "error");
+        assert_eq!(game.begin_jump("Sol".to_string()).kind, "error");
         assert_eq!(game.begin_jump("nowhere".to_string()).kind, "error");
         assert_eq!(game.answer_event(0).kind, "error");
         assert_eq!(game.answer_inspection("bribe".to_string()).kind, "error");
@@ -1614,9 +1614,9 @@ mod tests {
     fn a_second_jump_cannot_start_mid_journey() {
         for seed in 0..60 {
             let game = Game::with_seed("Test".to_string(), seed);
-            let step = game.begin_jump("DISO".to_string());
+            let step = game.begin_jump("Proxima Centauri".to_string());
             if step.kind != "arrived" {
-                let again = game.begin_jump("LEESTI".to_string());
+                let again = game.begin_jump("Alpha Centauri".to_string());
                 assert_eq!(again.kind, "error");
                 assert!(again.message.contains("already in progress"));
                 assert!(game
@@ -1633,7 +1633,7 @@ mod tests {
     fn the_same_seed_gives_the_same_journey() {
         let run = |seed| {
             let game = Game::with_seed("Test".to_string(), seed);
-            let first = game.begin_jump("DISO".to_string());
+            let first = game.begin_jump("Proxima Centauri".to_string());
             let (last, kinds) = play_out(&game, first);
             (kinds, last.arrived_at, game.status().credits)
         };
@@ -1696,7 +1696,7 @@ mod tests {
     fn a_new_game_needs_a_name_and_ends_any_journey() {
         let game = Game::with_saves_in("Test".to_string(), 1, temp_saves("new"));
         assert!(!game.new_game("   ".to_string()).ok);
-        let step = game.begin_jump("DISO".to_string());
+        let step = game.begin_jump("Proxima Centauri".to_string());
         if step.kind != "arrived" {
             assert!(game.journey_in_progress());
             assert!(game.new_game("Fresh".to_string()).ok);
@@ -1707,7 +1707,7 @@ mod tests {
     fn game_in_a_fight() -> Option<(Arc<Game>, StepData)> {
         (0..400).find_map(|seed| {
             let game = Game::with_seed("Test".to_string(), seed);
-            let mut step = game.begin_jump("DISO".to_string());
+            let mut step = game.begin_jump("Proxima Centauri".to_string());
             for _ in 0..20 {
                 step = match step.kind.as_str() {
                     "fight" => return Some((game, step)),

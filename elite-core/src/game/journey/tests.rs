@@ -15,7 +15,7 @@ fn game() -> GameState {
 
 fn first_step(seed: u64) -> (GameState, Journey, Step) {
     let mut game = game();
-    let plan = game.plan_jump("DISO").unwrap();
+    let plan = game.plan_jump("Proxima Centauri").unwrap();
     let (journey, step) = game.start_jump(plan, &mut StdRng::seed_from_u64(seed));
     (game, journey, step)
 }
@@ -52,14 +52,17 @@ fn a_quiet_jump_costs_fuel_counts_a_jump_and_arrives() {
     else {
         panic!("expected arrival");
     };
-    assert_eq!((arrived_at.as_str(), planned.as_str()), ("DISO", "DISO"));
+    assert_eq!(
+        (arrived_at.as_str(), planned.as_str()),
+        ("Proxima Centauri", "Proxima Centauri")
+    );
     assert!(!eventful);
-    assert_eq!(game.commander.location, "DISO");
+    assert_eq!(game.commander.location, "Proxima Centauri");
     assert_eq!(game.ship.fuel_current, 7 - 3);
     assert_eq!(game.world_clock, 1);
-    assert!(journey
-        .take_notices()
-        .contains(&Notice::Success("Arrived safely at DISO.".to_string())));
+    assert!(journey.take_notices().contains(&Notice::Success(
+        "Arrived safely at Proxima Centauri.".to_string()
+    )));
 }
 
 #[test]
@@ -70,7 +73,7 @@ fn an_event_waits_for_a_choice_then_the_journey_finishes() {
         panic!("expected an event");
     };
     assert!(!event.choices.is_empty());
-    assert_eq!(game.commander.location, "LAVE");
+    assert_eq!(game.commander.location, "Sol");
 
     let mut rng = StdRng::seed_from_u64(seed + 1);
     assert_eq!(
@@ -112,12 +115,12 @@ fn entering_a_wormhole_lands_somewhere_else_and_the_jump_still_costs_its_fuel() 
         panic!("expected arrival");
     };
 
-    assert_eq!(planned, "DISO");
-    assert!(arrived_at != "LAVE" && arrived_at != "DISO");
+    assert_eq!(planned, "Proxima Centauri");
+    assert!(arrived_at != "Sol" && arrived_at != "Proxima Centauri");
     assert_eq!(game.commander.location, arrived_at);
     assert!(game.ship.fuel_current <= 7 - 3 - 2);
     assert!(journey.take_notices().contains(&Notice::Info(format!(
-        "You emerge at {}, not DISO.",
+        "You emerge at {}, not Proxima Centauri.",
         arrived_at
     ))));
 }
@@ -131,7 +134,7 @@ fn a_bounty_at_the_destination_needs_a_fight_and_pays_on_victory() {
             kind: JobKind::Bounty,
             tons: 0,
             commodity: None,
-            destination: "DISO".to_string(),
+            destination: "Proxima Centauri".to_string(),
             distance: 2.3,
             fuel_cost: 3,
             reward: 300,
@@ -141,7 +144,7 @@ fn a_bounty_at_the_destination_needs_a_fight_and_pays_on_victory() {
         jumps_left: 3,
     });
     let credits = game.commander.credits();
-    let plan = game.plan_jump("DISO").unwrap();
+    let plan = game.plan_jump("Proxima Centauri").unwrap();
     let mut rng = StdRng::seed_from_u64(seed);
 
     let (mut journey, step) = game.start_jump(plan, &mut rng);
@@ -169,7 +172,7 @@ fn an_interrupted_bounty_fight_fails_the_job() {
             kind: JobKind::Bounty,
             tons: 0,
             commodity: None,
-            destination: "DISO".to_string(),
+            destination: "Proxima Centauri".to_string(),
             distance: 2.3,
             fuel_cost: 3,
             reward: 300,
@@ -178,7 +181,7 @@ fn an_interrupted_bounty_fight_fails_the_job() {
         },
         jumps_left: 3,
     });
-    let plan = game.plan_jump("DISO").unwrap();
+    let plan = game.plan_jump("Proxima Centauri").unwrap();
     let mut rng = StdRng::seed_from_u64(seed);
     let (mut journey, _) = game.start_jump(plan, &mut rng);
 
@@ -191,9 +194,9 @@ fn an_interrupted_bounty_fight_fails_the_job() {
 
     assert!(game.active_jobs.is_empty());
     assert_eq!(game.commander.reputation, -3);
-    assert!(journey
-        .take_notices()
-        .contains(&Notice::Text("The bounty near DISO failed.".to_string())));
+    assert!(journey.take_notices().contains(&Notice::Text(
+        "The bounty near Proxima Centauri failed.".to_string()
+    )));
 }
 
 #[test]
@@ -204,7 +207,7 @@ fn settling_jobs_without_a_jump_delivers_a_parcel() {
             kind: JobKind::Courier,
             tons: 0,
             commodity: None,
-            destination: "LAVE".to_string(),
+            destination: "Sol".to_string(),
             distance: 2.3,
             fuel_cost: 3,
             reward: 40,
@@ -245,7 +248,7 @@ fn game_with_contraband() -> GameState {
             kind: JobKind::Smuggling,
             tons: 5,
             commodity: None,
-            destination: "DISO".to_string(),
+            destination: "Proxima Centauri".to_string(),
             distance: 2.3,
             fuel_cost: 3,
             reward: 200,
@@ -261,7 +264,7 @@ fn inspected_journey(answer: smuggling::InspectionChoice) -> (GameState, u32, Jo
     for seed in 0..2_000 {
         let mut game = game_with_contraband();
         let credits = game.commander.credits();
-        let plan = game.plan_jump("DISO").unwrap();
+        let plan = game.plan_jump("Proxima Centauri").unwrap();
         let mut rng = StdRng::seed_from_u64(seed);
         let (mut journey, step) = game.start_jump(plan, &mut rng);
         if let Step::Inspection {
@@ -306,7 +309,7 @@ fn a_stopped_smuggler_who_hands_over_the_cargo_is_fined() {
 fn a_smuggler_who_runs_fights_a_patrol_vessel() {
     for seed in 0..2_000 {
         let mut game = game_with_contraband();
-        let plan = game.plan_jump("DISO").unwrap();
+        let plan = game.plan_jump("Proxima Centauri").unwrap();
         let mut rng = StdRng::seed_from_u64(seed);
         let (mut journey, step) = game.start_jump(plan, &mut rng);
         if !matches!(step, Step::Inspection { .. }) {

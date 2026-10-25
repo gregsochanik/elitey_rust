@@ -4,7 +4,7 @@
 Replace the invented system names with real stars (Sol, Sirius, Tau Ceti, Barnard's Star), placed where they really are.
 
 ## Status
-Approved.
+Done (v1).
 
 ## Source
 HYG star database v4.4 (<https://codeberg.org/astronexus/hyg>, `data/hyg/CURRENT/hyg_v44.csv.gz`), CC BY-SA 4.0. Columns used: `proper`, `bf` (Bayer/Flamsteed), `gl` (Gliese), `dist` (parsecs), `x`/`y`/`z` (parsecs, Sol at origin), `spect`, `comp_primary`.
@@ -19,11 +19,12 @@ Of 119,614 stars, 549 have proper names; 149 of those lie within 100 ly of Sol.
 - Position: HYG `x`/`y` in light years, scaled to fit the existing 0 to 255 grid; `z` is dropped
 - Sol is the starting system, replacing LAVE
 - Economy, government, tech level, population and description are generated per star from a fixed seed, so the file is reproducible; real stars carry none of these
-- Spectral class is shown on the system info screen
+- The description names the star's spectral class (`A yellow class G star.`)
+- Every system has at least 2 others within 7 ly (the starting fuel range) and the galaxy is connected, so nobody is stranded; the script drops stars that would break this
 - Credit HYG and the licence in the README and on the GUI start screen; `galaxy1.json` stays CC BY-SA 4.0
 
 ## Decisions
-- **Old saves**: refused with a clear message naming the unknown system; no migration
+- **Old saves**: each save carries the galaxy it was made in, so old saves keep playing in the old galaxy and nothing needs refusing or migrating; new games and new saves use the real stars
 - **Distances**: real positions are scaled so the nearest neighbours stay 2 to 4 ly apart, keeping fuel and jump economics unchanged
 - **Names**: multi-word and punctuated names work in `jump` and `info`; tests move from `LAVE`/`DISO` to Sol and its neighbours
 

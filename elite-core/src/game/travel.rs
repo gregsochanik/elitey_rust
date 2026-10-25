@@ -138,12 +138,12 @@ mod tests {
         let ship = Ship::new_cobra_mk3();
         let fuel = ship.fuel_current;
 
-        for name in ["LAVE", "lave"] {
+        for name in ["Sol", "sol"] {
             let result = travel_handler.plan_jump(&commander, &ship, name);
             assert_eq!(result, Err(TravelError::AlreadyThere));
         }
         assert_eq!(ship.fuel_current, fuel);
-        assert_eq!(commander.location, "LAVE");
+        assert_eq!(commander.location, "Sol");
     }
 
     #[test]
@@ -156,18 +156,23 @@ mod tests {
     #[test]
     fn a_plan_rounds_the_distance_up_to_whole_light_years() {
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
-        let diso = system_manager.get_system("DISO").unwrap().clone();
-        let lave = system_manager.get_system("LAVE").unwrap().clone();
-        let distance = diso.distance_to(&lave);
+        let proxima = system_manager
+            .get_system("Proxima Centauri")
+            .unwrap()
+            .clone();
+        let sol = system_manager.get_system("Sol").unwrap().clone();
+        let distance = proxima.distance_to(&sol);
         assert!(distance > 2.0 && distance < 3.0);
 
         let travel_handler = TravelHandler::new(system_manager);
         let commander = Commander::new("Test".to_string());
         let ship = Ship::new_cobra_mk3();
-        let plan = travel_handler.plan_jump(&commander, &ship, "diso").unwrap();
+        let plan = travel_handler
+            .plan_jump(&commander, &ship, "proxima centauri")
+            .unwrap();
 
-        assert_eq!(plan.origin, "LAVE");
-        assert_eq!(plan.destination, "DISO");
+        assert_eq!(plan.origin, "Sol");
+        assert_eq!(plan.destination, "Proxima Centauri");
         assert_eq!(plan.fuel_cost, 3);
         assert!((plan.distance - distance).abs() < 1e-9);
     }
@@ -186,14 +191,14 @@ mod tests {
 
         ship.fuel_current = 1;
         assert_eq!(
-            travel_handler.plan_jump(&commander, &ship, "DISO"),
+            travel_handler.plan_jump(&commander, &ship, "Proxima Centauri"),
             Err(TravelError::NotEnoughFuel { needed: 3, have: 1 })
         );
 
         let mut wrecked = Ship::new_cobra_mk3();
         wrecked.hull_percentage = 0;
         assert_eq!(
-            travel_handler.plan_jump(&commander, &wrecked, "DISO"),
+            travel_handler.plan_jump(&commander, &wrecked, "Proxima Centauri"),
             Err(TravelError::TooDamaged)
         );
     }
@@ -213,10 +218,10 @@ mod tests {
         let system_manager = SystemManager::new().expect("Failed to load galaxy data");
         let travel_handler = TravelHandler::new(system_manager);
 
-        // Should be able to get LAVE system info
-        let lave_info = travel_handler.get_system_info("LAVE");
+        // Should be able to get Sol system info
+        let lave_info = travel_handler.get_system_info("Sol");
         assert!(lave_info.is_some());
-        assert_eq!(lave_info.unwrap().name, "LAVE");
+        assert_eq!(lave_info.unwrap().name, "Sol");
     }
 
     fn systems_for_redirects() -> SystemManager {
@@ -229,18 +234,18 @@ mod tests {
         use rand::SeedableRng;
         let manager = systems_for_redirects();
         let systems = manager.get_all_systems();
-        let destination = manager.get_system("DISO").unwrap();
+        let destination = manager.get_system("Proxima Centauri").unwrap();
         for redirect in [Redirect::Anywhere, Redirect::NearDestination] {
             for seed in 0..200 {
                 let target = redirect_target(
                     redirect,
                     &systems,
-                    "LAVE",
+                    "Sol",
                     destination,
                     &mut StdRng::seed_from_u64(seed),
                 )
                 .unwrap();
-                assert!(target != "LAVE" && target != "DISO");
+                assert!(target != "Sol" && target != "Proxima Centauri");
             }
         }
     }
@@ -251,13 +256,13 @@ mod tests {
         use rand::SeedableRng;
         let manager = systems_for_redirects();
         let systems = manager.get_all_systems();
-        let destination = manager.get_system("DISO").unwrap();
+        let destination = manager.get_system("Proxima Centauri").unwrap();
         let targets: std::collections::HashSet<String> = (0..300)
             .filter_map(|seed| {
                 redirect_target(
                     Redirect::Anywhere,
                     &systems,
-                    "LAVE",
+                    "Sol",
                     destination,
                     &mut StdRng::seed_from_u64(seed),
                 )
@@ -272,11 +277,11 @@ mod tests {
         use rand::SeedableRng;
         let manager = systems_for_redirects();
         let systems = manager.get_all_systems();
-        let destination = manager.get_system("DISO").unwrap();
+        let destination = manager.get_system("Proxima Centauri").unwrap();
         let mut closest: Vec<&StarSystem> = systems
             .iter()
             .copied()
-            .filter(|system| system.name != "LAVE" && system.name != "DISO")
+            .filter(|system| system.name != "Sol" && system.name != "Proxima Centauri")
             .collect();
         closest.sort_by(|a, b| {
             destination
@@ -292,7 +297,7 @@ mod tests {
             let target = redirect_target(
                 Redirect::NearDestination,
                 &systems,
-                "LAVE",
+                "Sol",
                 destination,
                 &mut StdRng::seed_from_u64(seed),
             )

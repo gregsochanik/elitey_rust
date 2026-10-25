@@ -1,0 +1,3588 @@
+{
+ "start": {
+  "economy": {
+   "level": 5,
+   "name": "Rich Agri"
+  },
+  "government": {
+   "level": 3,
+   "name": "Dictatorship"
+  },
+  "techlevel": 5,
+  "turnover": 7000,
+  "radius": 4116,
+  "population": "25 Billion"
+ },
+ "pool": [
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 9,
+   "turnover": 11520,
+   "radius": 4610,
+   "population": "36 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 7,
+   "turnover": 16280,
+   "radius": 5528,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 8,
+   "turnover": 13720,
+   "radius": 3149,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 12,
+   "turnover": 22560,
+   "radius": 4435,
+   "population": "47 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 14336,
+   "radius": 3508,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 10,
+   "turnover": 26240,
+   "radius": 4780,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 15552,
+   "radius": 3909,
+   "population": "36 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 45760,
+   "radius": 4076,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 7,
+   "turnover": 8960,
+   "radius": 6360,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 3,
+   "turnover": 2560,
+   "radius": 5892,
+   "population": "16 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 10,
+   "turnover": 24192,
+   "radius": 6493,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 16800,
+   "radius": 5364,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 16800,
+   "radius": 6740,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 7,
+   "turnover": 6272,
+   "radius": 4290,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 16416,
+   "radius": 4341,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 9,
+   "turnover": 18144,
+   "radius": 6578,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 8,
+   "turnover": 10360,
+   "radius": 3127,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 7,
+   "turnover": 10296,
+   "radius": 6102,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 11840,
+   "radius": 6662,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 9,
+   "turnover": 8960,
+   "radius": 6575,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 4,
+   "turnover": 1920,
+   "radius": 4731,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 11,
+   "turnover": 31360,
+   "radius": 6074,
+   "population": "49 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 14,
+   "turnover": 52800,
+   "radius": 6678,
+   "population": "60 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 8,
+   "turnover": 12096,
+   "radius": 4114,
+   "population": "36 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 16416,
+   "radius": 4597,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 6,
+   "turnover": 11160,
+   "radius": 3076,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 7,
+   "turnover": 6272,
+   "radius": 5390,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 10,
+   "turnover": 31680,
+   "radius": 6820,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 7,
+   "turnover": 11136,
+   "radius": 3168,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 4,
+   "turnover": 5888,
+   "radius": 4972,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 7,
+   "turnover": 8120,
+   "radius": 3381,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 9240,
+   "radius": 5326,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 14,
+   "turnover": 52800,
+   "radius": 5970,
+   "population": "60 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 3,
+   "turnover": 3192,
+   "radius": 6092,
+   "population": "19 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 16800,
+   "radius": 6196,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 6,
+   "turnover": 9600,
+   "radius": 6549,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 6,
+   "turnover": 9600,
+   "radius": 5957,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 4,
+   "turnover": 3168,
+   "radius": 5146,
+   "population": "22 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 5208,
+   "radius": 6419,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 8,
+   "turnover": 21120,
+   "radius": 5540,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 9,
+   "turnover": 10360,
+   "radius": 3727,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 5,
+   "turnover": 3000,
+   "radius": 5743,
+   "population": "25 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 10880,
+   "radius": 5178,
+   "population": "34 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 4,
+   "turnover": 4032,
+   "radius": 5185,
+   "population": "21 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 6,
+   "turnover": 12800,
+   "radius": 4712,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 4,
+   "turnover": 1920,
+   "radius": 6403,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 25344,
+   "radius": 3697,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 9,
+   "turnover": 20664,
+   "radius": 4949,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 12,
+   "turnover": 26880,
+   "radius": 5866,
+   "population": "48 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 10,
+   "turnover": 28952,
+   "radius": 6701,
+   "population": "47 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 8,
+   "turnover": 13120,
+   "radius": 6879,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 2,
+   "turnover": 1408,
+   "radius": 3432,
+   "population": "11 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 9,
+   "turnover": 8960,
+   "radius": 3851,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 12,
+   "turnover": 37440,
+   "radius": 5222,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 11,
+   "turnover": 35200,
+   "radius": 3085,
+   "population": "50 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 5,
+   "turnover": 4536,
+   "radius": 3746,
+   "population": "27 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 18648,
+   "radius": 4004,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 14040,
+   "radius": 4934,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 4,
+   "turnover": 1920,
+   "radius": 6371,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 11840,
+   "radius": 4810,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 8736,
+   "radius": 3180,
+   "population": "26 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 10,
+   "turnover": 24192,
+   "radius": 5253,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 2,
+   "turnover": 1560,
+   "radius": 5032,
+   "population": "13 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 7,
+   "turnover": 8120,
+   "radius": 5705,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 10,
+   "turnover": 28952,
+   "radius": 6909,
+   "population": "47 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 13440,
+   "radius": 4859,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 11,
+   "turnover": 20640,
+   "radius": 4102,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 8960,
+   "radius": 5415,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 9,
+   "turnover": 19968,
+   "radius": 3021,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 5568,
+   "radius": 6559,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 12,
+   "turnover": 24696,
+   "radius": 4867,
+   "population": "49 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 5,
+   "turnover": 8184,
+   "radius": 2828,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 10240,
+   "radius": 5429,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 4,
+   "turnover": 2520,
+   "radius": 5514,
+   "population": "21 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 12,
+   "turnover": 28800,
+   "radius": 4103,
+   "population": "50 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 12768,
+   "radius": 5183,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 9280,
+   "radius": 2924,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 6,
+   "turnover": 5888,
+   "radius": 4852,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 11,
+   "turnover": 33120,
+   "radius": 3036,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 9,
+   "turnover": 20664,
+   "radius": 3497,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 7,
+   "turnover": 12152,
+   "radius": 4492,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 45760,
+   "radius": 3380,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 9280,
+   "radius": 6568,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 3,
+   "turnover": 1536,
+   "radius": 4562,
+   "population": "16 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 4,
+   "turnover": 1920,
+   "radius": 2955,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 9120,
+   "radius": 4547,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 8,
+   "turnover": 21120,
+   "radius": 3572,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 15288,
+   "radius": 3298,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 11,
+   "turnover": 27648,
+   "radius": 3650,
+   "population": "48 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 6,
+   "turnover": 9216,
+   "radius": 6713,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 5,
+   "turnover": 4480,
+   "radius": 3240,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 16800,
+   "radius": 6816,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 7776,
+   "radius": 3433,
+   "population": "27 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 9,
+   "turnover": 17920,
+   "radius": 5454,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 2,
+   "turnover": 1560,
+   "radius": 6156,
+   "population": "13 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 10240,
+   "radius": 6261,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 9,
+   "turnover": 16192,
+   "radius": 3223,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 11,
+   "turnover": 24640,
+   "radius": 3545,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 12,
+   "turnover": 22560,
+   "radius": 6087,
+   "population": "47 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 11,
+   "turnover": 28800,
+   "radius": 4457,
+   "population": "45 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 4,
+   "turnover": 4608,
+   "radius": 4165,
+   "population": "24 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 5,
+   "turnover": 6624,
+   "radius": 3796,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 15288,
+   "radius": 3298,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 33880,
+   "radius": 4387,
+   "population": "55 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 5,
+   "turnover": 3000,
+   "radius": 3019,
+   "population": "25 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 10240,
+   "radius": 5205,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 6,
+   "turnover": 9600,
+   "radius": 3013,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 15552,
+   "radius": 5357,
+   "population": "36 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 7200,
+   "radius": 4961,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 6,
+   "turnover": 5888,
+   "radius": 2964,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 11520,
+   "radius": 6455,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 25344,
+   "radius": 6061,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 6720,
+   "radius": 2846,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 11,
+   "turnover": 27456,
+   "radius": 4331,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 6,
+   "turnover": 10560,
+   "radius": 6497,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 1,
+   "turnover": 768,
+   "radius": 5612,
+   "population": "8 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 5,
+   "turnover": 2944,
+   "radius": 6395,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 9280,
+   "radius": 3792,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 9,
+   "turnover": 16192,
+   "radius": 4043,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 5,
+   "turnover": 5824,
+   "radius": 6865,
+   "population": "26 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 27864,
+   "radius": 3280,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 5,
+   "turnover": 8064,
+   "radius": 4572,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 2,
+   "turnover": 1152,
+   "radius": 3933,
+   "population": "12 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 12,
+   "turnover": 37440,
+   "radius": 4646,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 5,
+   "turnover": 5760,
+   "radius": 3413,
+   "population": "24 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 8960,
+   "radius": 5831,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 9,
+   "turnover": 10360,
+   "radius": 3679,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 10240,
+   "radius": 6737,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 41976,
+   "radius": 3873,
+   "population": "53 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 5,
+   "turnover": 7000,
+   "radius": 6248,
+   "population": "25 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 16800,
+   "radius": 3960,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 12,
+   "turnover": 28800,
+   "radius": 3419,
+   "population": "50 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 12672,
+   "radius": 5293,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 8736,
+   "radius": 5048,
+   "population": "26 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 8120,
+   "radius": 5809,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 9,
+   "turnover": 16192,
+   "radius": 6123,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 4,
+   "turnover": 3200,
+   "radius": 4689,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 10,
+   "turnover": 12800,
+   "radius": 5071,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 11,
+   "turnover": 26496,
+   "radius": 6002,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 5568,
+   "radius": 5195,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 12,
+   "turnover": 40800,
+   "radius": 3141,
+   "population": "51 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 2,
+   "turnover": 1152,
+   "radius": 5349,
+   "population": "12 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 9,
+   "turnover": 18144,
+   "radius": 5762,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 25344,
+   "radius": 4449,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 18648,
+   "radius": 5792,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 41976,
+   "radius": 4945,
+   "population": "53 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 8,
+   "turnover": 13120,
+   "radius": 6155,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 8,
+   "turnover": 7936,
+   "radius": 6582,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 5,
+   "turnover": 4480,
+   "radius": 5212,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 8,
+   "turnover": 18720,
+   "radius": 2957,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 15,
+   "turnover": 56320,
+   "radius": 4243,
+   "population": "64 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 17024,
+   "radius": 6257,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 13,
+   "turnover": 38880,
+   "radius": 2894,
+   "population": "54 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 7,
+   "turnover": 7992,
+   "radius": 6191,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 8,
+   "turnover": 7168,
+   "radius": 4867,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 9120,
+   "radius": 6747,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 4,
+   "turnover": 4032,
+   "radius": 3633,
+   "population": "21 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 13,
+   "turnover": 33920,
+   "radius": 6127,
+   "population": "53 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 9240,
+   "radius": 5026,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 3,
+   "turnover": 2040,
+   "radius": 3293,
+   "population": "17 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 11,
+   "turnover": 27456,
+   "radius": 4507,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 12,
+   "turnover": 24696,
+   "radius": 5031,
+   "population": "49 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 10,
+   "turnover": 18720,
+   "radius": 5657,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 14336,
+   "radius": 6652,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 11,
+   "turnover": 26496,
+   "radius": 6406,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 15552,
+   "radius": 6221,
+   "population": "36 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 3,
+   "turnover": 3192,
+   "radius": 3952,
+   "population": "19 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 13,
+   "turnover": 40832,
+   "radius": 3427,
+   "population": "58 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 2,
+   "turnover": 1560,
+   "radius": 6344,
+   "population": "13 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 8,
+   "turnover": 9240,
+   "radius": 4858,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 8,
+   "turnover": 12160,
+   "radius": 4623,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 5,
+   "turnover": 6624,
+   "radius": 5208,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 11,
+   "turnover": 34560,
+   "radius": 5145,
+   "population": "48 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 3,
+   "turnover": 1536,
+   "radius": 3558,
+   "population": "16 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 11,
+   "turnover": 27648,
+   "radius": 5310,
+   "population": "48 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 27864,
+   "radius": 3012,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 13440,
+   "radius": 4115,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 7,
+   "turnover": 16280,
+   "radius": 5736,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 9280,
+   "radius": 6308,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 9,
+   "turnover": 8960,
+   "radius": 3375,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 2,
+   "turnover": 1408,
+   "radius": 4524,
+   "population": "11 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 9,
+   "turnover": 23520,
+   "radius": 6393,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 12,
+   "turnover": 38016,
+   "radius": 4682,
+   "population": "54 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 8120,
+   "radius": 5825,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 5,
+   "turnover": 6264,
+   "radius": 6589,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 5,
+   "turnover": 6264,
+   "radius": 3889,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 1,
+   "turnover": 768,
+   "radius": 5784,
+   "population": "8 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 8,
+   "turnover": 18720,
+   "radius": 4673,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 3,
+   "turnover": 2592,
+   "radius": 3837,
+   "population": "18 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 14336,
+   "radius": 6344,
+   "population": "32 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 3,
+   "turnover": 2040,
+   "radius": 6613,
+   "population": "17 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 2,
+   "turnover": 1560,
+   "radius": 3608,
+   "population": "13 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 7,
+   "turnover": 10296,
+   "radius": 5126,
+   "population": "39 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 6720,
+   "radius": 3734,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 12,
+   "turnover": 22560,
+   "radius": 3755,
+   "population": "47 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 8,
+   "turnover": 14208,
+   "radius": 5454,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 6,
+   "turnover": 7936,
+   "radius": 3406,
+   "population": "31 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 11,
+   "turnover": 20640,
+   "radius": 3474,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 9,
+   "turnover": 18648,
+   "radius": 6432,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 10,
+   "turnover": 21560,
+   "radius": 5003,
+   "population": "49 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 5,
+   "turnover": 3840,
+   "radius": 3886,
+   "population": "24 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 7,
+   "turnover": 8120,
+   "radius": 4565,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 9,
+   "turnover": 21888,
+   "radius": 3740,
+   "population": "38 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 10,
+   "turnover": 17280,
+   "radius": 5142,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 10,
+   "turnover": 28800,
+   "radius": 3549,
+   "population": "45 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 9,
+   "turnover": 8960,
+   "radius": 5783,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 12,
+   "turnover": 36000,
+   "radius": 4585,
+   "population": "50 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 10,
+   "turnover": 27864,
+   "radius": 5592,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 4,
+   "turnover": 3864,
+   "radius": 2933,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 13,
+   "turnover": 40832,
+   "radius": 6447,
+   "population": "58 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 6,
+   "turnover": 10560,
+   "radius": 5933,
+   "population": "33 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 6,
+   "turnover": 5376,
+   "radius": 4441,
+   "population": "24 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 5,
+   "turnover": 4480,
+   "radius": 3564,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 12,
+   "turnover": 37440,
+   "radius": 5398,
+   "population": "52 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 9,
+   "turnover": 23232,
+   "radius": 5105,
+   "population": "44 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 10,
+   "turnover": 20664,
+   "radius": 5313,
+   "population": "41 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 8,
+   "turnover": 11520,
+   "radius": 6171,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 11,
+   "turnover": 33120,
+   "radius": 5860,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 6,
+   "turnover": 5376,
+   "radius": 6685,
+   "population": "24 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 12,
+   "turnover": 33920,
+   "radius": 6871,
+   "population": "53 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 11,
+   "turnover": 20640,
+   "radius": 4026,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 6,
+   "turnover": 9600,
+   "radius": 6481,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 3,
+   "turnover": 2040,
+   "radius": 3833,
+   "population": "17 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 3,
+   "turnover": 2560,
+   "radius": 4100,
+   "population": "16 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 10,
+   "turnover": 32384,
+   "radius": 5728,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 8,
+   "turnover": 15232,
+   "radius": 6452,
+   "population": "34 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 9,
+   "turnover": 16800,
+   "radius": 5420,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 4,
+   "turnover": 5888,
+   "radius": 4432,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 9,
+   "turnover": 17920,
+   "radius": 4742,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 6,
+   "turnover": 5568,
+   "radius": 4743,
+   "population": "29 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 10,
+   "turnover": 16856,
+   "radius": 4799,
+   "population": "43 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 13,
+   "turnover": 45144,
+   "radius": 6498,
+   "population": "57 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 6,
+   "turnover": 7000,
+   "radius": 5508,
+   "population": "25 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 7,
+   "turnover": 8960,
+   "radius": 4192,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 7,
+   "turnover": 10880,
+   "radius": 6426,
+   "population": "34 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 2,
+   "turnover": 2016,
+   "radius": 5252,
+   "population": "14 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 10,
+   "turnover": 25760,
+   "radius": 5522,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 5,
+   "turnover": 2944,
+   "radius": 4087,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 5,
+   "turnover": 8064,
+   "radius": 3844,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 11,
+   "turnover": 33120,
+   "radius": 3996,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 11,
+   "turnover": 20608,
+   "radius": 5575,
+   "population": "46 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 8,
+   "turnover": 14784,
+   "radius": 3238,
+   "population": "42 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 7,
+   "turnover": 11840,
+   "radius": 6054,
+   "population": "37 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 4,
+   "turnover": 1920,
+   "radius": 5427,
+   "population": "20 Billion"
+  },
+  {
+   "economy": {
+    "level": 2,
+    "name": "Poor Ind"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 6,
+   "turnover": 5888,
+   "radius": 6684,
+   "population": "23 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 14,
+   "turnover": 47200,
+   "radius": 4835,
+   "population": "59 Billion"
+  },
+  {
+   "economy": {
+    "level": 6,
+    "name": "Average Agri"
+   },
+   "government": {
+    "level": 7,
+    "name": "Corporate State"
+   },
+   "techlevel": 6,
+   "turnover": 11968,
+   "radius": 5512,
+   "population": "34 Billion"
+  },
+  {
+   "economy": {
+    "level": 4,
+    "name": "Mainly Agri"
+   },
+   "government": {
+    "level": 3,
+    "name": "Dictatorship"
+   },
+   "techlevel": 6,
+   "turnover": 9408,
+   "radius": 4720,
+   "population": "28 Billion"
+  },
+  {
+   "economy": {
+    "level": 5,
+    "name": "Rich Agri"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 7,
+   "turnover": 12600,
+   "radius": 5737,
+   "population": "35 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 5,
+    "name": "Confederacy"
+   },
+   "techlevel": 14,
+   "turnover": 41760,
+   "radius": 3399,
+   "population": "58 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 0,
+    "name": "Anarchy"
+   },
+   "techlevel": 3,
+   "turnover": 1536,
+   "radius": 3474,
+   "population": "16 Billion"
+  },
+  {
+   "economy": {
+    "level": 7,
+    "name": "Poor Agri"
+   },
+   "government": {
+    "level": 6,
+    "name": "Democracy"
+   },
+   "techlevel": 5,
+   "turnover": 7200,
+   "radius": 4637,
+   "population": "30 Billion"
+  },
+  {
+   "economy": {
+    "level": 1,
+    "name": "Average Ind"
+   },
+   "government": {
+    "level": 2,
+    "name": "Multi-Government"
+   },
+   "techlevel": 10,
+   "turnover": 17280,
+   "radius": 3942,
+   "population": "40 Billion"
+  },
+  {
+   "economy": {
+    "level": 0,
+    "name": "Rich Ind"
+   },
+   "government": {
+    "level": 4,
+    "name": "Communist"
+   },
+   "techlevel": 12,
+   "turnover": 31360,
+   "radius": 6794,
+   "population": "49 Billion"
+  },
+  {
+   "economy": {
+    "level": 3,
+    "name": "Mainly Ind"
+   },
+   "government": {
+    "level": 1,
+    "name": "Feudal"
+   },
+   "techlevel": 6,
+   "turnover": 7000,
+   "radius": 5132,
+   "population": "25 Billion"
+  }
+ ]
+}

@@ -75,6 +75,13 @@ func _ready() -> void:
 	box.add_child(row)
 	box.add_child(message)
 
+	var credit := Label.new()
+	credit.text = "Star systems from the HYG database (CC BY-SA 4.0)"
+	credit.add_theme_font_size_override("font_size", Theme_.FONT_SMALL)
+	credit.add_theme_color_override("font_color", Theme_.MUTED)
+	credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(credit)
+
 	replace_dialog.title = "Replace save?"
 	replace_dialog.confirmed.connect(_start_new)
 	add_child(replace_dialog)

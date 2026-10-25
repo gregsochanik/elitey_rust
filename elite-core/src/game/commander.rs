@@ -185,7 +185,7 @@ impl Commander {
         Self {
             name,
             credits: STARTING_CREDITS,
-            location: "LAVE".to_string(), // Starting location as per spec
+            location: "Sol".to_string(), // Starting location as per spec
             reputation: 0,
             kills: 0,
         }
@@ -242,7 +242,7 @@ mod tests {
         let commander = Commander::new("Test Commander".to_string());
         assert_eq!(commander.name(), "Test Commander");
         assert_eq!(commander.credits(), 100);
-        assert_eq!(commander.location(), "LAVE");
+        assert_eq!(commander.location(), "Sol");
     }
 
     #[test]
@@ -279,8 +279,8 @@ mod tests {
     #[test]
     fn test_set_location() {
         let mut commander = Commander::new("Test".to_string());
-        commander.set_location("Leesti".to_string());
-        assert_eq!(commander.location(), "Leesti");
+        commander.set_location("Alpha Centauri".to_string());
+        assert_eq!(commander.location(), "Alpha Centauri");
     }
 
     #[test]
@@ -360,11 +360,11 @@ mod tests {
 
     #[test]
     fn out_of_range_saved_reputation_is_clamped_on_load() {
-        let json = r#"{"name":"Old","credits":1,"location":"LAVE","reputation":250}"#;
+        let json = r#"{"name":"Old","credits":1,"location":"Sol","reputation":250}"#;
         let commander: Commander = serde_json::from_str(json).unwrap();
         assert_eq!(commander.reputation, 100);
 
-        let json = r#"{"name":"Old","credits":1,"location":"LAVE","reputation":-250}"#;
+        let json = r#"{"name":"Old","credits":1,"location":"Sol","reputation":-250}"#;
         let commander: Commander = serde_json::from_str(json).unwrap();
         assert_eq!(commander.reputation, -100);
     }
@@ -372,7 +372,7 @@ mod tests {
     #[test]
     fn reputation_defaults_to_zero_for_old_saves() {
         let commander: Commander =
-            serde_json::from_str(r#"{"name":"Old","credits":100,"location":"LAVE"}"#).unwrap();
+            serde_json::from_str(r#"{"name":"Old","credits":100,"location":"Sol"}"#).unwrap();
         assert_eq!(commander.reputation, 0);
     }
 
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     fn old_commanders_start_with_no_kills() {
         let commander: Commander =
-            serde_json::from_str(r#"{"name":"Old","credits":5,"location":"LAVE"}"#).unwrap();
+            serde_json::from_str(r#"{"name":"Old","credits":5,"location":"Sol"}"#).unwrap();
 
         assert_eq!(commander.kills, 0);
     }

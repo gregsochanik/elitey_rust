@@ -74,7 +74,7 @@ fn an_uninspected_run_pays_in_full_and_costs_infamy() {
     let (mut commander, mut ship) = loaded(8);
 
     let messages = resolve_smuggling(
-        vec![run("DISO", 8, 120)],
+        vec![run("Proxima Centauri", 8, 120)],
         &mut commander,
         &mut ship,
         &GovernmentType::Communist,
@@ -95,7 +95,7 @@ fn a_bribe_costs_forty_percent_and_the_run_succeeds() {
     let mut asked = None;
 
     resolve_smuggling(
-        vec![run("DISO", 8, 100)],
+        vec![run("Proxima Centauri", 8, 100)],
         &mut commander,
         &mut ship,
         &government(),
@@ -120,7 +120,7 @@ fn a_bribe_the_player_cannot_afford_hands_the_cargo_over() {
 
     let mut asked = None;
     resolve_smuggling(
-        vec![run("DISO", 8, 100)],
+        vec![run("Proxima Centauri", 8, 100)],
         &mut commander,
         &mut ship,
         &government(),
@@ -142,7 +142,10 @@ fn handing_over_the_cargo_fails_the_jobs_with_a_fine_capped_by_credits() {
     let (mut commander, mut ship) = loaded(16);
 
     resolve_smuggling(
-        vec![run("DISO", 8, 100), run("DISO", 8, 60)],
+        vec![
+            run("Proxima Centauri", 8, 100),
+            run("Proxima Centauri", 8, 60),
+        ],
         &mut commander,
         &mut ship,
         &government(),
@@ -158,7 +161,7 @@ fn handing_over_the_cargo_fails_the_jobs_with_a_fine_capped_by_credits() {
     let (mut broke, mut ship) = loaded(8);
     broke.remove_credits(90);
     resolve_smuggling(
-        vec![run("DISO", 8, 100)],
+        vec![run("Proxima Centauri", 8, 100)],
         &mut broke,
         &mut ship,
         &government(),
@@ -174,7 +177,7 @@ fn running_and_winning_pays_in_full_with_both_reputation_costs() {
     let (mut commander, mut ship) = loaded(8);
 
     resolve_smuggling(
-        vec![run("DISO", 8, 120)],
+        vec![run("Proxima Centauri", 8, 120)],
         &mut commander,
         &mut ship,
         &government(),
@@ -195,7 +198,7 @@ fn escaping_or_surrendering_fails_the_jobs_with_the_fine_and_keeps_the_hull_dama
         let (mut commander, mut ship) = loaded(8);
 
         resolve_smuggling(
-            vec![run("DISO", 8, 100)],
+            vec![run("Proxima Centauri", 8, 100)],
             &mut commander,
             &mut ship,
             &government(),
@@ -217,7 +220,7 @@ fn losing_the_fight_applies_only_the_combat_defeat_rules() {
     ship.add_cargo(CommodityType::Food, 2);
 
     resolve_smuggling(
-        vec![run("DISO", 8, 100)],
+        vec![run("Proxima Centauri", 8, 100)],
         &mut commander,
         &mut ship,
         &government(),

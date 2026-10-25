@@ -94,7 +94,7 @@ fn the_market_shows_what_held_cargo_cost() {
 fn the_market_and_status_are_laid_out_as_before() {
     let output = play("layout", "market\nstatus");
 
-    assert!(output.contains("LAVE Market"));
+    assert!(output.contains("Sol Market"));
     assert!(output.contains("Food"));
     assert!(output.contains("Commodity") && output.contains("Buy"));
     assert!(output.contains("vs Base"));
@@ -123,10 +123,10 @@ fn power_is_shown_in_the_shop_and_the_installed_list_and_can_be_upgraded() {
 
 #[test]
 fn a_jump_asks_for_confirmation_and_can_be_cancelled() {
-    let output = play("jump", "jump diso\nn\njump nowhere\njump");
+    let output = play("jump", "jump proxima centauri\nn\njump nowhere\njump");
 
     assert!(output.contains("Travel Confirmation"));
-    assert!(output.contains("To: DISO"));
+    assert!(output.contains("To: Proxima Centauri"));
     assert!(output.contains("Info: Travel cancelled."));
     assert!(output.contains("Error: System 'nowhere' not found"));
     assert!(output.contains("Error: Usage: jump <system_name>"));
@@ -150,7 +150,7 @@ fn upkeep_and_equipment_commands_report_what_they_did() {
 fn jobs_can_be_listed_accepted_and_abandoned() {
     let output = play("jobs", "jobs\naccept 1\nmissions\nabandon 1\nabandon 9");
 
-    assert!(output.contains("Jobs at LAVE"));
+    assert!(output.contains("Jobs at Sol"));
     assert!(output.contains("Active Jobs"));
     assert!(output.contains("Error: You have no job 9."));
     if output.contains("Success: Accepted: ") {
@@ -205,8 +205,8 @@ fn screens_open_with_an_icon_header_when_colour_is_on() {
 
 #[test]
 fn systems_and_info_show_economy_and_government() {
-    let plain = play("plain_systems", "systems\ninfo diso");
-    assert!(plain.contains("DISO") && plain.contains("2.3 ly"));
+    let plain = play("plain_systems", "systems\ninfo proxima centauri");
+    assert!(plain.contains("Proxima Centauri") && plain.contains("2.2 ly"));
     assert!(plain.contains("Economy: "));
     assert!(
         !plain.contains("Economy: Rich Ind"),
@@ -216,7 +216,7 @@ fn systems_and_info_show_economy_and_government() {
 
     let coloured = play_with(
         "coloured_systems",
-        "systems\ninfo diso",
+        "systems\ninfo proxima centauri",
         &[("CLICOLOR_FORCE", "1")],
     );
     assert!(coloured.contains('🏭') || coloured.contains('🌾'));
@@ -238,7 +238,7 @@ fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
     assert!(output.contains(" 2. status - Display ship and commander status"));
     assert!(output.contains("24. quit - Exit the game"));
     assert_eq!(output.matches("Commander Status").count(), 2);
-    assert_eq!(output.matches("LAVE Market").count(), 2);
+    assert_eq!(output.matches("Sol Market").count(), 2);
     assert!(output.contains("Unknown command."));
 }
 

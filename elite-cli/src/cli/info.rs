@@ -73,11 +73,12 @@ pub fn systems(game: &GameState) {
 
 /// `info <system>`
 pub fn system_info(game: &GameState, args: &[String]) -> bool {
-    let Some(name) = args.first() else {
+    if args.is_empty() {
         show_error("Usage: info <system_name>");
         return false;
-    };
-    match game.system_info(name) {
+    }
+    let name = args.join(" ");
+    match game.system_info(&name) {
         Some(view) => {
             print_system_info(&view);
             true
@@ -273,7 +274,7 @@ mod tests {
         let view = game.status_view();
 
         assert_eq!(view.commander_name, "Test");
-        assert_eq!(view.location, "LAVE");
+        assert_eq!(view.location, "Sol");
         assert_eq!((view.hull, view.max_hull), (95, 100));
         assert!(view.damaged);
         assert_eq!(view.fuel_current, 1);
@@ -285,11 +286,11 @@ mod tests {
     fn the_system_info_view_includes_the_jump_from_here() {
         let game = GameState::new("Test".to_string());
 
-        let diso = game.system_info("DISO").unwrap();
-        assert_eq!(diso.name, "DISO");
-        assert_eq!(diso.from_here.as_ref().unwrap().fuel, 3);
+        let proxima = game.system_info("Proxima Centauri").unwrap();
+        assert_eq!(proxima.name, "Proxima Centauri");
+        assert_eq!(proxima.from_here.as_ref().unwrap().fuel, 3);
         assert!(game.system_info("NOWHERE").is_none());
-        print_system_info(&diso);
+        print_system_info(&proxima);
     }
 
     #[test]

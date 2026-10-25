@@ -97,7 +97,7 @@ fn bounty_reward_follows_the_formula() {
 fn about_thirty_percent_of_jobs_are_bounties_when_enabled() {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
-    let origin = galaxy.get_system("LAVE").unwrap();
+    let origin = galaxy.get_system("Sol").unwrap();
 
     let (mut bounties, mut total) = (0, 0);
     for seed in 0..500u64 {
@@ -124,8 +124,7 @@ fn about_thirty_percent_of_jobs_are_bounties_when_enabled() {
 
 #[test]
 fn jobs_saved_without_a_kind_load_as_courier_jobs() {
-    let json =
-        r#"{"destination":"DISO","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
+    let json = r#"{"destination":"Proxima Centauri","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
     let job: Job = serde_json::from_str(json).unwrap();
     assert_eq!(job.kind, JobKind::Courier);
 }
@@ -133,11 +132,11 @@ fn jobs_saved_without_a_kind_load_as_courier_jobs() {
 #[test]
 fn bounties_here_are_handed_back_to_be_fought_not_paid() {
     let mut commander = Commander::new("Test".to_string());
-    let mut bounty = active_job("DISO", 150, 1);
+    let mut bounty = active_job("Proxima Centauri", 150, 1);
     bounty.job.kind = JobKind::Bounty;
-    let mut active = vec![bounty, active_job("DISO", 40, 2)];
+    let mut active = vec![bounty, active_job("Proxima Centauri", 40, 2)];
 
-    let arrival = settle(&mut active, &mut commander, "DISO");
+    let arrival = settle(&mut active, &mut commander, "Proxima Centauri");
 
     assert_eq!(arrival.bounties.len(), 1);
     assert_eq!(commander.credits(), 140);
@@ -147,11 +146,11 @@ fn bounties_here_are_handed_back_to_be_fought_not_paid() {
 #[test]
 fn a_bounty_that_runs_out_of_time_elsewhere_fails_without_a_fight() {
     let mut commander = Commander::new("Test".to_string());
-    let mut bounty = active_job("DISO", 150, 1);
+    let mut bounty = active_job("Proxima Centauri", 150, 1);
     bounty.job.kind = JobKind::Bounty;
     let mut active = vec![bounty];
 
-    let arrival = settle(&mut active, &mut commander, "LEESTI");
+    let arrival = settle(&mut active, &mut commander, "Alpha Centauri");
 
     assert!(arrival.bounties.is_empty());
     assert!(active.is_empty());
@@ -175,7 +174,7 @@ fn winning_a_bounty_pays_the_bounty_instead_of_the_random_payout() {
     let mut ship = Ship::new_cobra_mk3();
 
     let messages = resolve_bounties(
-        vec![bounty("DISO", 150)],
+        vec![bounty("Proxima Centauri", 150)],
         &mut commander,
         &mut ship,
         &mut fights(vec![(Outcome::Victory, 70)]),
@@ -195,7 +194,7 @@ fn escaping_surrendering_or_losing_fails_the_bounty() {
         let mut ship = Ship::new_cobra_mk3();
 
         resolve_bounties(
-            vec![bounty("DISO", 150)],
+            vec![bounty("Proxima Centauri", 150)],
             &mut commander,
             &mut ship,
             &mut fights(vec![(outcome, 40)]),
@@ -217,7 +216,10 @@ fn escaping_the_first_of_two_bounties_fails_both() {
     let mut ship = Ship::new_cobra_mk3();
 
     resolve_bounties(
-        vec![bounty("DISO", 150), bounty("DISO", 170)],
+        vec![
+            bounty("Proxima Centauri", 150),
+            bounty("Proxima Centauri", 170),
+        ],
         &mut commander,
         &mut ship,
         &mut fights(vec![(Outcome::Escaped, 60)]),
@@ -234,7 +236,10 @@ fn winning_the_first_bounty_leads_to_a_second_fight() {
     let mut ship = Ship::new_cobra_mk3();
 
     resolve_bounties(
-        vec![bounty("DISO", 150), bounty("DISO", 170)],
+        vec![
+            bounty("Proxima Centauri", 150),
+            bounty("Proxima Centauri", 170),
+        ],
         &mut commander,
         &mut ship,
         &mut fights(vec![(Outcome::Victory, 80), (Outcome::Victory, 60)]),
@@ -249,7 +254,7 @@ fn winning_the_first_bounty_leads_to_a_second_fight() {
 fn boards_have_three_to_five_reachable_jobs_with_valid_numbers() {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
-    let origin = galaxy.get_system("LAVE").unwrap();
+    let origin = galaxy.get_system("Sol").unwrap();
 
     for seed in 0..200u64 {
         let board = generate_board_for(origin, &systems, &mut StdRng::seed_from_u64(seed), HOLD);
@@ -262,7 +267,7 @@ fn boards_have_three_to_five_reachable_jobs_with_valid_numbers() {
 
         let mut seen = std::collections::HashSet::new();
         for job in &board {
-            assert_ne!(job.destination, "LAVE");
+            assert_ne!(job.destination, "Sol");
             assert!(
                 seen.insert(job.destination.clone()),
                 "duplicate destination"
@@ -315,8 +320,8 @@ fn sparse_systems_offer_what_is_in_range() {
 fn the_same_seed_gives_the_same_board_across_galaxy_instances() {
     let first = galaxy();
     let second = galaxy();
-    let origin_a = first.get_system("LAVE").unwrap();
-    let origin_b = second.get_system("LAVE").unwrap();
+    let origin_a = first.get_system("Sol").unwrap();
+    let origin_b = second.get_system("Sol").unwrap();
 
     let a = board_for(
         origin_a,
@@ -337,7 +342,7 @@ fn the_same_seed_gives_the_same_board_across_galaxy_instances() {
 fn the_same_seed_gives_the_same_board() {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
-    let origin = galaxy.get_system("LAVE").unwrap();
+    let origin = galaxy.get_system("Sol").unwrap();
 
     let a = board_for(
         origin,
@@ -357,9 +362,9 @@ fn the_same_seed_gives_the_same_board() {
 fn board_with_jobs() -> (JobBoard, Vec<ActiveJob>) {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
-    let lave = galaxy.get_system("LAVE").unwrap();
+    let sol = galaxy.get_system("Sol").unwrap();
     let mut board = JobBoard::new();
-    board.jobs_at(lave, &systems, &mut StdRng::seed_from_u64(2), HOLD);
+    board.jobs_at(sol, &systems, &mut StdRng::seed_from_u64(2), HOLD);
     (board, Vec::new())
 }
 
@@ -369,7 +374,7 @@ fn accepting_moves_a_job_from_the_board_to_the_active_list() {
     let before = board.jobs.len();
     let second = board.jobs[1].clone();
 
-    let job = accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 2).unwrap();
+    let job = accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 2).unwrap();
 
     assert_eq!(job, second);
     assert_eq!(board.jobs.len(), before - 1);
@@ -382,11 +387,11 @@ fn accepting_moves_a_job_from_the_board_to_the_active_list() {
 fn a_fourth_active_job_is_refused() {
     let (mut board, mut active) = board_with_jobs();
     for _ in 0..3 {
-        accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
+        accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 1).unwrap();
     }
     let remaining = board.jobs.len();
 
-    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).is_err());
+    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 1).is_err());
     assert_eq!(active.len(), 3);
     assert_eq!(board.jobs.len(), remaining);
 }
@@ -411,9 +416,9 @@ fn active_job(destination: &str, reward: u32, jumps_left: u32) -> ActiveJob {
 #[test]
 fn arriving_in_time_pays_the_reward_and_clears_the_job() {
     let mut commander = Commander::new("Test".to_string());
-    let mut active = vec![active_job("DISO", 50, 3)];
+    let mut active = vec![active_job("Proxima Centauri", 50, 3)];
 
-    let messages = settle(&mut active, &mut commander, "DISO").messages;
+    let messages = settle(&mut active, &mut commander, "Proxima Centauri").messages;
 
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 150);
@@ -424,9 +429,9 @@ fn arriving_in_time_pays_the_reward_and_clears_the_job() {
 #[test]
 fn delivering_on_the_last_allowed_jump_still_counts() {
     let mut commander = Commander::new("Test".to_string());
-    let mut active = vec![active_job("DISO", 50, 1)];
+    let mut active = vec![active_job("Proxima Centauri", 50, 1)];
 
-    settle(&mut active, &mut commander, "diso");
+    settle(&mut active, &mut commander, "proxima centauri");
 
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 150);
@@ -435,9 +440,9 @@ fn delivering_on_the_last_allowed_jump_still_counts() {
 #[test]
 fn a_job_that_runs_out_of_jumps_fails_at_once() {
     let mut commander = Commander::new("Test".to_string());
-    let mut active = vec![active_job("DISO", 50, 1)];
+    let mut active = vec![active_job("Proxima Centauri", 50, 1)];
 
-    let messages = settle(&mut active, &mut commander, "LEESTI").messages;
+    let messages = settle(&mut active, &mut commander, "Alpha Centauri").messages;
 
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 100);
@@ -448,9 +453,9 @@ fn a_job_that_runs_out_of_jumps_fails_at_once() {
 #[test]
 fn jobs_with_time_left_lose_one_jump_per_arrival() {
     let mut commander = Commander::new("Test".to_string());
-    let mut active = vec![active_job("DISO", 50, 3)];
+    let mut active = vec![active_job("Proxima Centauri", 50, 3)];
 
-    settle(&mut active, &mut commander, "LEESTI");
+    settle(&mut active, &mut commander, "Alpha Centauri");
 
     assert_eq!(active[0].jumps_left, 2);
     assert_eq!(commander.reputation, 0);
@@ -460,33 +465,33 @@ fn jobs_with_time_left_lose_one_jump_per_arrival() {
 fn several_jobs_for_one_destination_all_complete() {
     let mut commander = Commander::new("Test".to_string());
     let mut active = vec![
-        active_job("DISO", 50, 3),
-        active_job("DISO", 60, 2),
-        active_job("LEESTI", 70, 3),
+        active_job("Proxima Centauri", 50, 3),
+        active_job("Proxima Centauri", 60, 2),
+        active_job("Alpha Centauri", 70, 3),
     ];
 
-    settle(&mut active, &mut commander, "DISO");
+    settle(&mut active, &mut commander, "Proxima Centauri");
 
     assert_eq!(commander.credits(), 210);
     assert_eq!(commander.reputation, 4);
     assert_eq!(active.len(), 1);
-    assert_eq!(active[0].job.destination, "LEESTI");
+    assert_eq!(active[0].job.destination, "Alpha Centauri");
 }
 
 #[test]
 fn bad_numbers_and_unseen_boards_are_refused() {
     let (mut board, mut active) = board_with_jobs();
-    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 0).is_err());
-    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 99).is_err());
-    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "DISO", 1).is_err());
+    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 0).is_err());
+    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 99).is_err());
+    assert!(accept_on_a_fresh_ship(&mut board, &mut active, "Proxima Centauri", 1).is_err());
     assert!(active.is_empty());
 }
 
 #[test]
 fn abandoning_removes_the_job_and_costs_reputation() {
     let (mut board, mut active) = board_with_jobs();
-    accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
-    accept_on_a_fresh_ship(&mut board, &mut active, "LAVE", 1).unwrap();
+    accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 1).unwrap();
+    accept_on_a_fresh_ship(&mut board, &mut active, "Sol", 1).unwrap();
     let kept = active[1].clone();
     let mut commander = Commander::new("Test".to_string());
 
@@ -502,16 +507,16 @@ fn abandoning_removes_the_job_and_costs_reputation() {
 fn the_board_is_stable_while_docked_and_rerolls_after_leaving() {
     let galaxy = galaxy();
     let systems = galaxy.get_all_systems();
-    let lave = galaxy.get_system("LAVE").unwrap();
+    let sol = galaxy.get_system("Sol").unwrap();
     let mut board = JobBoard::new();
     let mut rng = StdRng::seed_from_u64(1);
 
-    let first = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
-    let again = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
+    let first = board.jobs_at(sol, &systems, &mut rng, HOLD).to_vec();
+    let again = board.jobs_at(sol, &systems, &mut rng, HOLD).to_vec();
     assert_eq!(first, again);
 
     board.clear();
-    let rerolled = board.jobs_at(lave, &systems, &mut rng, HOLD).to_vec();
+    let rerolled = board.jobs_at(sol, &systems, &mut rng, HOLD).to_vec();
     assert_ne!(first, rerolled);
 }
 
@@ -601,7 +606,7 @@ fn job_of(kind: JobKind, fuel_cost: u32) -> Job {
         kind,
         tons: 0,
         commodity: None,
-        destination: "DISO".to_string(),
+        destination: "Proxima Centauri".to_string(),
         distance: f64::from(fuel_cost),
         fuel_cost,
         reward: 100,
@@ -816,7 +821,7 @@ fn freight_loads_are_legal_and_fit_the_hold() {
 
 fn board_with_freight(tons: u32) -> (JobBoard, Vec<ActiveJob>, String) {
     let (mut board, active) = board_with_jobs();
-    board.jobs[0] = freight("DISO", tons, 100, 3).job;
+    board.jobs[0] = freight("Proxima Centauri", tons, 100, 3).job;
     let location = board.location.clone();
     (board, active, location)
 }
@@ -863,9 +868,9 @@ fn delivering_freight_pays_and_frees_the_hold() {
     let mut commander = Commander::new("Test".to_string());
     let mut ship = Ship::new_cobra_mk3();
     assert!(ship.cargo_hold.reserve(12));
-    let mut active = vec![freight("DISO", 12, 90, 2)];
+    let mut active = vec![freight("Proxima Centauri", 12, 90, 2)];
 
-    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "Proxima Centauri");
 
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 190);
@@ -882,8 +887,8 @@ fn freight_that_runs_out_of_time_or_is_abandoned_frees_the_hold_and_costs_reputa
     let mut commander = Commander::new("Test".to_string());
     let mut ship = Ship::new_cobra_mk3();
     assert!(ship.cargo_hold.reserve(12));
-    let mut active = vec![freight("DISO", 12, 90, 1)];
-    settle_arrival(&mut active, &mut commander, &mut ship, "LEESTI");
+    let mut active = vec![freight("Proxima Centauri", 12, 90, 1)];
+    settle_arrival(&mut active, &mut commander, &mut ship, "Alpha Centauri");
     assert!(active.is_empty());
     assert_eq!(ship.cargo_hold.reserved, 0);
     assert_eq!(commander.reputation, -3);
@@ -891,7 +896,7 @@ fn freight_that_runs_out_of_time_or_is_abandoned_frees_the_hold_and_costs_reputa
     let mut commander = Commander::new("Test".to_string());
     let mut ship = Ship::new_cobra_mk3();
     assert!(ship.cargo_hold.reserve(12));
-    let mut active = vec![freight("DISO", 12, 90, 3)];
+    let mut active = vec![freight("Proxima Centauri", 12, 90, 3)];
     abandon(&mut active, &mut commander, &mut ship, 1).unwrap();
     assert_eq!(ship.cargo_hold.reserved, 0);
     assert_eq!(commander.reputation, -3);
@@ -902,12 +907,12 @@ fn freight_lost_on_the_way_voids_the_contract() {
     let mut commander = Commander::new("Test".to_string());
     let mut ship = Ship::new_cobra_mk3();
     assert!(ship.cargo_hold.reserve(12));
-    let mut active = vec![freight("DISO", 12, 90, 2)];
+    let mut active = vec![freight("Proxima Centauri", 12, 90, 2)];
 
     crate::game::events::apply_cargo_loss(&mut ship, &crate::game::events::CargoLoss::Tons(20));
     assert_eq!(ship.cargo_hold.reserved, 0);
 
-    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "Proxima Centauri");
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 100);
     assert_eq!(commander.reputation, -3);
@@ -931,7 +936,7 @@ fn cargo_loss_takes_goods_first_then_contract_cargo() {
 
 #[test]
 fn jobs_saved_without_freight_fields_load_with_none() {
-    let json = r#"{"kind":"Courier","destination":"DISO","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
+    let json = r#"{"kind":"Courier","destination":"Proxima Centauri","distance":2.3,"fuel_cost":3,"reward":41,"deadline_jumps":3}"#;
     let job: Job = serde_json::from_str(json).unwrap();
     assert_eq!(job.tons, 0);
     assert_eq!(job.commodity, None);
@@ -939,12 +944,15 @@ fn jobs_saved_without_freight_fields_load_with_none() {
 
 #[test]
 fn jobs_describe_themselves_by_kind() {
-    let entry = freight("DISO", 12, 90, 2);
+    let entry = freight("Proxima Centauri", 12, 90, 2);
     assert_eq!(
         entry.job.describe(),
-        "Freight: 12 tons of Machinery to DISO"
+        "Freight: 12 tons of Machinery to Proxima Centauri"
     );
-    assert_eq!(active_job("DISO", 41, 2).job.describe(), "Courier to DISO");
+    assert_eq!(
+        active_job("Proxima Centauri", 41, 2).job.describe(),
+        "Courier to Proxima Centauri"
+    );
 }
 
 fn lawless_origin(galaxy: &SystemManager) -> &StarSystem {
@@ -1011,7 +1019,7 @@ fn smuggling_is_only_offered_to_bad_standing_at_lawless_systems_with_lawful_dest
 }
 
 fn smuggling_job(tons: u32) -> ActiveJob {
-    let mut entry = freight("DISO", tons, 150, 3);
+    let mut entry = freight("Proxima Centauri", tons, 150, 3);
     entry.job.kind = JobKind::Smuggling;
     entry.job.commodity = Some(CommodityType::Narcotics);
     entry
@@ -1056,7 +1064,7 @@ fn smuggling_needs_hold_room_to_accept_and_frees_it_when_it_ends() {
     assert!(ship.cargo_hold.reserve(8));
     let mut active = vec![smuggling_job(8)];
     active[0].jumps_left = 1;
-    settle_arrival(&mut active, &mut commander, &mut ship, "LEESTI");
+    settle_arrival(&mut active, &mut commander, &mut ship, "Alpha Centauri");
     assert!(active.is_empty());
     assert_eq!(ship.cargo_hold.reserved, 0);
 }
@@ -1068,7 +1076,7 @@ fn smuggling_at_its_destination_is_handed_back_for_inspection_not_paid() {
     assert!(ship.cargo_hold.reserve(8));
     let mut active = vec![smuggling_job(8)];
 
-    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "DISO");
+    let arrival = settle_arrival(&mut active, &mut commander, &mut ship, "Proxima Centauri");
 
     assert_eq!(arrival.smuggling.len(), 1);
     assert!(active.is_empty());
@@ -1080,7 +1088,7 @@ fn smuggling_at_its_destination_is_handed_back_for_inspection_not_paid() {
 fn smuggling_describes_itself() {
     assert_eq!(
         smuggling_job(8).job.describe(),
-        "Smuggling: 8 tons of contraband to DISO"
+        "Smuggling: 8 tons of contraband to Proxima Centauri"
     );
 }
 
@@ -1148,9 +1156,9 @@ fn black_courier(destination: &str, reward: u32) -> ActiveJob {
 #[test]
 fn delivering_a_black_courier_job_pays_and_costs_reputation() {
     let mut commander = Commander::new("Test".to_string());
-    let mut active = vec![black_courier("DISO", 62)];
+    let mut active = vec![black_courier("Proxima Centauri", 62)];
 
-    let messages = settle(&mut active, &mut commander, "DISO").messages;
+    let messages = settle(&mut active, &mut commander, "Proxima Centauri").messages;
 
     assert!(active.is_empty());
     assert_eq!(commander.credits(), 162);
@@ -1162,8 +1170,8 @@ fn delivering_a_black_courier_job_pays_and_costs_reputation() {
 fn a_few_black_courier_deliveries_lead_to_the_criminal_track() {
     let mut commander = Commander::new("Test".to_string());
     for _ in 0..4 {
-        let mut active = vec![black_courier("DISO", 62)];
-        settle(&mut active, &mut commander, "DISO");
+        let mut active = vec![black_courier("Proxima Centauri", 62)];
+        settle(&mut active, &mut commander, "Proxima Centauri");
     }
     assert_eq!(commander.standing(), Standing::Disreputable);
     assert!(Track::Criminal.open_to(commander.standing()));

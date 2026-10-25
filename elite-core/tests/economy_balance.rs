@@ -33,11 +33,11 @@ fn board_for_rated(
 }
 
 const TRIPS: [(&str, &str); 5] = [
-    ("LAVE", "DISO"),
-    ("DISO", "LAVE"),
-    ("LAVE", "LEESTI"),
-    ("LEESTI", "DISO"),
-    ("DISO", "RIEDQUAT"),
+    ("Sol", "Proxima Centauri"),
+    ("Proxima Centauri", "Sol"),
+    ("Sol", "Alpha Centauri"),
+    ("Alpha Centauri", "Proxima Centauri"),
+    ("Proxima Centauri", "Barnard's Star"),
 ];
 
 struct Totals {

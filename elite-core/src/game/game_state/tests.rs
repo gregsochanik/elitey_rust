@@ -123,7 +123,7 @@ fn trade_log_survives_serialization() {
         crate::data::commodities::CommodityType::Food,
         5,
         10,
-        "LAVE",
+        "Sol",
         0,
     );
 
