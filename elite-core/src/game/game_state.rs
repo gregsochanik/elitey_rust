@@ -1,5 +1,5 @@
 use crate::data::commodities::CommodityType;
-use crate::data::systems::SystemManager;
+use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
 use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
@@ -60,6 +60,8 @@ pub struct Destination {
     pub name: String,
     pub distance: f64,
     pub fuel: u32,
+    pub economy: EconomyType,
+    pub government: GovernmentType,
 }
 
 impl GameState {
@@ -444,6 +446,8 @@ impl GameState {
                     name: system.name.clone(),
                     distance,
                     fuel: fuel_for_distance(distance),
+                    economy: system.economy.clone(),
+                    government: system.government.clone(),
                 })
             })
             .collect();

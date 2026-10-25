@@ -1,4 +1,6 @@
-use crate::utils::display::{credits, header, icon, show_error, system_name, Icon};
+use crate::utils::display::{
+    credits, economy_icon, government_icon, header, icon, show_error, system_name, Icon,
+};
 use colored::*;
 use elite_core::game::trade_log::TradeKind;
 use elite_core::game::views::{StatusView, SystemInfoView, TradeLogView};
@@ -41,10 +43,14 @@ pub fn systems(game: &GameState) {
     } else {
         for destination in reachable {
             println!(
-                "{} - {:.1} light years, {} fuel",
+                "{} - {:.1} light years, {} fuel - {}{} - {}{}",
                 system_name(&destination.name, false),
                 destination.distance,
-                destination.fuel
+                destination.fuel,
+                economy_icon(&destination.economy),
+                destination.economy.display_name(),
+                government_icon(&destination.government),
+                destination.government.display_name()
             );
         }
     }
@@ -149,8 +155,16 @@ fn print_status(view: &StatusView) {
 
 fn print_system_info(view: &SystemInfoView) {
     header(Icon::Ship, &format!("System: {}", view.name));
-    println!("Economy: {:?}", view.economy);
-    println!("Government: {:?}", view.government);
+    println!(
+        "{}Economy: {}",
+        economy_icon(&view.economy),
+        view.economy.display_name()
+    );
+    println!(
+        "{}Government: {}",
+        government_icon(&view.government),
+        view.government.display_name()
+    );
     println!("Tech Level: {}", view.tech_level);
     println!("Population: {}", view.population);
     println!("Description: {}", view.description);
