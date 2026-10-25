@@ -1,4 +1,4 @@
-use crate::cli::{equipment, info, jobs, saves, trading, travel, upgrades, upkeep};
+use crate::cli::{equipment, info, jobs, menu, saves, trading, travel, upgrades, upkeep};
 use crate::utils::display;
 use colored::*;
 use elite_core::game::GameState;
@@ -13,8 +13,9 @@ pub enum Control {
 
 /// Run one command line's command with its arguments
 pub fn execute(game: &mut GameState, command: &str, args: &[String]) -> Control {
-    match command {
-        "help" => display::show_help(),
+    let command = menu::resolve(command);
+    match command.as_str() {
+        "help" => menu::show_help(),
         "status" => info::status(game),
         "market" => trading::market(game),
         "buy" => {

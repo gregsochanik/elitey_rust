@@ -3,6 +3,7 @@ pub mod equipment;
 pub mod fight;
 pub mod info;
 pub mod jobs;
+pub mod menu;
 pub mod saves;
 pub mod startup;
 pub mod trading;
