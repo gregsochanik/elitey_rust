@@ -4,7 +4,10 @@ extends HBoxContainer
 const Theme_ := preload("res://theme/elite_theme.gd")
 const GalaxyMap := preload("res://screens/galaxy_map.gd")
 
+signal jump_requested(destination: String)
+
 var game: EliteGame
+var confirm := ConfirmationDialog.new()
 var map := GalaxyMap.new()
 var title := Label.new()
 var details := RichTextLabel.new()
@@ -64,8 +67,11 @@ func _ready() -> void:
 	box.add_child(plan)
 	jump.text = "🚀  Jump"
 	jump.disabled = true
-	jump.tooltip_text = "Jumping arrives with the journey screen"
+	jump.pressed.connect(_ask)
 	box.add_child(jump)
+	confirm.title = "Confirm jump"
+	confirm.confirmed.connect(func(): jump_requested.emit(selected))
+	add_child(confirm)
 	refresh()
 
 
@@ -77,8 +83,17 @@ func refresh() -> void:
 		title.text = "Select a system"
 		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel."
 		plan.text = ""
+		jump.disabled = true
 		return
 	_select(selected)
+
+
+func _ask() -> void:
+	var plan: Dictionary = game.plan_jump(selected)
+	if not plan["ok"]:
+		return
+	confirm.dialog_text = "Jump from %s to %s?\n%.1f light years, %d fuel." % [plan["origin"], plan["destination"], plan["distance"], plan["fuel_cost"]]
+	confirm.popup_centered()
 
 
 func _select(name: String) -> void:
@@ -96,6 +111,7 @@ func _select(name: String) -> void:
 	text += info["description"]
 	details.text = text
 	var jump_plan: Dictionary = game.plan_jump(name)
+	jump.disabled = not jump_plan["ok"]
 	if jump_plan["ok"]:
 		plan.text = "%s → %s\n%.1f light years · %d fuel" % [jump_plan["origin"], jump_plan["destination"], jump_plan["distance"], jump_plan["fuel_cost"]]
 		plan.add_theme_color_override("font_color", Theme_.GOOD)
