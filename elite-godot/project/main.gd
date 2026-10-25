@@ -4,6 +4,8 @@ extends Control
 const Theme_ := preload("res://theme/elite_theme.gd")
 const HeaderBar := preload("res://shell/header_bar.gd")
 const MarketScreen := preload("res://screens/market_screen.gd")
+const CargoScreen := preload("res://screens/cargo_screen.gd")
+const LogScreen := preload("res://screens/log_screen.gd")
 const JourneyScreen := preload("res://screens/journey_screen.gd")
 
 var game := EliteGame.new()
@@ -49,6 +51,8 @@ func _ready() -> void:
 	body.add_child(content)
 
 	_add_screen(nav, "market", "📊  Market", _make_market())
+	_add_screen(nav, "cargo", "📦  Cargo", _make(CargoScreen))
+	_add_screen(nav, "log", "🧾  Trading Log", _make(LogScreen))
 	_add_screen(nav, "journey", "🚀  Journey", JourneyScreen.new())
 	_show("market")
 	_refresh_header()
@@ -59,6 +63,12 @@ func _make_market() -> Control:
 	market.setup(game)
 	market.traded.connect(_refresh_header)
 	return market
+
+
+func _make(script: GDScript) -> Control:
+	var screen: Control = script.new()
+	screen.setup(game)
+	return screen
 
 
 func _add_screen(nav: VBoxContainer, key: String, title: String, screen: Control) -> void:
@@ -78,6 +88,8 @@ func _show(key: String) -> void:
 	for name in screens:
 		screens[name].visible = name == key
 		nav_buttons[name].button_pressed = name == key
+	if screens[key].has_method("refresh"):
+		screens[key].refresh()
 
 
 func _refresh_header() -> void:

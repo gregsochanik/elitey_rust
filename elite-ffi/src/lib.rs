@@ -61,6 +61,43 @@ pub struct StatusData {
 }
 
 #[derive(Debug, Clone)]
+pub struct CargoLineData {
+    pub id: String,
+    pub name: String,
+    pub quantity: u32,
+    pub estimated_value: u32,
+    pub paid: Option<u32>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CargoData {
+    pub weight: u32,
+    pub capacity: u32,
+    pub reserved: u32,
+    pub items: Vec<CargoLineData>,
+    pub total_value: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct TradeRecordData {
+    pub bought: bool,
+    pub commodity: String,
+    pub quantity: u32,
+    pub location: String,
+    pub total: u32,
+    pub profit: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TradeLogData {
+    pub recent: Vec<TradeRecordData>,
+    pub total_trades: u32,
+    pub net_profit: i64,
+    pub success_rate: Option<f64>,
+    pub best: Option<TradeRecordData>,
+}
+
+#[derive(Debug, Clone)]
 pub struct TradeResult {
     pub message: String,
     pub credits_after: u32,
@@ -96,6 +133,42 @@ impl Game {
             max_hull: view.max_hull,
             power_used: view.power_used,
             power_capacity: view.power_capacity,
+        }
+    }
+
+    pub fn cargo(&self) -> CargoData {
+        let view = self.state.lock().expect("game state lock").cargo_view();
+        CargoData {
+            weight: view.weight,
+            capacity: view.capacity,
+            reserved: view.reserved,
+            items: view
+                .items
+                .into_iter()
+                .map(|line| CargoLineData {
+                    id: line.commodity.id().to_string(),
+                    name: line.commodity.name().to_string(),
+                    quantity: line.quantity,
+                    estimated_value: line.estimated_value,
+                    paid: line.paid,
+                })
+                .collect(),
+            total_value: view.total_value,
+        }
+    }
+
+    pub fn trade_log(&self, count: u32) -> TradeLogData {
+        let view = self
+            .state
+            .lock()
+            .expect("game state lock")
+            .trade_log_view(count as usize);
+        TradeLogData {
+            recent: view.recent.iter().map(trade_record).collect(),
+            total_trades: view.stats.total_trades as u32,
+            net_profit: view.stats.net_profit,
+            success_rate: view.stats.success_rate,
+            best: view.best.as_ref().map(trade_record),
         }
     }
 
@@ -163,6 +236,17 @@ impl Game {
     }
 }
 
+fn trade_record(transaction: &elite_core::game::trade_log::Transaction) -> TradeRecordData {
+    TradeRecordData {
+        bought: transaction.kind == TradeKind::Buy,
+        commodity: transaction.commodity.name().to_string(),
+        quantity: transaction.quantity,
+        location: transaction.location.clone(),
+        total: transaction.total(),
+        profit: transaction.profit,
+    }
+}
+
 fn parse_commodity(id: &str) -> Result<CommodityType, GameError> {
     CommodityType::from_string(id)
         .ok_or_else(|| GameError::refused(format!("Unknown commodity: {}", id)))
@@ -202,6 +286,39 @@ mod tests {
         assert_eq!(status.combat_rating, "Harmless");
         assert_eq!((status.power_used, status.power_capacity), (9, 20));
         assert_eq!((status.fuel_current, status.fuel_capacity), (7, 7));
+    }
+
+    #[test]
+    fn the_cargo_lists_what_is_held_and_what_it_cost() {
+        let game = Game::new("Test".to_string());
+        assert!(game.cargo().items.is_empty());
+
+        game.buy("food".to_string(), 3).unwrap();
+        let cargo = game.cargo();
+
+        assert_eq!((cargo.weight, cargo.capacity), (3, 20));
+        assert_eq!(cargo.items.len(), 1);
+        assert_eq!(cargo.items[0].name, "Food");
+        assert!(cargo.items[0].paid.is_some());
+        assert!(cargo.total_value > 0);
+    }
+
+    #[test]
+    fn the_trade_log_lists_recent_trades_and_totals() {
+        let game = Game::new("Test".to_string());
+        game.buy("food".to_string(), 2).unwrap();
+        game.sell("food".to_string(), 2).unwrap();
+
+        let log = game.trade_log(10);
+
+        assert_eq!(log.total_trades, 2);
+        assert_eq!(log.recent.len(), 2);
+        assert!(log.recent.iter().any(|t| t.bought));
+        assert!(log.recent.iter().any(|t| !t.bought && t.profit.is_some()));
+        let profit = log.recent.iter().find_map(|t| t.profit).unwrap();
+        assert_eq!(log.best.is_some(), profit > 0);
+        assert_eq!(log.net_profit, profit);
+        assert_eq!(game.trade_log(1).recent.len(), 1);
     }
 
     #[test]
