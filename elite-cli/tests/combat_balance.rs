@@ -113,3 +113,34 @@ fn the_best_loadout_barely_scratches_the_hull() {
     assert!(best.win_rate >= 0.99);
     assert!(best.average_hull_lost < 10.0, "{}", best.average_hull_lost);
 }
+
+#[test]
+fn pirates_sometimes_run_or_yield_but_most_still_die() {
+    let ship = ship_with(&[]);
+    let raider = elite_core::data::enemies::find_enemy("pirate-raider").unwrap();
+    let (mut won, mut fled, mut yielded) = (0u64, 0u64, 0u64);
+    for seed in 0..FIGHTS {
+        let mut combat = Combat::against(Combatant::from_ship(&ship), raider);
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut roll = || rng.gen::<f64>();
+        for _ in 0..500 {
+            match combat.resolve_round(Action::Attack, &mut roll) {
+                Ok(Outcome::Ongoing) => continue,
+                Ok(Outcome::Victory) => won += 1,
+                Ok(Outcome::EnemyFled) => fled += 1,
+                Ok(Outcome::EnemySurrendered) => yielded += 1,
+                _ => {}
+            }
+            break;
+        }
+    }
+    let share = |count: u64| count as f64 / FIGHTS as f64;
+
+    assert!(share(won) >= 0.5, "destroyed {}", share(won));
+    assert!((0.05..=0.25).contains(&share(fled)), "fled {}", share(fled));
+    assert!(
+        (0.15..=0.4).contains(&share(yielded)),
+        "surrendered {}",
+        share(yielded)
+    );
+}

@@ -310,7 +310,7 @@ impl GameState {
                     }
                     Some(entry) => {
                         journey.stage = Stage::AwaitBountyFight { entry };
-                        return Ok(Step::Fight(self.fight_against("pirate-raider")));
+                        return Ok(Step::Fight(self.fight_against("bounty-target")));
                     }
                 },
                 Stage::AwaitBountyFight { entry } => {

@@ -78,6 +78,7 @@ func begin_encounter() -> void:
 	enemy.position = ENEMY_ENCOUNTER
 	enemy.visible = true
 	enemy.scale = Vector3.ONE
+	Style.restyle(enemy, ENEMY_MODEL, "enemy")
 
 
 func end_encounter() -> void:
@@ -85,6 +86,18 @@ func end_encounter() -> void:
 	ship.position = Vector3.ZERO
 	ship.visible = true
 	enemy.visible = false
+
+
+## The enemy breaks off and streaks away.
+func enemy_leaves() -> void:
+	var tween := create_tween()
+	tween.tween_property(enemy, "position", ENEMY_ENCOUNTER + Vector3(10, 4, -70), 0.9)
+	tween.tween_callback(func(): enemy.visible = false)
+
+
+## The enemy gives in: it stops firing and goes pale.
+func enemy_yields() -> void:
+	enemy.material_override.albedo_color = Color(0.9, 0.9, 0.9)
 
 
 func point_of(player: bool) -> Vector3:
