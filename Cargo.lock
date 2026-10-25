@@ -353,6 +353,7 @@ version = "0.0.0-dev"
 dependencies = [
  "elite-ffi",
  "godot",
+ "serde_json",
 ]
 
 [[package]]
