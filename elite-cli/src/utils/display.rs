@@ -24,6 +24,7 @@ pub enum Icon {
     Equipment,
     Save,
     Help,
+    Explore,
 }
 
 impl Icon {
@@ -41,6 +42,7 @@ impl Icon {
             Icon::Jobs => "💼",
             Icon::Locked => "🔒",
             Icon::Rating => "⭐",
+            Icon::Explore => "🧭",
             Icon::Success => "✅",
             Icon::Error => "❌",
             Icon::Warning => "⚠️",

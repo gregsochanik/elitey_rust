@@ -100,6 +100,7 @@ fn the_market_and_status_are_laid_out_as_before() {
     assert!(output.contains("vs Base"));
     assert!(output.contains("Commander Status"));
     assert!(output.contains("Combat rating: Harmless (0 kills, 3 more for Mostly Harmless)"));
+    assert!(output.contains("Explored: 0% — Local (1 of 256 stars)"));
     assert!(output.contains("Fuel: 7/7 light years [##########]"));
     assert!(output.contains("Hull: 100/100 [##########]"));
     assert!(output.contains("Cargo: 0/20 tons [----------]"));

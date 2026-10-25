@@ -502,3 +502,13 @@ fn losing_the_first_fight_ends_the_group() {
 
     assert!(matches!(step, Step::Arrived { .. }));
 }
+
+#[test]
+fn arriving_at_a_system_marks_it_visited() {
+    let seed = seed_where(|step| matches!(step, Step::Arrived { .. }));
+    let (game, _, _) = first_step(seed);
+
+    assert!(game.commander.has_visited("Sol"));
+    assert!(game.commander.has_visited("Proxima Centauri"));
+    assert_eq!(game.exploration().visited, 2);
+}

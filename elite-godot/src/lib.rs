@@ -353,6 +353,10 @@ fn status_to_dictionary(status: StatusData) -> VarDictionary {
         "max_hull": status.max_hull,
         "power_used": status.power_used,
         "power_capacity": status.power_capacity,
+        "explored_percent": status.explored_percent,
+        "explorer_rating": status.explorer_rating,
+        "systems_visited": status.systems_visited,
+        "systems_total": status.systems_total,
     }
 }
 
@@ -428,6 +432,7 @@ fn galaxy_to_dictionary(galaxy: GalaxyData) -> VarDictionary {
                 "reachable": system.reachable,
                 "is_current": system.is_current,
                 "industrial": system.industrial,
+                "visited": system.visited,
             }
             .to_variant(),
         );
@@ -446,6 +451,7 @@ fn detail_to_dictionary(detail: SystemDetailData) -> VarDictionary {
         "star_class": detail.star_class,
         "star_type": detail.star_type,
         "star_note": detail.star_note,
+        "visited": detail.visited,
         "distance": detail.distance,
         "fuel_cost": detail.fuel_cost,
         "reachable": detail.reachable,

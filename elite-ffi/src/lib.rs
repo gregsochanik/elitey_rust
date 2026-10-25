@@ -75,6 +75,10 @@ pub struct StatusData {
     pub max_hull: u32,
     pub power_used: u32,
     pub power_capacity: u32,
+    pub explored_percent: u32,
+    pub explorer_rating: String,
+    pub systems_visited: u32,
+    pub systems_total: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -140,6 +144,7 @@ pub struct SystemPointData {
     pub reachable: bool,
     pub is_current: bool,
     pub industrial: bool,
+    pub visited: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -160,6 +165,7 @@ pub struct SystemDetailData {
     pub star_class: String,
     pub star_type: String,
     pub star_note: String,
+    pub visited: bool,
     pub distance: f64,
     pub fuel_cost: u32,
     pub reachable: bool,
@@ -406,6 +412,10 @@ impl Game {
             max_hull: view.max_hull,
             power_used: view.power_used,
             power_capacity: view.power_capacity,
+            explored_percent: view.exploration.percent,
+            explorer_rating: view.exploration.rating.name().to_string(),
+            systems_visited: view.exploration.visited,
+            systems_total: view.exploration.total,
         }
     }
 
@@ -519,6 +529,7 @@ impl Game {
                     fuel_cost,
                     reachable: !is_current && fuel_cost <= fuel,
                     is_current,
+                    visited: state.commander.has_visited(&system.name),
                     industrial: matches!(
                         system.economy,
                         EconomyType::RichIndustrial
@@ -560,6 +571,7 @@ impl Game {
                 .star
                 .as_ref()
                 .map_or_else(String::new, |s| s.note.to_string()),
+            visited: view.visited,
             distance: from_here.map_or(0.0, |jump| jump.distance),
             fuel_cost: from_here.map_or(0, |jump| jump.fuel),
             reachable: !is_current

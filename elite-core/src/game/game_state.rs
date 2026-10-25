@@ -1,6 +1,7 @@
 use crate::data::commodities::CommodityType;
 use crate::data::star_class::StarClass;
 use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
+use crate::game::exploration::Exploration;
 use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
@@ -144,6 +145,7 @@ impl GameState {
 
         // Update location
         self.commander.location = destination.to_string();
+        self.commander.visit(destination);
 
         self.world_clock += 1;
         self.job_board.clear();
@@ -178,6 +180,16 @@ impl GameState {
         if let Some(home) = home {
             self.commander.location = home;
         }
+    }
+
+    /// How many of the galaxy's stars the commander has been to
+    pub fn exploration(&self) -> Exploration {
+        let systems = self.system_manager.get_all_systems();
+        let visited = systems
+            .iter()
+            .filter(|system| self.commander.has_visited(&system.name))
+            .count();
+        Exploration::new(visited as u32, systems.len() as u32)
     }
 
     /// Get system information
@@ -374,6 +386,7 @@ impl GameState {
             power_used: self.ship.equipment.power_used(),
             power_capacity: self.ship.equipment.power_capacity(),
             damaged: self.ship.is_damaged(),
+            exploration: self.exploration(),
         }
     }
 
@@ -398,6 +411,7 @@ impl GameState {
             population: system.population.clone(),
             description: system.description.clone(),
             star: StarClass::from_code(&system.star_class),
+            visited: self.commander.has_visited(&system.name),
             from_here,
         })
     }

@@ -310,6 +310,7 @@ impl GameState {
                         .clone()
                         .unwrap_or_else(|| journey.plan.destination.clone());
                     self.commander.location = arrived_at.clone();
+                    self.commander.visit(&arrived_at);
                     if arrived_at != journey.plan.destination {
                         journey.info(format!(
                             "You emerge at {}, not {}.",
