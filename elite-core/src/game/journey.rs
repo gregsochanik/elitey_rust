@@ -3,6 +3,7 @@ use crate::data::systems::StarSystem;
 use crate::game::aftermath::Foe;
 use crate::game::combat::{Combat, Combatant, Outcome};
 use crate::game::commander::Standing;
+use crate::game::encounters;
 use crate::game::events::{Event, EventPhase, EventReport, EventType};
 use crate::game::jobs::{self, ActiveJob};
 use crate::game::smuggling::{self, Answer, Inspection, InspectionChoice};
@@ -67,15 +68,29 @@ const PATROL_SALUTE_REPUTATION: i32 = 2;
 enum Stage {
     Start,
     JumpEvent,
-    AwaitEvent { event: Event, phase: EventPhase },
-    AwaitEventFight { phase: EventPhase, foe: Foe },
+    AwaitEvent {
+        event: Event,
+        phase: EventPhase,
+    },
+    AwaitEventFight {
+        phase: EventPhase,
+        foe: Foe,
+        /// Further enemies still to fight after this one
+        remaining: u32,
+    },
     Fuel,
     ApproachEvent,
     Arrive,
-    AwaitInspection { jobs: Vec<ActiveJob> },
-    AwaitPatrolFight { jobs: Vec<ActiveJob> },
+    AwaitInspection {
+        jobs: Vec<ActiveJob>,
+    },
+    AwaitPatrolFight {
+        jobs: Vec<ActiveJob>,
+    },
     NextBounty,
-    AwaitBountyFight { entry: ActiveJob },
+    AwaitBountyFight {
+        entry: ActiveJob,
+    },
     Done,
 }
 
@@ -188,20 +203,56 @@ impl GameState {
                     let starts_combat = self.report_event(journey, &report, rng);
                     if starts_combat {
                         let foe = Foe::of_event(&event.event_type);
-                        journey.stage = Stage::AwaitEventFight { phase, foe };
+                        let remaining = if foe == Foe::Pirate {
+                            let here = match phase {
+                                EventPhase::Jump => journey.plan.destination.clone(),
+                                EventPhase::Approach => journey
+                                    .landed
+                                    .clone()
+                                    .unwrap_or_else(|| journey.plan.destination.clone()),
+                            };
+                            encounters::extra_foes(
+                                &event.event_type,
+                                &self.system_named(&here),
+                                rng,
+                            )
+                        } else {
+                            0
+                        };
+                        journey.stage = Stage::AwaitEventFight {
+                            phase,
+                            foe,
+                            remaining,
+                        };
                         return Ok(Step::Fight(self.fight_against(foe.enemy_id())));
                     }
                     journey.stage = after_event(&phase);
                 }
-                Stage::AwaitEventFight { phase, foe } => {
+                Stage::AwaitEventFight {
+                    phase,
+                    foe,
+                    remaining,
+                } => {
                     let result = match input.take().map(fight_result) {
                         Some(Ok(result)) => result,
                         Some(Err(error)) => {
-                            journey.stage = Stage::AwaitEventFight { phase, foe };
+                            journey.stage = Stage::AwaitEventFight {
+                                phase,
+                                foe,
+                                remaining,
+                            };
                             return Err(error);
                         }
                         None => return Err(JourneyError::WrongInput),
                     };
+                    let keeps_fighting = remaining > 0
+                        && matches!(
+                            result,
+                            Ok((
+                                Outcome::Victory | Outcome::EnemySurrendered | Outcome::EnemyFled,
+                                _
+                            ))
+                        );
                     match result {
                         Ok((outcome, hull)) => {
                             journey.notices.push(Notice::Blank);
@@ -220,6 +271,17 @@ impl GameState {
                             "The fight was interrupted: {}",
                             error
                         ))),
+                    }
+                    if keeps_fighting {
+                        journey
+                            .notices
+                            .push(Notice::Error("Another raider closes in!".to_string()));
+                        journey.stage = Stage::AwaitEventFight {
+                            phase,
+                            foe,
+                            remaining: remaining - 1,
+                        };
+                        return Ok(Step::Fight(self.fight_against(foe.enemy_id())));
                     }
                     journey.stage = after_event(&phase);
                 }
@@ -390,7 +452,11 @@ impl GameState {
                         "The patrol recognises you and opens fire!".to_string(),
                     ));
                     let foe = Foe::Police;
-                    journey.stage = Stage::AwaitEventFight { phase, foe };
+                    journey.stage = Stage::AwaitEventFight {
+                        phase,
+                        foe,
+                        remaining: 0,
+                    };
                     return Some(Step::Fight(self.fight_against(foe.enemy_id())));
                 }
                 Standing::Respected => {
@@ -413,7 +479,8 @@ impl GameState {
 
     fn fight_against(&self, enemy_id: &str) -> Combat {
         let enemy = find_enemy(enemy_id).expect("enemy is in data/enemies.json");
-        Combat::against(Combatant::from_ship(&self.ship), enemy)
+        let difficulty = encounters::difficulty(enemy_id, self.commander.combat_rating());
+        Combat::against_scaled(Combatant::from_ship(&self.ship), enemy, difficulty)
     }
 
     /// Turn an applied event outcome into notices and apply any redirect; true when it starts a fight

@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::encounters::Difficulty;
 use crate::game::npc::NpcAction;
 
 fn fighter(name: &str, hull: u32, shield: u32, recharge: u32, weapons: &[(u32, f64)]) -> Combatant {
@@ -469,4 +470,18 @@ fn an_unarmed_trader_may_give_in_at_the_first_shot() {
 
     assert_eq!(outcome, Outcome::EnemySurrendered);
     assert_eq!(combat.player.hull, 100);
+}
+
+#[test]
+fn a_scaled_enemy_has_more_health_and_less_aggression() {
+    let raider = crate::data::enemies::find_enemy("pirate-raider").unwrap();
+    let difficulty = Difficulty {
+        health: 1.5,
+        nerve: 0.3,
+    };
+
+    let combat = Combat::against_scaled(fighter("You", 100, 0, 0, &[(5, 1.0)]), raider, difficulty);
+
+    assert_eq!((combat.enemy.hull, combat.enemy.max_hull), (105, 105));
+    assert_eq!((combat.enemy.shield, combat.enemy.max_shield), (38, 38));
 }

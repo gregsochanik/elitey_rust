@@ -1,5 +1,7 @@
 use super::*;
 use crate::data::systems::{GovernmentType, StarSystem};
+use crate::game::commander::CombatRating;
+use rand::SeedableRng;
 
 const GOVERNMENTS: [GovernmentType; 8] = [
     GovernmentType::Anarchy,
@@ -164,4 +166,74 @@ fn bounty_hunters_only_come_for_the_wanted() {
     for standing in [Standing::Neutral, Standing::Trusted, Standing::Respected] {
         assert_eq!(weight(&EventType::BountyHunter, &here, standing), 0.0);
     }
+}
+
+fn extra_share(event: &EventType, government: GovernmentType, economy: EconomyType) -> (f64, f64) {
+    let here = system(government, economy);
+    let mut rng = rand::rngs::StdRng::seed_from_u64(5);
+    let runs = 20_000;
+    let (mut any, mut two) = (0, 0);
+    for _ in 0..runs {
+        let extra = extra_foes(event, &here, &mut rng);
+        any += u32::from(extra >= 1);
+        two += u32::from(extra == 2);
+    }
+    (
+        f64::from(any) / f64::from(runs),
+        f64::from(two) / f64::from(runs),
+    )
+}
+
+#[test]
+fn pirates_in_anarchy_come_in_groups() {
+    let (any, two) = extra_share(
+        &EventType::PirateAttack,
+        GovernmentType::Anarchy,
+        EconomyType::RichIndustrial,
+    );
+
+    assert!((0.32..=0.38).contains(&any), "{any}");
+    assert!((0.04..=0.08).contains(&two), "{two}");
+}
+
+#[test]
+fn groups_need_a_reason_and_only_pirates_have_them() {
+    let (calm, _) = extra_share(
+        &EventType::PirateAttack,
+        GovernmentType::Democracy,
+        EconomyType::RichIndustrial,
+    );
+    let (patrols, _) = extra_share(
+        &EventType::MilitaryPatrol,
+        GovernmentType::Anarchy,
+        EconomyType::PoorAgricultural,
+    );
+    let (poor, _) = extra_share(
+        &EventType::PirateAttack,
+        GovernmentType::Democracy,
+        EconomyType::PoorAgricultural,
+    );
+
+    assert_eq!(calm, 0.0);
+    assert_eq!(patrols, 0.0);
+    assert!((0.12..=0.18).contains(&poor), "{poor}");
+}
+
+#[test]
+fn only_pirates_toughen_with_the_commanders_rating() {
+    assert_eq!(
+        difficulty("pirate-raider", CombatRating::Harmless),
+        Difficulty::NONE
+    );
+    let elite = difficulty("pirate-raider", CombatRating::Elite);
+    assert!((elite.health - 1.48).abs() < 1e-9);
+    assert!((elite.nerve - 0.32).abs() < 1e-9);
+    assert_eq!(
+        difficulty("patrol-vessel", CombatRating::Elite),
+        Difficulty::NONE
+    );
+    assert_eq!(
+        difficulty("bounty-target", CombatRating::Elite),
+        Difficulty::NONE
+    );
 }

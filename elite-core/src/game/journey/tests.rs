@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::systems::GovernmentType;
+use crate::game::aftermath::Foe;
 use crate::game::combat::{Action, Weapon};
 use crate::game::commander::CombatRating;
 use crate::game::events::EventType;
@@ -441,4 +442,63 @@ fn everyone_else_gets_the_patrol_event_and_lawless_systems_do_not_care() {
 
         assert!(matches!(step, Some(Step::Event(_))), "{score}");
     }
+}
+
+fn pirate_fight_with(remaining: u32) -> (GameState, Journey, Combat) {
+    let game = game();
+    let plan = game.plan_jump("Proxima Centauri").unwrap();
+    let journey = Journey::new(
+        plan,
+        Stage::AwaitEventFight {
+            phase: EventPhase::Approach,
+            foe: Foe::Pirate,
+            remaining,
+        },
+    );
+    let combat = game.fight_against("pirate-raider");
+    (game, journey, combat)
+}
+
+#[test]
+fn a_second_raider_joins_after_the_first_is_beaten() {
+    let (mut game, mut journey, combat) = pirate_fight_with(1);
+    let mut rng = StdRng::seed_from_u64(1);
+
+    let step = game
+        .advance_journey(&mut journey, Input::FightEnded(won_fight(combat)), &mut rng)
+        .unwrap();
+    let Step::Fight(second) = step else {
+        panic!("another raider closes in");
+    };
+    assert!(journey
+        .take_notices()
+        .iter()
+        .any(|notice| matches!(notice, Notice::Error(text) if text.contains("Another raider"))));
+
+    let step = game
+        .advance_journey(&mut journey, Input::FightEnded(won_fight(second)), &mut rng)
+        .unwrap();
+    assert!(matches!(step, Step::Arrived { .. }));
+}
+
+#[test]
+fn losing_the_first_fight_ends_the_group() {
+    let (mut game, mut journey, mut combat) = pirate_fight_with(2);
+    combat.player.hull = 1;
+    combat.enemy.weapons = vec![Weapon {
+        damage: 50,
+        accuracy: 1.0,
+    }];
+    combat.resolve_round(Action::Attack, &mut || 0.99).unwrap();
+    assert_eq!(combat.outcome(), Outcome::Defeat);
+
+    let step = game
+        .advance_journey(
+            &mut journey,
+            Input::FightEnded(combat),
+            &mut StdRng::seed_from_u64(1),
+        )
+        .unwrap();
+
+    assert!(matches!(step, Step::Arrived { .. }));
 }
