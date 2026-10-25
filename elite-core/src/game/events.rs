@@ -27,6 +27,7 @@ pub enum EventType {
     RescueSignal,
     GovernmentInspection,
     MilitaryPatrol,
+    TraderConvoy,
 }
 
 /// Cargo an event takes from the hold
@@ -112,9 +113,17 @@ impl Default for EventManager {
 
 /// How much more or less likely an event is at this destination (1.0 is normal)
 fn event_weight(event_type: &EventType, destination: &StarSystem, standing: Standing) -> f64 {
-    government_weight(event_type, &destination.government)
+    base_weight(event_type)
+        * government_weight(event_type, &destination.government)
         * economy_weight(event_type, &destination.economy)
         * standing_weight(event_type, standing, &destination.government)
+}
+
+fn base_weight(event_type: &EventType) -> f64 {
+    match event_type {
+        EventType::TraderConvoy => 0.6,
+        _ => 1.0,
+    }
 }
 
 /// Law enforcement notices who you are: the infamous are stopped more in lawful systems and
@@ -294,6 +303,7 @@ impl EventManager {
             EventType::MilitaryPatrol,
             Self::create_military_patrol_event(),
         );
+        events.insert(EventType::TraderConvoy, Self::create_trader_convoy_event());
 
         Self { events }
     }
@@ -919,16 +929,82 @@ impl EventManager {
                     description: "Engage the patrol".to_string(),
                     outcome: EventOutcome {
                         description: "You engage in combat with the military patrol".to_string(),
-                        credits_change: 300,
+                        credits_change: 0,
                         cargo_loss: None,
                         cargo_gain: None,
-                        hull_damage: -15,
+                        hull_damage: 0,
                         fuel_change: 0,
                         reputation_change: -20,
-                        starts_combat: false,
+                        starts_combat: true,
                         redirect: None,
-                        message: "You defeat the patrol! +{credits} credits, but heavy damage and reputation loss.".to_string(),
+                        message: "You open fire on the patrol. Reputation loss.".to_string(),
                     },
+                },
+            ],
+        }
+    }
+
+    fn create_trader_convoy_event() -> Event {
+        let quiet = |description: &str, message: &str| EventOutcome {
+            description: description.to_string(),
+            credits_change: 0,
+            cargo_loss: None,
+            cargo_gain: None,
+            hull_damage: 0,
+            fuel_change: 0,
+            reputation_change: 0,
+            starts_combat: false,
+            redirect: None,
+            message: message.to_string(),
+        };
+        Event {
+            event_type: EventType::TraderConvoy,
+            phase: EventPhase::Approach,
+            title: "💼 Trader Convoy".to_string(),
+            description: "A merchant convoy is hailing you, offering to trade.".to_string(),
+            choices: vec![
+                EventChoice {
+                    description: "Trade with the convoy".to_string(),
+                    outcome: EventOutcome {
+                        credits_change: -50,
+                        cargo_gain: Some(CargoGain {
+                            commodity: CommodityType::Textiles,
+                            tons: 3,
+                        }),
+                        ..quiet(
+                            "You swap credits for textiles",
+                            "You pay 50 credits for 3 tons of textiles.",
+                        )
+                    },
+                },
+                EventChoice {
+                    description: "Buy fuel from the convoy".to_string(),
+                    outcome: EventOutcome {
+                        credits_change: -20,
+                        fuel_change: 2,
+                        ..quiet(
+                            "You top up your tank",
+                            "You pay 20 credits for 2 light years of fuel.",
+                        )
+                    },
+                },
+                EventChoice {
+                    description: "Rob the convoy".to_string(),
+                    outcome: EventOutcome {
+                        reputation_change: -10,
+                        starts_combat: true,
+                        ..quiet(
+                            "You draw your weapons on the convoy",
+                            "You open fire on the convoy. Reputation loss.",
+                        )
+                    },
+                },
+                EventChoice {
+                    description: "Wave and move on".to_string(),
+                    outcome: quiet(
+                        "You wave and fly on",
+                        "The convoy wishes you a safe journey.",
+                    ),
                 },
             ],
         }

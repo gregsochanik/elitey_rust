@@ -339,3 +339,50 @@ fn a_smuggler_who_runs_fights_a_patrol_vessel() {
     }
     panic!("no seed produced an inspection");
 }
+
+#[test]
+fn engaging_a_patrol_or_robbing_a_convoy_starts_the_matching_fight() {
+    for (event_type, choice, enemy) in [
+        (
+            EventType::MilitaryPatrol,
+            "Engage the patrol",
+            "Patrol Vessel",
+        ),
+        (EventType::TraderConvoy, "Rob the convoy", "Trader Convoy"),
+    ] {
+        let mut game = game();
+        let event = game
+            .event_manager
+            .get_available_events(&EventPhase::Approach)
+            .into_iter()
+            .find(|event| event.event_type == event_type)
+            .unwrap()
+            .clone();
+        let index = event
+            .choices
+            .iter()
+            .position(|c| c.description == choice)
+            .unwrap();
+        let plan = game.plan_jump("Proxima Centauri").unwrap();
+        let mut journey = Journey::new(
+            plan,
+            Stage::AwaitEvent {
+                event,
+                phase: EventPhase::Approach,
+            },
+        );
+
+        let step = game
+            .advance_journey(
+                &mut journey,
+                Input::Choice(index),
+                &mut StdRng::seed_from_u64(1),
+            )
+            .unwrap();
+
+        let Step::Fight(combat) = step else {
+            panic!("{choice} starts a fight");
+        };
+        assert_eq!(combat.enemy.name, enemy);
+    }
+}

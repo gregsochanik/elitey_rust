@@ -191,7 +191,7 @@ func _fighter_box(bars: Dictionary, colour: Color) -> Control:
 func _show_fight(step: Dictionary) -> void:
 	journey.begin_encounter()
 	fight_logged = 0
-	banner.text = "⚔️  %s attacks!" % step["enemy_name"]
+	banner.text = "⚔️  Fight: %s" % step["enemy_name"]
 	_update_fight(game.fight())
 	fight_panel.visible = true
 	_set_fight_buttons(true)

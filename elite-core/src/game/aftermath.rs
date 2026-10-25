@@ -1,7 +1,7 @@
-use crate::data::commodities::TradingSystem;
+use crate::data::commodities::{CommodityType, TradingSystem};
 use crate::game::combat::Outcome;
 use crate::game::commander::{CombatRating, ReputationChange};
-use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLoss};
+use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLoss, EventType};
 use crate::game::{Commander, Ship};
 use rand::Rng;
 
@@ -23,6 +23,111 @@ fn push_reputation_messages(messages: &mut Vec<String>, change: ReputationChange
     if let Some(standing) = change.new_standing {
         messages.push(format!("Your standing is now {}.", standing.name()));
     }
+}
+
+/// Who the player fought, which decides how the fight is settled
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Foe {
+    Pirate,
+    Police,
+    Trader,
+}
+
+impl Foe {
+    pub fn of_event(event_type: &EventType) -> Self {
+        match event_type {
+            EventType::MilitaryPatrol => Foe::Police,
+            EventType::TraderConvoy => Foe::Trader,
+            _ => Foe::Pirate,
+        }
+    }
+
+    /// The entry in `data/enemies.json` that plays this foe
+    pub fn enemy_id(self) -> &'static str {
+        match self {
+            Foe::Pirate => "pirate-raider",
+            Foe::Police => "patrol-vessel",
+            Foe::Trader => "trader",
+        }
+    }
+}
+
+const POLICE_FINE_PERCENT: u32 = 25;
+const TRADER_LOOT_CREDITS: std::ops::RangeInclusive<u32> = 60..=120;
+const TRADER_PIRACY_REPUTATION: i32 = -10;
+
+/// Settle a fight against `foe`: pirates as `settle`; police fine and confiscate instead of
+/// robbing; traders give up goods, and robbing them costs reputation and earns no kill.
+pub fn settle_against(
+    foe: Foe,
+    outcome: Outcome,
+    player_hull: u32,
+    commander: &mut Commander,
+    ship: &mut Ship,
+    rng: &mut impl Rng,
+) -> Vec<String> {
+    match (foe, outcome) {
+        (Foe::Police, Outcome::Defeat) => {
+            ship.hull_percentage = DEFEAT_HULL_PERCENT * ship.ship_type.max_hull() / 100;
+            let mut messages = vec![];
+            confiscate_and_fine(commander, ship, POLICE_FINE_PERCENT, &mut messages);
+            messages
+        }
+        (Foe::Police, Outcome::Surrendered) => {
+            ship.hull_percentage = player_hull.min(ship.ship_type.max_hull());
+            let mut messages = vec![];
+            confiscate_and_fine(commander, ship, POLICE_FINE_PERCENT, &mut messages);
+            messages
+        }
+        (Foe::Trader, Outcome::Victory | Outcome::EnemySurrendered) => {
+            ship.hull_percentage = player_hull.min(ship.ship_type.max_hull());
+            let credits = rng.gen_range(TRADER_LOOT_CREDITS);
+            commander.add_credits(credits);
+            let mut messages = vec![format!("You take {} credits from the convoy.", credits)];
+            let commodities = TradingSystem::new().get_commodities().to_vec();
+            let loot = CargoGain {
+                commodity: commodities[rng.gen_range(0..commodities.len())].clone(),
+                tons: rng.gen_range(2..=4),
+            };
+            match apply_cargo_gain(ship, &loot) {
+                0 => messages.push("There is no room in your hold for the goods.".to_string()),
+                tons => messages.push(format!(
+                    "You seize {} tons of {}.",
+                    tons,
+                    loot.commodity.name()
+                )),
+            }
+            push_reputation_messages(
+                &mut messages,
+                commander.change_reputation(TRADER_PIRACY_REPUTATION),
+            );
+            messages
+        }
+        (Foe::Trader, Outcome::Surrendered) => {
+            ship.hull_percentage = player_hull.min(ship.ship_type.max_hull());
+            vec!["The convoy lets you go.".to_string()]
+        }
+        _ => settle(outcome, player_hull, commander, ship, rng),
+    }
+}
+
+fn confiscate_and_fine(
+    commander: &mut Commander,
+    ship: &mut Ship,
+    percent: u32,
+    messages: &mut Vec<String>,
+) {
+    let taken = apply_cargo_loss(ship, &CargoLoss::All(CommodityType::Narcotics));
+    let tons: u32 = taken.iter().map(|(_, tons)| tons).sum();
+    if tons > 0 {
+        messages.push(format!(
+            "The patrol confiscates {} tons of narcotics.",
+            tons
+        ));
+    }
+    let fine = commander.credits() * percent / 100;
+    commander.remove_credits(fine);
+    messages.push(format!("They fine you {} credits.", fine));
 }
 
 /// Apply the consequences of a finished fight and return what to tell the player.
@@ -132,6 +237,67 @@ mod tests {
 
     fn rng() -> StdRng {
         StdRng::seed_from_u64(11)
+    }
+
+    #[test]
+    fn losing_to_the_police_costs_a_fine_and_the_narcotics_but_not_the_rest() {
+        let (mut commander, mut ship) = setup(
+            1_000,
+            &[(CommodityType::Narcotics, 3), (CommodityType::Food, 4)],
+        );
+
+        let messages = settle_against(
+            Foe::Police,
+            Outcome::Defeat,
+            0,
+            &mut commander,
+            &mut ship,
+            &mut rng(),
+        );
+
+        assert_eq!(commander.credits(), 750);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Narcotics), 0);
+        assert_eq!(ship.cargo_hold.get_quantity(&CommodityType::Food), 4);
+        assert_eq!(commander.reputation, 0);
+        assert!(messages.iter().any(|m| m.contains("fine")));
+    }
+
+    #[test]
+    fn robbing_a_convoy_pays_but_costs_reputation_and_earns_no_kill() {
+        for seed in 0..30 {
+            let (mut commander, mut ship) = setup(100, &[]);
+            settle_against(
+                Foe::Trader,
+                Outcome::Victory,
+                90,
+                &mut commander,
+                &mut ship,
+                &mut StdRng::seed_from_u64(seed),
+            );
+
+            assert!((60..=120).contains(&(commander.credits() - 100)));
+            assert!((2..=4).contains(&ship.cargo_used()));
+            assert_eq!(commander.reputation, -10);
+            assert_eq!(commander.kills, 0);
+        }
+    }
+
+    #[test]
+    fn a_pirate_fight_settles_as_before() {
+        let (mut a, mut ship_a) = setup(100, &[]);
+        let (mut b, mut ship_b) = setup(100, &[]);
+
+        let direct = settle(Outcome::Defeat, 0, &mut a, &mut ship_a, &mut rng());
+        let against = settle_against(
+            Foe::Pirate,
+            Outcome::Defeat,
+            0,
+            &mut b,
+            &mut ship_b,
+            &mut rng(),
+        );
+
+        assert_eq!(direct, against);
     }
 
     #[test]

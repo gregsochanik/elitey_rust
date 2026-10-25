@@ -457,3 +457,16 @@ fn an_enemy_that_never_retreats_uses_no_extra_rolls() {
 
     assert_eq!(combat.last_npc_action, Some(NpcAction::Attack));
 }
+
+#[test]
+fn an_unarmed_trader_may_give_in_at_the_first_shot() {
+    let trader = crate::data::enemies::find_enemy("trader").unwrap();
+    let mut combat = Combat::against(fighter("You", 100, 0, 0, &[(5, 1.0)]), trader);
+
+    let outcome = combat
+        .resolve_round(Action::Attack, &mut rolls(&[0.0, 0.1]))
+        .unwrap();
+
+    assert_eq!(outcome, Outcome::EnemySurrendered);
+    assert_eq!(combat.player.hull, 100);
+}
