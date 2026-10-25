@@ -1,4 +1,4 @@
-use crate::data::equipment::EquipmentCategory;
+use crate::data::equipment::{Equipment, EquipmentCategory};
 use crate::game::equipment::{self, InstalledView, ShopView};
 use crate::game::{Commander, Ship};
 use crate::utils::display::{show_error, show_success};
@@ -86,6 +86,23 @@ fn sell(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
     }
 }
 
+fn power_column(item: &Equipment) -> String {
+    if item.output > 0 {
+        format!("gives {}", item.output)
+    } else {
+        format!("{:>2} power", item.power)
+    }
+}
+
+fn power_line(used: u32, capacity: u32) -> String {
+    format!(
+        "Power: {}/{} used, {} free",
+        used,
+        capacity,
+        capacity.saturating_sub(used)
+    )
+}
+
 fn category_name(category: EquipmentCategory) -> ColoredString {
     category.name().yellow()
 }
@@ -94,17 +111,18 @@ fn print_shop(view: &ShopView) {
     println!("\n{}", "Equipment Shop".cyan().bold());
     println!("{}", "==============".cyan());
     println!("Credits: {}cr", view.credits.to_string().green());
+    println!("{}", power_line(view.power_used, view.power_capacity));
 
     for group in &view.categories {
         println!("\n{}", category_name(group.category));
         for entry in &group.items {
             let item = entry.item;
             println!(
-                "  {:<18} {:<9} {:>5}cr  {:>2} power  {}{}",
+                "  {:<18} {:<9} {:>5}cr  {:<10}  {}{}",
                 item.id,
                 item.quality.name(),
                 item.price,
-                item.power,
+                power_column(item),
                 item.effect,
                 if entry.installed {
                     "  [installed]".green().to_string()
@@ -120,7 +138,7 @@ fn print_shop(view: &ShopView) {
 fn print_installed(view: &InstalledView) {
     println!("\n{}", "Installed Equipment".cyan().bold());
     println!("{}", "===================".cyan());
-    println!("Power: {}/{}", view.power_used, view.power_capacity);
+    println!("{}", power_line(view.power_used, view.power_capacity));
 
     for group in &view.categories {
         println!(
@@ -131,8 +149,10 @@ fn print_installed(view: &InstalledView) {
         );
         for item in &group.items {
             println!(
-                "  {:<18} {:>2} power  {}",
-                item.name, item.power, item.effect
+                "  {:<18} {:<10}  {}",
+                item.name,
+                power_column(item),
+                item.effect
             );
         }
     }

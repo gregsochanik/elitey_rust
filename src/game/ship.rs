@@ -122,6 +122,13 @@ impl Ship {
     /// Replace the equipment loadout and resize the cargo hold to match.
     /// Fails, changing nothing, if the cargo held would not fit.
     pub fn set_equipment(&mut self, equipment: Loadout) -> Result<(), String> {
+        if equipment.power_used() > equipment.power_capacity() {
+            return Err(format!(
+                "Not enough power: need {}, {} available",
+                equipment.power_used(),
+                equipment.power_capacity()
+            ));
+        }
         let capacity =
             (self.ship_type.cargo_capacity() as f64 * equipment.cargo_multiplier()) as u32;
         let held = self.cargo_hold.current_weight();

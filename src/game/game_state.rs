@@ -320,6 +320,8 @@ impl GameState {
             fuel_capacity: self.ship.fuel_capacity(),
             hull: self.ship.hull_percentage(),
             max_hull: self.ship.ship_type.max_hull(),
+            power_used: self.ship.equipment.power_used(),
+            power_capacity: self.ship.equipment.power_capacity(),
             damaged: self.ship.is_damaged(),
         }
     }

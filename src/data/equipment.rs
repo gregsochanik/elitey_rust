@@ -3,6 +3,7 @@ use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EquipmentCategory {
+    Power,
     Weapon,
     Shield,
     Engine,
@@ -12,7 +13,8 @@ pub enum EquipmentCategory {
 }
 
 impl EquipmentCategory {
-    pub const ALL: [EquipmentCategory; 6] = [
+    pub const ALL: [EquipmentCategory; 7] = [
+        EquipmentCategory::Power,
         EquipmentCategory::Weapon,
         EquipmentCategory::Shield,
         EquipmentCategory::Engine,
@@ -23,6 +25,7 @@ impl EquipmentCategory {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EquipmentCategory::Power => "Power Plant",
             EquipmentCategory::Weapon => "Weapons",
             EquipmentCategory::Shield => "Shields",
             EquipmentCategory::Engine => "Engines",
@@ -85,6 +88,9 @@ pub struct Equipment {
     pub quality: Quality,
     pub price: u32,
     pub power: u32,
+    /// Power the item supplies; only reactors have any
+    #[serde(default)]
+    pub output: u32,
     #[serde(default = "no_cargo_change")]
     pub cargo_multiplier: f64,
     #[serde(default)]
@@ -148,6 +154,21 @@ mod tests {
     fn find_returns_item_by_id() {
         assert_eq!(find("pulse-laser").unwrap().name, "Pulse Laser");
         assert!(find("nonsense").is_none());
+    }
+
+    #[test]
+    fn only_reactors_supply_power_and_they_draw_none() {
+        for item in catalog() {
+            let is_reactor = item.category == EquipmentCategory::Power;
+            assert_eq!(item.output > 0, is_reactor, "{}", item.id);
+            if is_reactor {
+                assert_eq!(item.power, 0, "{}", item.id);
+            }
+        }
+        let outputs: Vec<u32> = catalog_for(EquipmentCategory::Power)
+            .map(|item| item.output)
+            .collect();
+        assert_eq!(outputs, vec![20, 28, 38, 50]);
     }
 
     #[test]

@@ -98,6 +98,22 @@ fn the_market_and_status_are_laid_out_as_before() {
     assert!(output.contains("Combat rating: Harmless (0 kills, 3 more for Mostly Harmless)"));
     assert!(output.contains("Fuel: 7/7 light years"));
     assert!(output.contains("Hull: 100/100"));
+    assert!(output.contains("Power: 9/20"));
+}
+
+#[test]
+fn power_is_shown_in_the_shop_and_the_installed_list_and_can_be_upgraded() {
+    let output = play(
+        "power",
+        "equipment\nequipment buy improved-reactor\nequipment installed\nstatus\nequipment buy elite-reactor",
+    );
+
+    assert!(output.contains("Power: 9/20 used, 11 free"));
+    assert!(output.contains("gives 28"));
+    assert!(output.contains("Success: Installed Improved Reactor for 60cr"));
+    assert!(output.contains("Power: 9/28 used, 19 free"));
+    assert!(output.contains("Power: 9/28\n"));
+    assert!(output.contains("Error: Insufficient credits"));
 }
 
 #[test]
