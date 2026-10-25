@@ -37,7 +37,7 @@ Prefer one small command/outcome surface over many `handle_*` methods:
 
 ### Phase 1: Core refactor (in place, single crate)
 Do this first and on its own.
-- Areas migrated so far (typed API in the core, text in `src/cli/`): trading, refuel, repair.
+- Areas migrated so far (typed API in the core, text in `src/cli/`): trading, refuel, repair, equipment, ship upgrades.
 - [ ] Introduce the action/outcome/error/view types above and migrate one area at a time: trading, refuel, repair, equipment, upgrades/ships, save/load, trade log, travel and events, combat entry.
 - [ ] Keep each existing command working through a thin CLI layer that calls the new API and prints. The CLI's visible output may only change where the old text was wrong.
 - [ ] Remove `println!` / `print!` / `colored` / stdin use from everything under `src/game/` and `src/data/`.

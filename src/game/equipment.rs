@@ -1,8 +1,7 @@
 use crate::data::equipment::{self, Equipment, EquipmentCategory};
 use crate::game::{Commander, Ship};
-use crate::utils::display::{show_error, show_success};
-use colored::*;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 const POWER_CAPACITY: u32 = 20;
 
@@ -137,173 +136,172 @@ impl Default for Loadout {
     }
 }
 
-pub struct EquipmentHandler;
+/// Why an equipment purchase or sale was refused
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum EquipmentError {
+    #[error("Unknown equipment: {0}")]
+    Unknown(String),
+    #[error("{0} is already installed")]
+    AlreadyInstalled(String),
+    #[error("{0} is not installed")]
+    NotInstalled(String),
+    #[error("Insufficient credits. Need {needed}cr, have {have}cr")]
+    NotEnoughCredits { needed: u32, have: u32 },
+    /// No free slot, not enough power, or the ship could not take the change
+    #[error("{0}")]
+    CannotFit(String),
+}
 
-impl EquipmentHandler {
-    pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
-        match args.first().map(|a| a.to_lowercase()).as_deref() {
-            None => {
-                Self::display_shop(commander, ship);
-                true
-            }
-            Some("installed") => {
-                Self::display_installed(ship);
-                true
-            }
-            Some("buy") => Self::buy(&args[1..], commander, ship),
-            Some("sell") => Self::sell(&args[1..], commander, ship),
-            Some(_) => {
-                show_error("Usage: equipment [buy <item> | sell <item> | installed]");
-                false
-            }
-        }
+/// What buying equipment did
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EquipmentPurchase {
+    pub name: String,
+    pub price: u32,
+    /// The item swapped out and what it refunded
+    pub replaced: Option<(String, u32)>,
+}
+
+/// What selling equipment did
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EquipmentSale {
+    pub name: String,
+    pub refund: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShopItem {
+    pub item: &'static Equipment,
+    pub installed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShopCategory {
+    pub category: EquipmentCategory,
+    pub items: Vec<ShopItem>,
+}
+
+/// Everything for sale, by category
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShopView {
+    pub credits: u32,
+    pub categories: Vec<ShopCategory>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct InstalledCategory {
+    pub category: EquipmentCategory,
+    pub slots_used: usize,
+    pub slots_capacity: usize,
+    pub items: Vec<&'static Equipment>,
+}
+
+/// The ship's loadout
+#[derive(Debug, Clone, PartialEq)]
+pub struct InstalledView {
+    pub power_used: u32,
+    pub power_capacity: u32,
+    pub categories: Vec<InstalledCategory>,
+    pub cargo_capacity: u32,
+}
+
+/// Look an item up by catalog id
+pub fn find_item(id: &str) -> Result<&'static Equipment, EquipmentError> {
+    equipment::find(id).ok_or_else(|| EquipmentError::Unknown(id.to_string()))
+}
+
+/// Buy and install an item; a full single-slot category swaps out the current item for a refund
+pub fn buy(
+    commander: &mut Commander,
+    ship: &mut Ship,
+    item: &'static Equipment,
+) -> Result<EquipmentPurchase, EquipmentError> {
+    if ship.equipment.installed().iter().any(|i| i.id == item.id) {
+        return Err(EquipmentError::AlreadyInstalled(item.name.clone()));
     }
 
-    fn item_from_args(args: &[String]) -> Result<&'static Equipment, String> {
-        if args.is_empty() {
-            return Err("Specify an item, e.g. pulse-laser".to_string());
-        }
-        let id = args.join("-").to_lowercase();
-        equipment::find(&id).ok_or_else(|| format!("Unknown equipment: {}", id))
+    let mut trial = ship.equipment.clone();
+    let replaced = trial
+        .install(item, item.price)
+        .map_err(EquipmentError::CannotFit)?;
+
+    let refund = replaced.as_ref().map_or(0, Installed::refund);
+    if commander.credits() + refund < item.price {
+        return Err(EquipmentError::NotEnoughCredits {
+            needed: item.price.saturating_sub(refund),
+            have: commander.credits(),
+        });
     }
 
-    fn buy(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
-        let item = match Self::item_from_args(args) {
-            Ok(item) => item,
-            Err(message) => {
-                show_error(&message);
-                return false;
-            }
-        };
+    ship.set_equipment(trial)
+        .map_err(EquipmentError::CannotFit)?;
+    commander.add_credits(refund);
+    commander.remove_credits(item.price);
 
-        if ship.equipment.installed().iter().any(|i| i.id == item.id) {
-            show_error(&format!("{} is already installed", item.name));
-            return false;
-        }
+    Ok(EquipmentPurchase {
+        name: item.name.clone(),
+        price: item.price,
+        replaced: replaced.map(|old| (old.item().name.clone(), refund)),
+    })
+}
 
-        let mut trial = ship.equipment.clone();
-        let replaced = match trial.install(item, item.price) {
-            Ok(replaced) => replaced,
-            Err(message) => {
-                show_error(&message);
-                return false;
-            }
-        };
+/// Sell an installed item for half what was paid
+pub fn sell(
+    commander: &mut Commander,
+    ship: &mut Ship,
+    item: &'static Equipment,
+) -> Result<EquipmentSale, EquipmentError> {
+    let mut trial = ship.equipment.clone();
+    let removed = trial
+        .remove(&item.id)
+        .ok_or_else(|| EquipmentError::NotInstalled(item.name.clone()))?;
 
-        let refund = replaced.as_ref().map_or(0, Installed::refund);
-        if commander.credits() + refund < item.price {
-            show_error(&format!(
-                "Insufficient credits. Need {}cr, have {}cr",
-                item.price.saturating_sub(refund),
-                commander.credits()
-            ));
-            return false;
-        }
+    ship.set_equipment(trial)
+        .map_err(EquipmentError::CannotFit)?;
+    commander.add_credits(removed.refund());
+    Ok(EquipmentSale {
+        name: item.name.clone(),
+        refund: removed.refund(),
+    })
+}
 
-        if let Err(message) = ship.set_equipment(trial) {
-            show_error(&message);
-            return false;
-        }
-        commander.add_credits(refund);
-        commander.remove_credits(item.price);
-
-        match replaced {
-            Some(old) => show_success(&format!(
-                "Installed {} for {}cr, replacing {} (refund {}cr)",
-                item.name,
-                item.price,
-                old.item().name,
-                refund
-            )),
-            None => show_success(&format!("Installed {} for {}cr", item.name, item.price)),
-        }
-        true
+pub fn shop_view(commander: &Commander, ship: &Ship) -> ShopView {
+    ShopView {
+        credits: commander.credits(),
+        categories: EquipmentCategory::ALL
+            .into_iter()
+            .map(|category| ShopCategory {
+                category,
+                items: equipment::catalog_for(category)
+                    .map(|item| ShopItem {
+                        item,
+                        installed: ship.equipment.installed().iter().any(|i| i.id == item.id),
+                    })
+                    .collect(),
+            })
+            .collect(),
     }
+}
 
-    fn sell(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
-        let item = match Self::item_from_args(args) {
-            Ok(item) => item,
-            Err(message) => {
-                show_error(&message);
-                return false;
-            }
-        };
-
-        let mut trial = ship.equipment.clone();
-        let removed = match trial.remove(&item.id) {
-            Some(removed) => removed,
-            None => {
-                show_error(&format!("{} is not installed", item.name));
-                return false;
-            }
-        };
-
-        if let Err(message) = ship.set_equipment(trial) {
-            show_error(&message);
-            return false;
-        }
-        commander.add_credits(removed.refund());
-        show_success(&format!("Sold {} for {}cr", item.name, removed.refund()));
-        true
-    }
-
-    fn display_shop(commander: &Commander, ship: &Ship) {
-        println!("\n{}", "Equipment Shop".cyan().bold());
-        println!("{}", "==============".cyan());
-        println!("Credits: {}cr", commander.credits().to_string().green());
-
-        for category in EquipmentCategory::ALL {
-            println!("\n{}", category.name().yellow());
-            for item in equipment::catalog_for(category) {
-                let installed = ship.equipment.installed().iter().any(|i| i.id == item.id);
-                println!(
-                    "  {:<18} {:<9} {:>5}cr  {:>2} power  {}{}",
-                    item.id,
-                    item.quality.name(),
-                    item.price,
-                    item.power,
-                    item.effect,
-                    if installed {
-                        "  [installed]".green().to_string()
-                    } else {
-                        String::new()
-                    }
-                );
-            }
-        }
-        println!("\nUse: equipment buy <item>\n");
-    }
-
-    fn display_installed(ship: &Ship) {
-        let loadout = &ship.equipment;
-        println!("\n{}", "Installed Equipment".cyan().bold());
-        println!("{}", "===================".cyan());
-        println!(
-            "Power: {}/{}",
-            loadout.power_used(),
-            loadout.power_capacity()
-        );
-
-        for category in EquipmentCategory::ALL {
-            println!(
-                "\n{} ({}/{} slots)",
-                category.name().yellow(),
-                loadout.slots_used(category),
-                loadout.slots_capacity(category)
-            );
-            for installed in loadout
-                .installed()
-                .iter()
-                .filter(|i| i.item().category == category)
-            {
-                let item = installed.item();
-                println!(
-                    "  {:<18} {:>2} power  {}",
-                    item.name, item.power, item.effect
-                );
-            }
-        }
-        println!("\nCargo capacity: {} tons\n", ship.cargo_capacity());
+pub fn installed_view(ship: &Ship) -> InstalledView {
+    let loadout = &ship.equipment;
+    InstalledView {
+        power_used: loadout.power_used(),
+        power_capacity: loadout.power_capacity(),
+        categories: EquipmentCategory::ALL
+            .into_iter()
+            .map(|category| InstalledCategory {
+                category,
+                slots_used: loadout.slots_used(category),
+                slots_capacity: loadout.slots_capacity(category),
+                items: loadout
+                    .installed()
+                    .iter()
+                    .map(Installed::item)
+                    .filter(|item| item.category == category)
+                    .collect(),
+            })
+            .collect(),
+        cargo_capacity: ship.cargo_capacity(),
     }
 }
 
@@ -330,11 +328,11 @@ mod tests {
     }
 
     fn buy(text: &str, commander: &mut Commander, ship: &mut Ship) -> bool {
-        EquipmentHandler::handle(&args(&format!("buy {}", text)), commander, ship)
+        crate::cli::equipment::handle(&args(&format!("buy {}", text)), commander, ship)
     }
 
     fn sell(text: &str, commander: &mut Commander, ship: &mut Ship) -> bool {
-        EquipmentHandler::handle(&args(&format!("sell {}", text)), commander, ship)
+        crate::cli::equipment::handle(&args(&format!("sell {}", text)), commander, ship)
     }
 
     fn has(ship: &Ship, id: &str) -> bool {
@@ -461,5 +459,47 @@ mod tests {
 
         let restored: Ship = serde_json::from_value(value).unwrap();
         assert_eq!(restored.equipment, Loadout::starting());
+    }
+
+    #[test]
+    fn purchases_and_sales_report_what_changed() {
+        let (mut commander, mut ship) = setup(1_000);
+        let racks = find_item("expanded-racks").unwrap();
+
+        let bought = super::buy(&mut commander, &mut ship, racks).unwrap();
+        assert_eq!(bought.price, racks.price);
+        assert_eq!(bought.replaced, Some(("Standard Racks".to_string(), 0)));
+        assert_eq!(
+            super::buy(&mut commander, &mut ship, racks),
+            Err(EquipmentError::AlreadyInstalled(racks.name.clone()))
+        );
+
+        let sold = super::sell(&mut commander, &mut ship, racks).unwrap();
+        assert_eq!(sold.refund, racks.price / 2);
+        assert_eq!(
+            super::sell(&mut commander, &mut ship, racks),
+            Err(EquipmentError::NotInstalled(racks.name.clone()))
+        );
+        assert_eq!(
+            find_item("nonsense"),
+            Err(EquipmentError::Unknown("nonsense".to_string()))
+        );
+    }
+
+    #[test]
+    fn the_views_list_every_category() {
+        let (commander, ship) = setup(100);
+
+        let shop = shop_view(&commander, &ship);
+        assert_eq!(shop.categories.len(), EquipmentCategory::ALL.len());
+        assert!(shop
+            .categories
+            .iter()
+            .flat_map(|group| &group.items)
+            .any(|entry| entry.installed));
+
+        let installed = installed_view(&ship);
+        assert_eq!(installed.power_capacity, 20);
+        assert_eq!(installed.cargo_capacity, 20);
     }
 }
