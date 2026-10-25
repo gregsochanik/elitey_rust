@@ -95,6 +95,7 @@ fn the_market_and_status_are_laid_out_as_before() {
     assert!(output.contains("Buy: "));
     assert!(output.contains("vs base"));
     assert!(output.contains("Commander Status"));
+    assert!(output.contains("Combat rating: Harmless (0 kills, 3 more for Mostly Harmless)"));
     assert!(output.contains("Fuel: 7/7 light years"));
     assert!(output.contains("Hull: 100/100"));
 }

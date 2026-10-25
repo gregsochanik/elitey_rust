@@ -61,6 +61,65 @@ impl Standing {
     }
 }
 
+/// How dangerous the commander is, from the number of ships destroyed
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CombatRating {
+    Harmless,
+    MostlyHarmless,
+    Poor,
+    Average,
+    AboveAverage,
+    Competent,
+    Dangerous,
+    Deadly,
+    Elite,
+}
+
+impl CombatRating {
+    const LADDER: [(u32, CombatRating); 9] = [
+        (0, CombatRating::Harmless),
+        (3, CombatRating::MostlyHarmless),
+        (6, CombatRating::Poor),
+        (12, CombatRating::Average),
+        (25, CombatRating::AboveAverage),
+        (50, CombatRating::Competent),
+        (100, CombatRating::Dangerous),
+        (200, CombatRating::Deadly),
+        (400, CombatRating::Elite),
+    ];
+
+    pub fn from_kills(kills: u32) -> Self {
+        Self::LADDER
+            .iter()
+            .rev()
+            .find(|(needed, _)| kills >= *needed)
+            .map(|(_, rating)| *rating)
+            .unwrap_or(CombatRating::Harmless)
+    }
+
+    /// The next rating and the kills it needs, or `None` at ELITE
+    pub fn next(&self) -> Option<(CombatRating, u32)> {
+        let index = Self::LADDER.iter().position(|(_, rating)| rating == self)?;
+        Self::LADDER
+            .get(index + 1)
+            .map(|(needed, rating)| (*rating, *needed))
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            CombatRating::Harmless => "Harmless",
+            CombatRating::MostlyHarmless => "Mostly Harmless",
+            CombatRating::Poor => "Poor",
+            CombatRating::Average => "Average",
+            CombatRating::AboveAverage => "Above Average",
+            CombatRating::Competent => "Competent",
+            CombatRating::Dangerous => "Dangerous",
+            CombatRating::Deadly => "Deadly",
+            CombatRating::Elite => "ELITE",
+        }
+    }
+}
+
 /// What a reputation change actually did once limits were applied
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ReputationChange {
@@ -84,9 +143,24 @@ pub struct Commander {
     /// Reputation score, kept between MIN_REPUTATION and MAX_REPUTATION
     #[serde(default, deserialize_with = "clamped_reputation")]
     pub reputation: i32,
+    /// Enemy ships destroyed
+    #[serde(default)]
+    pub kills: u32,
 }
 
 impl Commander {
+    pub fn combat_rating(&self) -> CombatRating {
+        CombatRating::from_kills(self.kills)
+    }
+
+    /// Count a destroyed enemy; returns the new rating when it earns a promotion
+    pub fn record_kill(&mut self) -> Option<CombatRating> {
+        let before = self.combat_rating();
+        self.kills = self.kills.saturating_add(1);
+        let after = self.combat_rating();
+        (after != before).then_some(after)
+    }
+
     pub fn standing(&self) -> Standing {
         Standing::from_score(self.reputation)
     }
@@ -112,6 +186,7 @@ impl Commander {
             credits: STARTING_CREDITS,
             location: "LAVE".to_string(), // Starting location as per spec
             reputation: 0,
+            kills: 0,
         }
     }
 
@@ -298,5 +373,59 @@ mod tests {
         let commander: Commander =
             serde_json::from_str(r#"{"name":"Old","credits":100,"location":"LAVE"}"#).unwrap();
         assert_eq!(commander.reputation, 0);
+    }
+
+    #[test]
+    fn kills_map_to_the_rating_ladder() {
+        let expected = [
+            (0, CombatRating::Harmless),
+            (2, CombatRating::Harmless),
+            (3, CombatRating::MostlyHarmless),
+            (6, CombatRating::Poor),
+            (12, CombatRating::Average),
+            (25, CombatRating::AboveAverage),
+            (50, CombatRating::Competent),
+            (100, CombatRating::Dangerous),
+            (200, CombatRating::Deadly),
+            (399, CombatRating::Deadly),
+            (400, CombatRating::Elite),
+            (5_000, CombatRating::Elite),
+        ];
+        for (kills, rating) in expected {
+            assert_eq!(CombatRating::from_kills(kills), rating, "{kills} kills");
+        }
+    }
+
+    #[test]
+    fn the_next_rating_and_its_kills_are_known_until_elite() {
+        assert_eq!(
+            CombatRating::Harmless.next(),
+            Some((CombatRating::MostlyHarmless, 3))
+        );
+        assert_eq!(
+            CombatRating::Deadly.next(),
+            Some((CombatRating::Elite, 400))
+        );
+        assert_eq!(CombatRating::Elite.next(), None);
+        assert_eq!(CombatRating::Elite.name(), "ELITE");
+    }
+
+    #[test]
+    fn a_kill_reports_only_the_promotions() {
+        let mut commander = Commander::new("Test".to_string());
+
+        assert_eq!(commander.record_kill(), None);
+        assert_eq!(commander.record_kill(), None);
+        assert_eq!(commander.record_kill(), Some(CombatRating::MostlyHarmless));
+        assert_eq!(commander.kills, 3);
+        assert_eq!(commander.combat_rating(), CombatRating::MostlyHarmless);
+    }
+
+    #[test]
+    fn old_commanders_start_with_no_kills() {
+        let commander: Commander =
+            serde_json::from_str(r#"{"name":"Old","credits":5,"location":"LAVE"}"#).unwrap();
+
+        assert_eq!(commander.kills, 0);
     }
 }

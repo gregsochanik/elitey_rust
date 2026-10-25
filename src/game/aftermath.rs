@@ -1,6 +1,6 @@
 use crate::data::commodities::TradingSystem;
 use crate::game::combat::Outcome;
-use crate::game::commander::ReputationChange;
+use crate::game::commander::{CombatRating, ReputationChange};
 use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLoss};
 use crate::game::{Commander, Ship};
 use rand::Rng;
@@ -9,6 +9,12 @@ pub const VICTORY_REWARD: std::ops::RangeInclusive<u32> = 100..=200;
 const DEFEAT_HULL_PERCENT: u32 = 10;
 const SURRENDER_CARGO_TONS: u32 = 5;
 const SURRENDER_CREDITS: u32 = 200;
+
+pub fn push_promotion_message(messages: &mut Vec<String>, promotion: Option<CombatRating>) {
+    if let Some(rating) = promotion {
+        messages.push(format!("Your combat rating is now {}.", rating.name()));
+    }
+}
 
 fn push_reputation_messages(messages: &mut Vec<String>, change: ReputationChange) {
     if change.applied != 0 {
@@ -64,6 +70,7 @@ pub fn settle_with_reward(
                 )),
             }
             push_reputation_messages(&mut messages, reputation);
+            push_promotion_message(&mut messages, commander.record_kill());
         }
         Outcome::Defeat => {
             let held = ship.cargo_hold.current_weight();
@@ -255,5 +262,28 @@ mod tests {
 
         assert_eq!(ship.cargo_used(), 0);
         assert_eq!(ship.cargo_hold.reserved, 0);
+    }
+
+    #[test]
+    fn only_victories_count_as_kills() {
+        for outcome in [Outcome::Escaped, Outcome::Surrendered, Outcome::Defeat] {
+            let (mut commander, mut ship) = setup(100, &[]);
+            settle(outcome, 50, &mut commander, &mut ship, &mut rng());
+            assert_eq!(commander.kills, 0, "{outcome:?}");
+        }
+
+        let (mut commander, mut ship) = setup(100, &[]);
+        settle(Outcome::Victory, 50, &mut commander, &mut ship, &mut rng());
+        assert_eq!(commander.kills, 1);
+    }
+
+    #[test]
+    fn a_promotion_is_announced_after_the_fight() {
+        let (mut commander, mut ship) = setup(100, &[]);
+        commander.kills = 2;
+
+        let messages = settle(Outcome::Victory, 50, &mut commander, &mut ship, &mut rng());
+
+        assert!(messages.contains(&"Your combat rating is now Mostly Harmless.".to_string()));
     }
 }

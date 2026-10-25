@@ -1,5 +1,5 @@
 use crate::data::systems::GovernmentType;
-use crate::game::aftermath::settle_with_reward;
+use crate::game::aftermath::{push_promotion_message, settle_with_reward};
 use crate::game::combat::Outcome;
 use crate::game::jobs::ActiveJob;
 use crate::game::{Commander, Ship};
@@ -184,6 +184,7 @@ pub fn finish_patrol_fight(
         Ok((Outcome::Victory, hull)) => {
             ship.hull_percentage = hull.min(ship.ship_type.max_hull());
             messages.push("You destroy the patrol vessel and make the drop.".to_string());
+            push_promotion_message(&mut messages, commander.record_kill());
             pay_all(
                 jobs,
                 commander,

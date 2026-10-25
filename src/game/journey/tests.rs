@@ -154,6 +154,7 @@ fn a_bounty_at_the_destination_needs_a_fight_and_pays_on_victory() {
 
     assert!(matches!(step, Step::Arrived { .. }));
     assert_eq!(game.commander.credits(), credits + 300);
+    assert_eq!(game.commander.kills, 1);
     assert!(game.active_jobs.is_empty());
 }
 
@@ -325,6 +326,7 @@ fn a_smuggler_who_runs_fights_a_patrol_vessel() {
         assert!(matches!(step, Step::Arrived { .. }));
         assert!(game.active_jobs.is_empty());
         assert_eq!(game.commander.credits(), 1_000 + 200);
+        assert_eq!(game.commander.kills, 1);
         return;
     }
     panic!("no seed produced an inspection");

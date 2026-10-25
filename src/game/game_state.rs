@@ -304,6 +304,8 @@ impl GameState {
             location: self.commander.location().to_string(),
             reputation: self.commander.reputation,
             standing: self.commander.standing(),
+            kills: self.commander.kills,
+            combat_rating: self.commander.combat_rating(),
             ship_name: self.ship.ship_type_name().to_string(),
             cargo_used: self.ship.cargo_used(),
             cargo_capacity: self.ship.cargo_capacity(),
