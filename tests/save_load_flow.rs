@@ -7,8 +7,11 @@ use elitey_rust::data::save_load::SaveLoadManager;
 #[test]
 fn a_played_game_survives_saving_to_disk_and_loading_back() {
     let mut game = new_game(500);
-    assert!(game.handle_buy_command(&args("food 3")));
-    assert!(game.handle_equipment_command(&args("buy expanded-racks")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 3")));
+    assert!(elitey_rust::cli::equipment::command(
+        &mut game,
+        &args("buy expanded-racks")
+    ));
     game.commander.reputation = 12;
 
     let manager = SaveLoadManager::new().unwrap();
@@ -29,7 +32,7 @@ fn a_played_game_survives_saving_to_disk_and_loading_back() {
     assert_eq!(restored.buy_prices, expected.buy_prices);
     assert_eq!(restored.sell_prices, expected.sell_prices);
     assert_eq!(restored.availability, expected.availability);
-    assert!(loaded.handle_buy_command(&args("food 1")));
+    assert!(elitey_rust::cli::trading::buy(&mut loaded, &args("food 1")));
 }
 
 #[test]

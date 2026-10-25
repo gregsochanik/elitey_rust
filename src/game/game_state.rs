@@ -6,8 +6,6 @@ use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
 use crate::game::upgrades::{UpgradeError, UpgradeReceipt};
 use crate::game::views::{JumpFromHere, StatusView, SystemInfoView, TradeLogView};
-use crate::utils::display::{show_error, show_success};
-use colored::*;
 
 use super::jobs::{self, ActiveJob, Job};
 use super::{
@@ -210,11 +208,6 @@ impl GameState {
         &mut self.travel_handler
     }
 
-    /// Handle buy command
-    pub fn handle_buy_command(&mut self, args: &[String]) -> bool {
-        crate::cli::trading::buy(self, args)
-    }
-
     /// Buy tons of a commodity at the current system
     pub fn buy(
         &mut self,
@@ -264,16 +257,6 @@ impl GameState {
         self.trading_handler.cargo_view(&self.ship)
     }
 
-    /// Handle equipment command
-    pub fn handle_equipment_command(&mut self, args: &[String]) -> bool {
-        crate::cli::equipment::handle(args, &mut self.commander, &mut self.ship)
-    }
-
-    /// Handle refuel command
-    pub fn handle_refuel_command(&mut self, args: &[String]) -> bool {
-        crate::cli::upkeep::refuel(self, args)
-    }
-
     /// Buy fuel (all that fits and is affordable when `None`), or be rescued if stranded
     pub fn refuel(&mut self, units: Option<u32>) -> Result<RefuelOutcome, RefuelError> {
         let nearest = self.nearest_jump_cost();
@@ -300,16 +283,6 @@ impl GameState {
             .map(|system| fuel_for_distance(current.distance_to(system)))
             .min()
             .unwrap_or_else(|| self.ship.fuel_capacity())
-    }
-
-    /// Handle repair command
-    pub fn handle_repair_command(&mut self, args: &[String]) -> bool {
-        crate::cli::upkeep::repair(self, args)
-    }
-
-    /// Handle log command
-    pub fn handle_log_command(&self, args: &[String]) {
-        crate::cli::info::log(self, args);
     }
 
     /// Recent trades and totals
@@ -364,16 +337,6 @@ impl GameState {
         })
     }
 
-    /// Handle sell command
-    pub fn handle_sell_command(&mut self, args: &[String]) -> bool {
-        crate::cli::trading::sell(self, args)
-    }
-
-    /// Handle market command
-    pub fn handle_market_command(&mut self) {
-        crate::cli::trading::market(self);
-    }
-
     /// Commodities here whose prices the player's recent trading is still moving
     pub fn pushed_commodities(
         &self,
@@ -393,21 +356,6 @@ impl GameState {
         )
     }
 
-    /// Handle cargo command
-    pub fn handle_cargo_command(&self) {
-        crate::cli::trading::cargo(self);
-    }
-
-    /// Handle upgrade command
-    pub fn handle_upgrade_command(&self) {
-        crate::cli::upgrades::show_upgrades(self);
-    }
-
-    /// Handle upgrade purchase command
-    pub fn handle_upgrade_purchase_command(&mut self, args: &[String]) -> bool {
-        crate::cli::upgrades::buy(self, args)
-    }
-
     /// Buy a better ship
     pub fn buy_ship(
         &mut self,
@@ -415,41 +363,6 @@ impl GameState {
     ) -> Result<UpgradeReceipt, UpgradeError> {
         self.upgrade_handler
             .upgrade(ship_type, &mut self.commander, &mut self.ship)
-    }
-
-    /// Handle ships command
-    pub fn handle_ships_command(&self) {
-        crate::cli::upgrades::show_ships(self);
-    }
-
-    /// Handle save command
-    pub fn handle_save_command(&self, args: &[String]) -> bool {
-        crate::cli::saves::save(self, args)
-    }
-
-    /// Handle load command
-    pub fn handle_load_command(&self, args: &[String]) -> Result<Option<GameState>, String> {
-        crate::cli::saves::load(self, args)
-    }
-
-    /// Handle list saves command
-    pub fn handle_list_saves_command(&self) {
-        crate::cli::saves::list(self);
-    }
-
-    /// Handle delete save command
-    pub fn handle_delete_save_command(&self, args: &[String]) -> bool {
-        crate::cli::saves::delete(self, args)
-    }
-
-    /// Handle auto-save
-    pub fn handle_auto_save(&self) -> bool {
-        crate::cli::saves::auto_save(self)
-    }
-
-    /// Handle jump command
-    pub fn handle_jump_command(&mut self, args: &[String]) -> bool {
-        crate::cli::travel::jump(self, args)
     }
 
     /// The jobs on offer here, rolled with the given randomness on first sight
@@ -497,64 +410,6 @@ impl GameState {
         )
     }
 
-    /// Handle accept command
-    pub fn handle_accept_command(&mut self, args: &[String]) {
-        let Some(number) = Self::job_number(args, "accept") else {
-            return;
-        };
-        match self.accept_job(number) {
-            Ok(job) => show_success(&format!(
-                "Accepted: {} for {}cr within {} jumps.",
-                job.describe(),
-                job.reward,
-                job.deadline_jumps
-            )),
-            Err(e) => show_error(&e),
-        }
-    }
-
-    /// Handle abandon command
-    pub fn handle_abandon_command(&mut self, args: &[String]) {
-        let Some(number) = Self::job_number(args, "abandon") else {
-            return;
-        };
-        match self.abandon_job(number) {
-            Ok(job) => println!(
-                "{}",
-                format!(
-                    "Abandoned: {}. Reputation {:+}.",
-                    job.describe(),
-                    jobs::ABANDON_REPUTATION
-                )
-                .yellow()
-            ),
-            Err(e) => show_error(&e),
-        }
-    }
-
-    /// Handle missions command
-    pub fn handle_missions_command(&self) {
-        crate::utils::display::show_missions(&self.active_jobs);
-    }
-
-    fn job_number(args: &[String], command: &str) -> Option<usize> {
-        match args.first().map(|arg| arg.parse::<usize>()) {
-            Some(Ok(number)) if number > 0 && args.len() == 1 => Some(number),
-            _ => {
-                show_error(&format!("Usage: {} <number>", command));
-                None
-            }
-        }
-    }
-
-    /// Handle jobs command
-    pub fn handle_jobs_command(&mut self) {
-        match self.jobs_here(&mut rand::thread_rng()) {
-            Some(jobs) => crate::utils::display::show_jobs(&self.commander.location, &jobs),
-            None => show_error("Unable to determine current location"),
-        }
-    }
-
     /// Systems reachable with the current fuel, nearest first
     pub fn reachable_destinations(&self) -> Option<Vec<Destination>> {
         let current_fuel = self.ship.fuel_current as f64;
@@ -582,16 +437,6 @@ impl GameState {
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
         Some(destinations)
-    }
-
-    /// Handle systems command
-    pub fn handle_systems_command(&self) {
-        crate::cli::info::systems(self);
-    }
-
-    /// Handle info command
-    pub fn handle_info_command(&self, args: &[String]) -> bool {
-        crate::cli::info::system_info(self, args)
     }
 }
 

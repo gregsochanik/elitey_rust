@@ -7,12 +7,12 @@ use elitey_rust::data::commodities::CommodityType;
 fn buying_then_selling_updates_credits_cargo_and_log() {
     let mut game = new_game(100);
 
-    assert!(game.handle_buy_command(&args("food 2")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 2")));
     let spent = 100 - game.commander.credits();
     assert!(spent > 0);
     assert_eq!(game.ship.cargo_hold.get_quantity(&CommodityType::Food), 2);
 
-    assert!(game.handle_sell_command(&args("food 2")));
+    assert!(elitey_rust::cli::trading::sell(&mut game, &args("food 2")));
     assert_eq!(game.ship.cargo_hold.get_quantity(&CommodityType::Food), 0);
 
     let log = &game.trade_log;
@@ -32,7 +32,10 @@ fn trading_moves_only_the_commodity_traded_and_only_a_little_per_ton() {
     let mut game = new_game(10_000);
     let before = game.market_prices().unwrap();
 
-    assert!(game.handle_buy_command(&args("minerals 1")));
+    assert!(elitey_rust::cli::trading::buy(
+        &mut game,
+        &args("minerals 1")
+    ));
     let after = game.market_prices().unwrap();
 
     let first = f64::from(before.buy_prices[&CommodityType::Minerals]);
@@ -48,7 +51,10 @@ fn trading_moves_only_the_commodity_traded_and_only_a_little_per_ton() {
 fn a_purchase_with_too_few_credits_leaves_everything_unchanged() {
     let mut game = new_game(1);
 
-    assert!(!game.handle_buy_command(&args("luxury 5")));
+    assert!(!elitey_rust::cli::trading::buy(
+        &mut game,
+        &args("luxury 5")
+    ));
 
     assert_eq!(game.commander.credits(), 1);
     assert_eq!(game.ship.cargo_used(), 0);
@@ -61,7 +67,7 @@ fn stock_runs_out_after_repeated_buying() {
     let mut bought = 0;
 
     // Cargo space limits one trip, so empty the hold between purchases
-    while game.handle_buy_command(&args("food 10")) {
+    while elitey_rust::cli::trading::buy(&mut game, &args("food 10")) {
         bought += 10;
         let held = game.ship.cargo_hold.get_quantity(&CommodityType::Food);
         game.ship
@@ -78,10 +84,16 @@ fn trading_narcotics_costs_reputation_each_transaction() {
     let mut game = new_game(2000);
     let before = game.commander.reputation;
 
-    assert!(game.handle_buy_command(&args("narcotics 2")));
+    assert!(elitey_rust::cli::trading::buy(
+        &mut game,
+        &args("narcotics 2")
+    ));
     assert_eq!(game.commander.reputation, before - 2);
 
-    assert!(game.handle_sell_command(&args("narcotics 1")));
+    assert!(elitey_rust::cli::trading::sell(
+        &mut game,
+        &args("narcotics 1")
+    ));
     assert_eq!(game.commander.reputation, before - 4);
 }
 
@@ -89,10 +101,16 @@ fn trading_narcotics_costs_reputation_each_transaction() {
 fn legal_goods_and_failed_trades_leave_reputation_alone() {
     let mut game = new_game(2000);
 
-    assert!(game.handle_buy_command(&args("food 2")));
-    assert!(game.handle_sell_command(&args("food 1")));
-    assert!(!game.handle_buy_command(&args("narcotics 500")));
-    assert!(!game.handle_sell_command(&args("narcotics 1")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 2")));
+    assert!(elitey_rust::cli::trading::sell(&mut game, &args("food 1")));
+    assert!(!elitey_rust::cli::trading::buy(
+        &mut game,
+        &args("narcotics 500")
+    ));
+    assert!(!elitey_rust::cli::trading::sell(
+        &mut game,
+        &args("narcotics 1")
+    ));
 
     assert_eq!(game.commander.reputation, 0);
 }
@@ -123,13 +141,13 @@ fn standing_adjusts_the_same_market(
         standing.sell_price(neutral_sell)
     );
 
-    assert!(game.handle_buy_command(&args("food 1")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 1")));
     assert_eq!(
         latest_unit_price(&game),
         adjusted.buy_prices[&CommodityType::Food]
     );
     let after_buy = game.market_prices().unwrap();
-    assert!(game.handle_sell_command(&args("food 1")));
+    assert!(elitey_rust::cli::trading::sell(&mut game, &args("food 1")));
     assert_eq!(
         latest_unit_price(&game),
         after_buy.sell_prices[&CommodityType::Food]

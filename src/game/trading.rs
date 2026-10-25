@@ -87,6 +87,9 @@ pub struct CargoView {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TradingHandler {
     trading_system: TradingSystem,
+    /// Every market's price roll is derived from this, the system and the clock
+    #[serde(default = "rand::random")]
+    world_seed: u64,
     /// Each system's market, kept between visits
     #[serde(default)]
     markets: HashMap<String, SystemMarket>,
@@ -138,9 +141,9 @@ impl Pushed {
 }
 
 impl SystemMarket {
-    fn rolled(clock: u32) -> Self {
+    fn rolled(seed: u64, clock: u32) -> Self {
         Self {
-            seed: rand::random(),
+            seed,
             rolled_at: clock,
             updated_at: clock,
             ..Self::default()
@@ -212,10 +215,25 @@ impl SystemMarket {
 
 impl TradingHandler {
     pub fn new() -> Self {
+        Self::with_seed(rand::random())
+    }
+
+    /// A trading handler whose market rolls are fully determined by `world_seed`
+    pub fn with_seed(world_seed: u64) -> Self {
         Self {
             trading_system: TradingSystem::new(),
+            world_seed,
             markets: HashMap::new(),
         }
+    }
+
+    fn market_seed(&self, location: &str, clock: u32) -> u64 {
+        let hash = location
+            .bytes()
+            .fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
+                (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3)
+            });
+        (hash ^ self.world_seed).wrapping_add(u64::from(clock).wrapping_mul(0x9e37_79b9_7f4a_7c15))
     }
 
     /// A system's prices and stock stay fixed for a number of jumps, whoever arrives or leaves,
@@ -226,8 +244,9 @@ impl TradingHandler {
             .get(location)
             .is_none_or(|state| clock.saturating_sub(state.rolled_at) >= MARKET_REFRESH_JUMPS);
         if stale {
+            let seed = self.market_seed(location, clock);
             self.markets
-                .insert(location.to_string(), SystemMarket::rolled(clock));
+                .insert(location.to_string(), SystemMarket::rolled(seed, clock));
         }
         let state = self
             .markets

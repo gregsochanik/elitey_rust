@@ -309,10 +309,6 @@ pub fn installed_view(ship: &Ship) -> InstalledView {
 mod tests {
     use super::*;
 
-    fn args(text: &str) -> Vec<String> {
-        text.split_whitespace().map(String::from).collect()
-    }
-
     fn setup(credits: u32) -> (Commander, Ship) {
         let mut commander = Commander::new("Test".to_string());
         commander.credits = credits;
@@ -327,12 +323,23 @@ mod tests {
         assert_eq!(ship.cargo_capacity(), 20);
     }
 
+    fn item_id(text: &str) -> String {
+        text.split_whitespace()
+            .collect::<Vec<_>>()
+            .join("-")
+            .to_lowercase()
+    }
+
     fn buy(text: &str, commander: &mut Commander, ship: &mut Ship) -> bool {
-        crate::cli::equipment::handle(&args(&format!("buy {}", text)), commander, ship)
+        find_item(&item_id(text))
+            .map(|item| super::buy(commander, ship, item).is_ok())
+            .unwrap_or(false)
     }
 
     fn sell(text: &str, commander: &mut Commander, ship: &mut Ship) -> bool {
-        crate::cli::equipment::handle(&args(&format!("sell {}", text)), commander, ship)
+        find_item(&item_id(text))
+            .map(|item| super::sell(commander, ship, item).is_ok())
+            .unwrap_or(false)
     }
 
     fn has(ship: &Ship, id: &str) -> bool {

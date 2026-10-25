@@ -1,4 +1,3 @@
-use crate::game::jobs::{ActiveJob, Job};
 use colored::*;
 
 /// Print welcome message
@@ -119,48 +118,6 @@ pub fn show_success(message: &str) {
 /// Show info message
 pub fn show_info(message: &str) {
     println!("{}", format!("Info: {}", message).blue());
-}
-
-fn jumps(count: u32) -> String {
-    format!("{} jump{}", count, if count == 1 { "" } else { "s" })
-}
-
-pub fn show_missions(active: &[ActiveJob]) {
-    println!("\n{}", "Active Jobs".cyan().bold());
-    println!("{}", "===========".cyan());
-    if active.is_empty() {
-        println!("No active jobs. Use 'jobs' to see the board.");
-    }
-    for (index, entry) in active.iter().enumerate() {
-        println!(
-            "{}. {} - Reward: {}cr - {} left",
-            index + 1,
-            entry.job.describe().yellow(),
-            entry.job.reward.to_string().green(),
-            jumps(entry.jumps_left)
-        );
-    }
-    println!();
-}
-
-pub fn show_jobs(location: &str, jobs: &[Job]) {
-    println!("\n{}", format!("Jobs at {}", location).cyan().bold());
-    println!("{}", "=".repeat(location.len() + 8).cyan());
-    if jobs.is_empty() {
-        println!("No jobs on offer here.");
-    }
-    for (index, job) in jobs.iter().enumerate() {
-        println!(
-            "{}. {} - {:.1} light years, {} fuel - Reward: {}cr - Deadline: {}",
-            index + 1,
-            job.describe().yellow(),
-            job.distance,
-            job.fuel_cost,
-            job.reward.to_string().green(),
-            jumps(job.deadline_jumps)
-        );
-    }
-    println!();
 }
 
 #[cfg(test)]

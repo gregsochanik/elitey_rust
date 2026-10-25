@@ -31,8 +31,8 @@ fn old_saves_without_a_clock_start_at_zero() {
 #[test]
 fn markets_still_trade_after_the_state_change() {
     let mut game = new_game(500);
-    assert!(game.handle_buy_command(&args("food 2")));
-    assert!(game.handle_sell_command(&args("food 2")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 2")));
+    assert!(elitey_rust::cli::trading::sell(&mut game, &args("food 2")));
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn hopping_between_systems_does_not_reroll_prices_or_stock() {
 fn stock_bought_recovers_slowly_and_prices_refresh_after_the_period() {
     let mut game = new_game(500);
     let before = game.market_prices().unwrap();
-    assert!(game.handle_buy_command(&args("food 3")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 3")));
     let stock = before.availability[&elitey_rust::data::commodities::CommodityType::Food];
 
     game.travel_to_system("DISO").unwrap();
@@ -94,10 +94,13 @@ fn selling_pushes_the_price_down_and_it_recovers_over_the_next_jumps() {
     use elitey_rust::data::commodities::CommodityType;
 
     let mut game = new_game(2_000);
-    assert!(game.handle_buy_command(&args("luxury 5")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("luxury 5")));
     let undisturbed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
 
-    assert!(game.handle_sell_command(&args("luxury 5")));
+    assert!(elitey_rust::cli::trading::sell(
+        &mut game,
+        &args("luxury 5")
+    ));
     let pushed = game.market_prices().unwrap().sell_prices[&CommodityType::Luxury];
     assert!(pushed < undisturbed);
 
@@ -114,7 +117,7 @@ fn buying_raises_the_buy_price_for_the_next_purchase() {
 
     let mut game = new_game(2_000);
     let before = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
-    assert!(game.handle_buy_command(&args("food 5")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("food 5")));
     let after = game.market_prices().unwrap().buy_prices[&CommodityType::Food];
 
     assert!(after > before);
@@ -127,8 +130,11 @@ fn trading_marks_the_commodity_until_the_market_has_recovered() {
     let mut game = new_game(5_000);
     assert!(game.pushed_commodities().is_empty());
 
-    assert!(game.handle_buy_command(&args("luxury 5")));
-    assert!(game.handle_sell_command(&args("luxury 5")));
+    assert!(elitey_rust::cli::trading::buy(&mut game, &args("luxury 5")));
+    assert!(elitey_rust::cli::trading::sell(
+        &mut game,
+        &args("luxury 5")
+    ));
     let pushed = game.pushed_commodities();
     assert_eq!(pushed.len(), 1);
     let luxury = pushed[&CommodityType::Luxury];
