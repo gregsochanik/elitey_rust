@@ -246,6 +246,7 @@ fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
 fn lists_are_tables_with_a_header_rule() {
     let output = play("tables", "market\ncargo\nsystems\njobs");
 
+    for header in ["Commodity", "Available", "Distance", "Deadline"] {
         assert!(output.contains(header), "missing {}", header);
     }
     assert!(output
