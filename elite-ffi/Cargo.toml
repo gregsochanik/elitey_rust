@@ -2,6 +2,7 @@
 name = "elite-ffi"
 description = "Small facade over elite-core for front ends"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 

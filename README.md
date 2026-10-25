@@ -200,7 +200,7 @@ To force a release, run the Release workflow manually from the Actions tab and p
 
 ## License
 
-[Add your license information here]
+The code is under the [MIT licence](LICENSE). Star data and engine notices are in [NOTICE.md](NOTICE.md).
 
 ## Acknowledgments
 
