@@ -14,6 +14,7 @@ const JobsScreen := preload("res://screens/jobs_screen.gd")
 const SavesScreen := preload("res://screens/saves_screen.gd")
 const StartScreen := preload("res://screens/start_screen.gd")
 const JourneyScreen := preload("res://screens/journey_screen.gd")
+const ModelsScreen := preload("res://screens/models_screen.gd")
 
 var game := EliteGame.new()
 var header: PanelContainer
@@ -69,6 +70,8 @@ func _ready() -> void:
 	_add_screen(nav, "services", "🔧  Services", _make_services())
 	_add_screen(nav, "saves", "💾  Saves", _make_saves())
 	_add_screen(nav, "journey", "🚀  Journey", _make_journey())
+	if OS.get_environment("ELITE_DEV") != "":
+		_add_screen(nav, "models", "🧪  Models", _make(ModelsScreen))
 	_show("market")
 	_refresh_header()
 

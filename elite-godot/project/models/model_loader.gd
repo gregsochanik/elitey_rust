@@ -5,6 +5,15 @@ const DIRECTORY := "res://models/"
 const FALLBACK_SHIP := "cobra-mk-iii"
 
 
+static func ids() -> Array:
+	var found := []
+	for file in DirAccess.get_files_at(DIRECTORY):
+		if file.ends_with(".json"):
+			found.append(file.trim_suffix(".json"))
+	found.sort()
+	return found
+
+
 static func load_model(id: String) -> Dictionary:
 	var path := DIRECTORY + id + ".json"
 	if not FileAccess.file_exists(path):
