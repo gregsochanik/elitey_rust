@@ -13,6 +13,7 @@ var viewport := SubViewport.new()
 var camera := Camera3D.new()
 var world := WorldEnvironment.new()
 var node: MeshInstance3D
+var lights := []
 var style_picker := OptionButton.new()
 var dragging := false
 var yaw := 0.6
@@ -41,6 +42,7 @@ func _ready() -> void:
 	style_picker.item_selected.connect(func(index): Style.use(style_picker.get_item_text(index)))
 	add_child(style_picker)
 
+	_relight()
 	container.gui_input.connect(_input_on_view)
 	Style.events.changed.connect(_restyle)
 	_rebuild()
@@ -67,6 +69,15 @@ func _rebuild() -> void:
 func _restyle() -> void:
 	world.environment = Style.environment()
 	_rebuild()
+	_relight()
+
+
+func _relight() -> void:
+	for light in lights:
+		light.queue_free()
+	lights = Style.lights()
+	for light in lights:
+		viewport.add_child(light)
 
 
 func _frame() -> void:
