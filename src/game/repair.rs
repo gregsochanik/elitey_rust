@@ -1,45 +1,54 @@
 use crate::game::{Commander, Ship};
-use crate::utils::display::{show_error, show_info, show_success};
+use thiserror::Error;
 
 pub const CREDITS_PER_POINT: u32 = 2;
 
-pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
-    let requested = match args.first() {
-        None => None,
-        Some(arg) => match arg.parse::<u32>() {
-            Ok(points) if points > 0 && args.len() == 1 => Some(points),
-            _ => {
-                show_error("Usage: repair [points]");
-                return false;
-            }
-        },
-    };
+/// What a repair did
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RepairReceipt {
+    pub points: u32,
+    pub cost: u32,
+    pub hull: u32,
+    pub max_hull: u32,
+}
 
+/// Why a repair was refused
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum RepairError {
+    #[error("Your hull is already at full strength.")]
+    HullFull,
+    #[error(
+        "Repairs cost {} credits per hull point; you can't afford any.",
+        CREDITS_PER_POINT
+    )]
+    CannotAfford,
+}
+
+/// Repair `points` of hull damage (all of it when `None`), as far as credits allow
+pub fn repair(
+    commander: &mut Commander,
+    ship: &mut Ship,
+    points: Option<u32>,
+) -> Result<RepairReceipt, RepairError> {
     let damage = ship.damage();
     if damage == 0 {
-        show_info("Your hull is already at full strength.");
-        return false;
+        return Err(RepairError::HullFull);
     }
 
     let affordable = commander.credits() / CREDITS_PER_POINT;
     if affordable == 0 {
-        show_error(&format!(
-            "Repairs cost {} credits per hull point; you can't afford any.",
-            CREDITS_PER_POINT
-        ));
-        return false;
+        return Err(RepairError::CannotAfford);
     }
 
-    let points = requested.unwrap_or(damage).min(damage).min(affordable);
+    let points = points.unwrap_or(damage).min(damage).min(affordable);
     commander.remove_credits(points * CREDITS_PER_POINT);
     ship.repair_hull(points);
-    show_success(&format!(
-        "Repaired {} hull points for {} credits. Hull: {}",
+    Ok(RepairReceipt {
         points,
-        points * CREDITS_PER_POINT,
-        ship.hull_display()
-    ));
-    true
+        cost: points * CREDITS_PER_POINT,
+        hull: ship.hull_percentage(),
+        max_hull: ship.ship_type.max_hull(),
+    })
 }
 
 #[cfg(test)]
@@ -54,14 +63,10 @@ mod tests {
         (commander, ship)
     }
 
-    fn args(text: &str) -> Vec<String> {
-        text.split_whitespace().map(String::from).collect()
-    }
-
     #[test]
     fn repairs_to_full_at_two_credits_per_point() {
         let (mut commander, mut ship) = damaged(500, 70);
-        assert!(handle(&[], &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, None).is_ok());
         assert_eq!(ship.hull_percentage(), 100);
         assert_eq!(commander.credits(), 440);
     }
@@ -69,7 +74,7 @@ mod tests {
     #[test]
     fn repairs_as_much_as_affordable() {
         let (mut commander, mut ship) = damaged(21, 50);
-        assert!(handle(&[], &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, None).is_ok());
         assert_eq!(ship.hull_percentage(), 60);
         assert_eq!(commander.credits(), 1);
     }
@@ -77,7 +82,7 @@ mod tests {
     #[test]
     fn repairs_only_the_requested_points() {
         let (mut commander, mut ship) = damaged(500, 50);
-        assert!(handle(&args("10"), &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, Some(10)).is_ok());
         assert_eq!(ship.hull_percentage(), 60);
         assert_eq!(commander.credits(), 480);
     }
@@ -85,7 +90,7 @@ mod tests {
     #[test]
     fn requested_points_are_capped_at_the_damage() {
         let (mut commander, mut ship) = damaged(500, 90);
-        assert!(handle(&args("50"), &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, Some(50)).is_ok());
         assert_eq!(ship.hull_percentage(), 100);
         assert_eq!(commander.credits(), 480);
     }
@@ -93,14 +98,14 @@ mod tests {
     #[test]
     fn full_hull_is_refused_and_free() {
         let (mut commander, mut ship) = damaged(500, 100);
-        assert!(!handle(&[], &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, None).is_err());
         assert_eq!(commander.credits(), 500);
     }
 
     #[test]
     fn no_credits_leaves_the_hull_alone() {
         let (mut commander, mut ship) = damaged(1, 50);
-        assert!(!handle(&[], &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, None).is_err());
         assert_eq!(ship.hull_percentage(), 50);
         assert_eq!(commander.credits(), 1);
     }
@@ -109,18 +114,26 @@ mod tests {
     fn upgraded_ships_repair_up_to_their_own_maximum() {
         let (mut commander, mut ship) = damaged(1000, 100);
         ship.ship_type = crate::data::ships::ShipType::from_string("python").unwrap();
-        assert!(handle(&[], &mut commander, &mut ship));
+        assert!(repair(&mut commander, &mut ship, None).is_ok());
         assert_eq!(ship.hull_percentage(), 150);
         assert_eq!(commander.credits(), 900);
     }
 
     #[test]
-    fn invalid_arguments_change_nothing() {
-        for bad in ["abc", "0", "-5", "5 6"] {
-            let (mut commander, mut ship) = damaged(500, 50);
-            assert!(!handle(&args(bad), &mut commander, &mut ship));
-            assert_eq!(ship.hull_percentage(), 50);
-            assert_eq!(commander.credits(), 500);
-        }
+    fn the_receipt_reports_points_cost_and_hull() {
+        let (mut commander, mut ship) = damaged(500, 70);
+        assert_eq!(
+            repair(&mut commander, &mut ship, None),
+            Ok(RepairReceipt {
+                points: 30,
+                cost: 60,
+                hull: 100,
+                max_hull: 100
+            })
+        );
+        assert_eq!(
+            repair(&mut commander, &mut ship, None),
+            Err(RepairError::HullFull)
+        );
     }
 }

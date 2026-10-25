@@ -1,5 +1,7 @@
 use crate::data::commodities::CommodityType;
 use crate::data::systems::SystemManager;
+use crate::game::refuel::{RefuelError, RefuelOutcome};
+use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
 use crate::utils::display::{show_error, show_success};
@@ -362,8 +364,18 @@ impl GameState {
 
     /// Handle refuel command
     pub fn handle_refuel_command(&mut self, args: &[String]) -> bool {
+        crate::cli::upkeep::refuel(self, args)
+    }
+
+    /// Buy fuel (all that fits and is affordable when `None`), or be rescued if stranded
+    pub fn refuel(&mut self, units: Option<u32>) -> Result<RefuelOutcome, RefuelError> {
         let nearest = self.nearest_jump_cost();
-        super::refuel::handle(args, &mut self.commander, &mut self.ship, nearest)
+        super::refuel::refuel(&mut self.commander, &mut self.ship, units, nearest)
+    }
+
+    /// Repair hull damage for credits
+    pub fn repair(&mut self, points: Option<u32>) -> Result<RepairReceipt, RepairError> {
+        super::repair::repair(&mut self.commander, &mut self.ship, points)
     }
 
     /// Fuel needed to reach the closest other system
@@ -385,7 +397,7 @@ impl GameState {
 
     /// Handle repair command
     pub fn handle_repair_command(&mut self, args: &[String]) -> bool {
-        super::repair::handle(args, &mut self.commander, &mut self.ship)
+        crate::cli::upkeep::repair(self, args)
     }
 
     /// Handle log command
