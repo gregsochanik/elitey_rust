@@ -53,8 +53,13 @@ func _ready() -> void:
 		button.custom_minimum_size = Vector2(44, 0)
 		button.pressed.connect(map.zoom_by.bind(entry[1]))
 		controls.add_child(button)
+	var centre := Button.new()
+	centre.text = "Centre on me"
+	centre.focus_mode = Control.FOCUS_NONE
+	centre.pressed.connect(map.reset_view)
+	controls.add_child(centre)
 	var hint := Label.new()
-	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom"
+	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom · Home centres"
 	hint.add_theme_color_override("font_color", Theme_.MUTED)
 	controls.add_child(hint)
 	left.add_child(controls)
