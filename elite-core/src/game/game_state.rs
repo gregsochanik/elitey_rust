@@ -428,6 +428,7 @@ impl GameState {
             power_capacity: self.ship.equipment.power_capacity(),
             damaged: self.ship.is_damaged(),
             exploration: self.exploration(),
+            discoveries: self.commander.discoveries.len() as u32,
         }
     }
 
@@ -454,6 +455,12 @@ impl GameState {
             star: StarClass::from_code(&system.star_class),
             visited: self.commander.has_visited(&system.name),
             frontier: self.is_frontier(&system.name),
+            discovery: self
+                .commander
+                .discoveries
+                .iter()
+                .find(|found| found.system == system.name)
+                .map(|found| found.title.clone()),
             from_here,
         })
     }

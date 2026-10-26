@@ -142,3 +142,29 @@ fn the_game_knows_which_stars_are_on_the_frontier() {
     assert!(game.system_info(far).unwrap().frontier);
     assert!(!game.system_info("Sol").unwrap().frontier);
 }
+
+#[test]
+fn info_names_what_was_found_at_a_frontier_star() {
+    let mut game = crate::game::GameState::new("Test".to_string());
+    let far = frontier_systems(&game.travel_handler.get_available_systems())
+        .into_iter()
+        .min()
+        .unwrap();
+    assert_eq!(game.system_info(&far).unwrap().discovery, None);
+    let nearby = game.nearest_systems(&far);
+    discover(
+        &far,
+        &nearby,
+        &mut game.commander,
+        &mut game.ship,
+        &mut StdRng::seed_from_u64(1),
+    );
+
+    let view = game.system_info(&far).unwrap();
+
+    assert_eq!(
+        view.discovery,
+        Some(game.commander.discoveries[0].title.clone())
+    );
+    assert_eq!(game.status_view().discoveries, 1);
+}

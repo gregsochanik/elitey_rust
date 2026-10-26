@@ -25,6 +25,7 @@ pub struct StatusView {
     pub power_capacity: u32,
     pub damaged: bool,
     pub exploration: Exploration,
+    pub discoveries: u32,
 }
 
 /// How far a system is from where the ship is
@@ -47,6 +48,8 @@ pub struct SystemInfoView {
     pub visited: bool,
     /// One of the outer stars
     pub frontier: bool,
+    /// What was found here, once found
+    pub discovery: Option<String>,
     pub from_here: Option<JumpFromHere>,
 }
 

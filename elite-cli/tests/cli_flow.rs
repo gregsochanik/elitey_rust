@@ -234,11 +234,11 @@ fn status_bars_use_blocks_with_colour_and_hashes_without() {
 
 #[test]
 fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
-    let output = play("menu", "help\n2\ns\n7\nm\n99");
+    let output = play("menu", "help\n2\ns\n8\nm\n99");
 
     assert!(output.contains(" 1. help - Show this help menu"));
     assert!(output.contains(" 2. status - Display ship and commander status"));
-    assert!(output.contains("25. quit - Exit the game"));
+    assert!(output.contains("26. quit - Exit the game"));
     assert_eq!(output.matches("Commander Status").count(), 2);
     assert_eq!(output.matches("Sol Market").count(), 2);
     assert!(output.contains("Unknown command."));
@@ -283,4 +283,11 @@ fn info_marks_the_frontier() {
             .count(),
         1
     );
+}
+
+#[test]
+fn discoveries_lists_finds_and_status_counts_them() {
+    let output = play("discoveries_empty", "discoveries\nstatus");
+    assert!(output.contains("Nothing yet."));
+    assert!(output.contains("Discoveries: 0"));
 }
