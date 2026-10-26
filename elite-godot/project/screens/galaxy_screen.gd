@@ -15,7 +15,6 @@ var details := RichTextLabel.new()
 var plan := Label.new()
 var route_label := Label.new()
 var jump := Button.new()
-var toggle := Button.new()
 var selected := ""
 
 
@@ -45,12 +44,20 @@ func _ready() -> void:
 	map.system_selected.connect(_select)
 	left.add_child(map)
 
-	toggle.toggle_mode = true
-	toggle.text = "Show whole galaxy"
-	toggle.toggled.connect(func(whole: bool):
-		map.set_local(not whole)
-		toggle.text = "Show nearby" if whole else "Show whole galaxy")
-	left.add_child(toggle)
+	var controls := HBoxContainer.new()
+	controls.add_theme_constant_override("separation", 8)
+	for entry in [["−", 1.0 / 1.25], ["+", 1.25]]:
+		var button := Button.new()
+		button.text = entry[0]
+		button.focus_mode = Control.FOCUS_NONE
+		button.custom_minimum_size = Vector2(44, 0)
+		button.pressed.connect(map.zoom_by.bind(entry[1]))
+		controls.add_child(button)
+	var hint := Label.new()
+	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom"
+	hint.add_theme_color_override("font_color", Theme_.MUTED)
+	controls.add_child(hint)
+	left.add_child(controls)
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(430, 0)
