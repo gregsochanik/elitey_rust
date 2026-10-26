@@ -17,7 +17,7 @@ fn ship_with(commands: &[&str]) -> Ship {
     for command in commands {
         let args: Vec<String> = command.split_whitespace().map(String::from).collect();
         assert!(
-            elite_cli::cli::equipment::handle(&args, &mut commander, &mut ship),
+            elite_cli::cli::equipment::handle(&args, &mut commander, &mut ship, 15),
             "{}",
             command
         );

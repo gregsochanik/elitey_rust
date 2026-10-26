@@ -63,7 +63,7 @@ func _ready() -> void:
 
 func refresh() -> void:
 	var yard: Dictionary = game.shipyard()
-	summary.text = "Current ship: %s     💰 %d cr" % [yard["current"], yard["credits"]]
+	summary.text = "Current ship: %s     💰 %d cr     Tech level here: %d" % [yard["current"], yard["credits"], yard["tech_level"]]
 	var keep := _selected_id()
 	tree.clear()
 	var root := tree.create_item()
@@ -82,6 +82,11 @@ func refresh() -> void:
 			item.set_text(6, "current")
 			item.set_custom_color(6, Theme_.GOOD)
 			item.set_custom_color(0, Theme_.GOOD)
+		elif ship["locked"]:
+			item.set_text(5, "%d cr" % ship["upgrade_cost"])
+			item.set_text(6, "needs tech %d" % ship["min_tech"])
+			item.set_custom_color(6, Theme_.BAD)
+			item.set_custom_color(0, Theme_.MUTED)
 		elif ship["is_upgrade"]:
 			item.set_text(5, "%d cr" % ship["upgrade_cost"])
 			item.set_custom_color(5, Theme_.GOOD if ship["affordable"] else Theme_.BAD)
@@ -103,7 +108,7 @@ func _selected_id() -> String:
 func _update_button() -> void:
 	var item := tree.get_selected()
 	viewer.show_model(_selected_id())
-	buy_button.disabled = item == null or not item.get_metadata(1)["is_upgrade"]
+	buy_button.disabled = item == null or not item.get_metadata(1)["is_upgrade"] or item.get_metadata(1)["locked"]
 
 
 func _ask() -> void:

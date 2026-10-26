@@ -42,3 +42,16 @@ pub fn new_game(credits: u32) -> GameState {
 pub fn args(text: &str) -> Vec<String> {
     text.split_whitespace().map(String::from).collect()
 }
+
+/// Move the commander to the system with the highest tech level, where every item is on sale
+pub fn go_to_high_tech(game: &mut GameState) {
+    let best = game
+        .system_manager
+        .get_all_systems()
+        .into_iter()
+        .max_by_key(|system| (system.tech_level, system.name.clone()))
+        .expect("a system")
+        .name
+        .clone();
+    game.commander.location = best;
+}

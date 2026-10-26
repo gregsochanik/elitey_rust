@@ -9,6 +9,8 @@ pub struct ShipClass {
     pub name: String,
     #[serde(default)]
     pub aliases: Vec<String>,
+    /// The lowest system tech level that sells this ship
+    pub min_tech: u8,
     /// Orders ships for upgrades: a ship is an upgrade from any ship of a lower tier
     pub tier: u32,
     pub cost: u32,
@@ -104,6 +106,11 @@ impl ShipType {
     }
 
     /// Check if this ship is an upgrade from another ship
+    /// The lowest system tech level that sells this ship
+    pub fn min_tech(&self) -> u8 {
+        self.0.min_tech
+    }
+
     pub fn is_upgrade_from(&self, other: &ShipType) -> bool {
         self.0.tier > other.0.tier
     }

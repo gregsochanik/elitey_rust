@@ -194,6 +194,13 @@ impl GameState {
         )
     }
 
+    /// The tech level of the system the commander is in; what its shops and shipyard can sell
+    pub fn local_tech_level(&self) -> u8 {
+        self.system_manager
+            .get_system(self.commander.location())
+            .map_or(u8::MAX, |system| system.tech_level)
+    }
+
     /// How many of the galaxy's stars the commander has been to
     pub fn exploration(&self) -> Exploration {
         let systems = self.system_manager.get_all_systems();
@@ -452,6 +459,14 @@ impl GameState {
         &mut self,
         ship_type: crate::data::ships::ShipType,
     ) -> Result<UpgradeReceipt, UpgradeError> {
+        let tech_level = self.local_tech_level();
+        if tech_level < ship_type.min_tech() {
+            return Err(UpgradeError::TechTooLow {
+                ship: ship_type.display_name(),
+                needed: ship_type.min_tech(),
+                have: tech_level,
+            });
+        }
         self.upgrade_handler
             .upgrade(ship_type, &mut self.commander, &mut self.ship)
     }

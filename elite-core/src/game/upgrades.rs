@@ -17,6 +17,12 @@ pub enum UpgradeError {
     NotAnUpgrade(&'static str),
     #[error("Insufficient credits. Need {needed}cr, have {have}cr")]
     NotEnoughCredits { needed: u32, have: u32 },
+    #[error("The {ship} needs tech level {needed} (this system is {have})")]
+    TechTooLow {
+        ship: &'static str,
+        needed: u8,
+        have: u8,
+    },
     #[error("Upgrade failed: {0}")]
     Failed(String),
 }
@@ -35,6 +41,8 @@ pub struct UpgradeOption {
     pub ship: ShipType,
     pub cost: u32,
     pub affordable: bool,
+    /// The system's tech level is below the ship's
+    pub locked: bool,
 }
 
 /// The ships the current one can be upgraded to
@@ -52,6 +60,8 @@ pub struct ShipListing {
     /// What it costs to switch to this ship, if that costs anything
     pub upgrade_cost: Option<u32>,
     pub affordable: bool,
+    /// The system's tech level is below the ship's
+    pub locked: bool,
 }
 
 /// Every ship in the game
@@ -69,7 +79,12 @@ impl UpgradeHandler {
         }
     }
 
-    pub fn upgrade_options(&self, commander: &Commander, ship: &Ship) -> UpgradeOptions {
+    pub fn upgrade_options(
+        &self,
+        commander: &Commander,
+        ship: &Ship,
+        tech_level: u8,
+    ) -> UpgradeOptions {
         UpgradeOptions {
             current: *ship.ship_type(),
             credits: commander.credits(),
@@ -85,13 +100,14 @@ impl UpgradeHandler {
                         ship: *upgrade,
                         cost,
                         affordable: commander.has_credits(cost),
+                        locked: tech_level < upgrade.min_tech(),
                     }
                 })
                 .collect(),
         }
     }
 
-    pub fn ship_list(&self, commander: &Commander, ship: &Ship) -> ShipList {
+    pub fn ship_list(&self, commander: &Commander, ship: &Ship, tech_level: u8) -> ShipList {
         ShipList {
             current: *ship.ship_type(),
             credits: commander.credits(),
@@ -109,6 +125,7 @@ impl UpgradeHandler {
                         is_current,
                         upgrade_cost: (!is_current && cost > 0).then_some(cost),
                         affordable: commander.has_credits(cost),
+                        locked: tech_level < candidate.min_tech(),
                     }
                 })
                 .collect(),
@@ -233,11 +250,11 @@ mod tests {
         commander.credits = 600;
         let ship = Ship::new_cobra_mk3();
 
-        let options = handler.upgrade_options(&commander, &ship).options;
+        let options = handler.upgrade_options(&commander, &ship, 15).options;
 
         assert_eq!(options.len(), 3);
         assert!(options[0].affordable && !options[1].affordable);
-        let list = handler.ship_list(&commander, &ship);
+        let list = handler.ship_list(&commander, &ship, 15);
         assert!(list.ships[0].is_current && list.ships[0].upgrade_cost.is_none());
     }
 }

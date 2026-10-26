@@ -4,7 +4,7 @@
 Not every market sells everything. Some commodities are only stocked under certain governments or at high enough tech, and equipment and ships need a minimum tech level at the shop. Locked entries stay visible with the reason, like locked jobs (Feature 21).
 
 ## Status
-Commodities done (v1); equipment and ships in progress.
+Done (v1).
 
 ## Version 1 Scope
 

@@ -7,17 +7,19 @@ use elite_core::game::GameState;
 
 /// `upgrade`: show the ships that can be bought
 pub fn show_upgrades(game: &GameState) {
-    let view = game
-        .upgrade_handler()
-        .upgrade_options(&game.commander, &game.ship);
+    let view = game.upgrade_handler().upgrade_options(
+        &game.commander,
+        &game.ship,
+        game.local_tech_level(),
+    );
     print_upgrades(&view, game.ship.ship_type_name());
 }
 
 /// `ships`: list every ship
 pub fn show_ships(game: &GameState) {
-    let view = game
-        .upgrade_handler()
-        .ship_list(&game.commander, &game.ship);
+    let view =
+        game.upgrade_handler()
+            .ship_list(&game.commander, &game.ship, game.local_tech_level());
     print_ships(&view, game.ship.ship_type_name());
 }
 
@@ -81,7 +83,14 @@ fn print_upgrades(view: &UpgradeOptions, current_name: &str) {
     ]);
     for option in &view.options {
         let upgrade = &option.ship;
-        let (cost, note) = if option.affordable {
+        let (cost, note) = if option.locked {
+            (
+                format!("{}cr", option.cost).dimmed().to_string(),
+                format!("Needs tech level {}", upgrade.min_tech())
+                    .red()
+                    .to_string(),
+            )
+        } else if option.affordable {
             (
                 format!("{}cr", option.cost).green().to_string(),
                 String::new(),
@@ -131,6 +140,11 @@ fn print_ships(view: &ShipList, current_name: &str) {
             ship_type.display_name().yellow()
         };
         let upgrade = match listing.upgrade_cost {
+            Some(cost) if listing.locked => {
+                format!("{}cr (needs tech level {})", cost, ship_type.min_tech())
+                    .red()
+                    .to_string()
+            }
             Some(cost) if listing.affordable => format!("{}cr", cost).green().to_string(),
             Some(cost) => format!("{}cr (Insufficient credits)", cost)
                 .red()

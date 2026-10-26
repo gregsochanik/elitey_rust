@@ -7,21 +7,22 @@ use elite_core::game::{Commander, Ship};
 
 /// `equipment ...` on a game
 pub fn command(game: &mut elite_core::game::GameState, args: &[String]) -> bool {
-    handle(args, &mut game.commander, &mut game.ship)
+    let tech_level = game.local_tech_level();
+    handle(args, &mut game.commander, &mut game.ship, tech_level)
 }
 
 /// `equipment [buy <item> | sell <item> | installed]`
-pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
+pub fn handle(args: &[String], commander: &mut Commander, ship: &mut Ship, tech_level: u8) -> bool {
     match args.first().map(|a| a.to_lowercase()).as_deref() {
         None => {
-            print_shop(&equipment::shop_view(commander, ship));
+            print_shop(&equipment::shop_view(commander, ship, tech_level));
             true
         }
         Some("installed") => {
             print_installed(&equipment::installed_view(ship));
             true
         }
-        Some("buy") => buy(&args[1..], commander, ship),
+        Some("buy") => buy(&args[1..], commander, ship, tech_level),
         Some("sell") => sell(&args[1..], commander, ship),
         Some(_) => {
             show_error("Usage: equipment [buy <item> | sell <item> | installed]");
@@ -40,7 +41,7 @@ fn item_from_args(
     equipment::find_item(&id).map_err(|error| error.to_string())
 }
 
-fn buy(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
+fn buy(args: &[String], commander: &mut Commander, ship: &mut Ship, tech_level: u8) -> bool {
     let item = match item_from_args(args) {
         Ok(item) => item,
         Err(message) => {
@@ -48,6 +49,10 @@ fn buy(args: &[String], commander: &mut Commander, ship: &mut Ship) -> bool {
             return false;
         }
     };
+    if let Err(error) = equipment::check_tech(item, tech_level) {
+        show_error(&error.to_string());
+        return false;
+    }
     match equipment::buy(commander, ship, item) {
         Ok(purchase) => {
             match purchase.replaced {
@@ -148,6 +153,8 @@ fn print_shop(view: &ShopView) {
                 item.effect.clone(),
                 if entry.installed {
                     "[installed]".green().to_string()
+                } else if entry.locked {
+                    format!("[needs tech {}]", item.min_tech).red().to_string()
                 } else {
                     String::new()
                 },

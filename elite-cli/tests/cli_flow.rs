@@ -119,7 +119,7 @@ fn power_is_shown_in_the_shop_and_the_installed_list_and_can_be_upgraded() {
     assert!(output.contains("Success: Installed Improved Reactor for 60cr"));
     assert!(output.contains("Power: 9/28 used, 19 free"));
     assert!(output.contains("Power: 9/28 [###-------]"));
-    assert!(output.contains("Error: Insufficient credits"));
+    assert!(output.contains("Error: Elite Reactor needs tech level 11 (this system is 5)"));
 }
 
 #[test]
@@ -137,14 +137,15 @@ fn a_jump_asks_for_confirmation_and_can_be_cancelled() {
 fn upkeep_and_equipment_commands_report_what_they_did() {
     let output = play(
         "upkeep",
-        "repair\nrefuel\nrefuel x\nequipment buy nothing\nupgrade python",
+        "repair\nrefuel\nrefuel x\nequipment buy nothing\nupgrade python\nupgrade cobra4",
     );
 
     assert!(output.contains("Info: Your hull is already at full strength."));
     assert!(output.contains("Info: Your tank is already full."));
     assert!(output.contains("Error: Usage: refuel [units]"));
     assert!(output.contains("Error: Unknown equipment: nothing"));
-    assert!(output.contains("Error: Insufficient credits. Need 2000cr, have 100cr"));
+    assert!(output.contains("Error: The Python needs tech level 7 (this system is 5)"));
+    assert!(output.contains("Error: Insufficient credits. Need 500cr, have 100cr"));
 }
 
 #[test]

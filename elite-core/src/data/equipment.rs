@@ -86,6 +86,9 @@ pub struct Equipment {
     pub name: String,
     pub category: EquipmentCategory,
     pub quality: Quality,
+    /// The lowest system tech level that sells this item
+    #[serde(default = "lowest_tech")]
+    pub min_tech: u8,
     pub price: u32,
     pub power: u32,
     /// Power the item supplies; only reactors have any
@@ -96,6 +99,10 @@ pub struct Equipment {
     #[serde(default)]
     pub combat: CombatStats,
     pub effect: String,
+}
+
+fn lowest_tech() -> u8 {
+    1
 }
 
 fn no_cargo_change() -> f64 {
