@@ -42,6 +42,9 @@ func _ready() -> void:
 	map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	map.custom_minimum_size = Vector2(400, 300)
 	map.system_selected.connect(_select)
+	map.jump_asked.connect(func():
+		if not jump.disabled:
+			_ask())
 	left.add_child(map)
 
 	var controls := HBoxContainer.new()
@@ -59,7 +62,7 @@ func _ready() -> void:
 	centre.pressed.connect(map.reset_view)
 	controls.add_child(centre)
 	var hint := Label.new()
-	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom · Home centres"
+	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom · Home centres · Shift+arrows choose a star, Enter jumps"
 	hint.add_theme_color_override("font_color", Theme_.MUTED)
 	controls.add_child(hint)
 	left.add_child(controls)
