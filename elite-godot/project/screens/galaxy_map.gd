@@ -18,6 +18,7 @@ const ZOOM_STEP := 1.25
 const WHEEL_STEP := 1.12
 const MAX_ZOOM := 8.0
 const LABEL_ZOOM := 0.6
+const LABEL_ALL_ZOOM := 2.2
 const FUEL_LABEL_ZOOM := 0.9
 
 
@@ -162,7 +163,7 @@ func _draw() -> void:
 		if system["name"] == selected:
 			draw_arc(at, radius + 7.0, 0.0, TAU, 32, Theme_.WARNING, 3.0)
 			labelled = true
-		if system["name"] == hovered:
+		if system["name"] == hovered or zoom >= LABEL_ALL_ZOOM:
 			labelled = true
 		draw_circle(at, radius, colour)
 		if system["frontier"]:
@@ -197,6 +198,9 @@ func _gui_input(event: InputEvent) -> void:
 				accept_event()
 			KEY_EQUAL, KEY_PLUS, KEY_KP_ADD:
 				zoom_by(ZOOM_STEP)
+				accept_event()
+			KEY_HOME:
+				reset_view()
 				accept_event()
 			KEY_MINUS, KEY_KP_SUBTRACT:
 				zoom_by(1.0 / ZOOM_STEP)

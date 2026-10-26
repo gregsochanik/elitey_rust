@@ -4,7 +4,7 @@
 The GUI galaxy chart is one continuous map you can move around and zoom, from the keyboard or the mouse, instead of two fixed views.
 
 ## Status
-In progress, in slices: #266 pan and zoom, #267 recentre and label levels, #268 choose stars with the keyboard.
+In progress, in slices: #266 pan and zoom (done), #267 recentre and label levels (done), #268 choose stars with the keyboard.
 
 ## Version 1 Scope
 - Arrow keys pan the map; holding a key keeps panning
@@ -13,7 +13,9 @@ In progress, in slices: #266 pan and zoom, #267 recentre and label levels, #268 
 - The jump-range circle, the route line and the star markers scale with the view
 - Opening the screen resets the view: centred on the commander's star at the default zoom, with the map focused so the keys work at once
 - Clicking a star still selects it
-- Later slices: `Home` and a Centre on me button, star names that appear as you zoom in, and Shift+arrow to choose stars
+- `Home` and a Centre on me button return to the commander's star at the default zoom
+- Star names: the current, selected and hovered stars always; stars in jump range once zoomed in a little; every star once zoomed in close
+- Later slice: Shift+arrow to choose stars
 
 ## Not in v1
 - Dragging the map with the mouse to pan (maybe later)
