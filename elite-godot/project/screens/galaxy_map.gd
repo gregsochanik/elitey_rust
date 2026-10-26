@@ -13,6 +13,8 @@ var route: Array = []
 ## Where the view is centred, in galaxy coordinates, and how far it is zoomed in (1 fits the jump range)
 var view_centre := Vector2.ZERO
 var zoom := 1.0
+## Set when the screen opens, so the fresh chart data that follows is what the view centres on
+var centre_on_next_data := false
 
 const PAN_SPEED := 340.0
 const ZOOM_STEP := 1.25
@@ -32,7 +34,7 @@ func set_route(names: Array) -> void:
 func show_galaxy(data: Dictionary) -> void:
 	var first := galaxy.is_empty()
 	galaxy = data
-	if first:
+	if first or centre_on_next_data:
 		reset_view()
 	queue_redraw()
 
@@ -112,6 +114,9 @@ func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		reset_view()
 		grab_focus()
+		centre_on_next_data = true
+		await get_tree().process_frame
+		centre_on_next_data = false
 
 
 func _process(delta: float) -> void:
