@@ -115,6 +115,11 @@ func refresh() -> void:
 		if entry["installed"]:
 			item.set_text(6, "installed")
 			item.set_custom_color(6, Theme_.GOOD)
+		elif entry["locked"]:
+			item.set_text(6, "needs tech %d" % entry["min_tech"])
+			item.set_custom_color(6, Theme_.BAD)
+			for column in range(0, 6):
+				item.set_custom_color(column, Theme_.MUTED)
 		elif entry["price"] > shop["credits"]:
 			item.set_custom_color(3, Theme_.BAD)
 		if entry["id"] == keep_shop:
@@ -132,7 +137,8 @@ func _selected_id(tree: Tree) -> String:
 
 
 func _update_buttons() -> void:
-	buy_button.disabled = _selected_id(shop_tree) == ""
+	var chosen := shop_tree.get_selected()
+	buy_button.disabled = chosen == null or chosen.get_text(6).begins_with("needs tech")
 	sell_button.disabled = _selected_id(installed_tree) == ""
 
 

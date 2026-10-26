@@ -89,6 +89,7 @@ To run it from source, install Godot 4, run `sh elite-godot/build.sh`, then open
 ### Equipment
 - `equipment` - Show equipment for sale
 - `equipment buy <item>` - Buy and install (replaces the current item in single-slot categories)
+- `equipment buy <item>` also needs a high enough tech level at the current system; locked items say what they need
 - `equipment sell <item>` - Sell installed equipment for half of what was paid
 - `equipment installed` - Show installed equipment, slots and power
 - `jobs` - Show the jobs on offer here (courier and bounty for everyone; freight for Trusted commanders at lawful systems; smuggling for Disreputable commanders at lawless ones; a contraband courier job for Neutral commanders at lawless ones)

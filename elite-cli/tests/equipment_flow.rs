@@ -1,6 +1,6 @@
 mod common;
 
-use common::{args, new_game};
+use common::{args, go_to_high_tech, new_game};
 use elite_core::data::commodities::CommodityType;
 
 #[test]
@@ -24,6 +24,7 @@ fn racks_raise_capacity_and_a_full_hold_blocks_selling_them() {
 #[test]
 fn credits_follow_buys_replacements_and_sales() {
     let mut game = new_game(500);
+    go_to_high_tech(&mut game);
 
     assert!(elite_cli::cli::equipment::command(
         &mut game,
@@ -45,6 +46,7 @@ fn credits_follow_buys_replacements_and_sales() {
 #[test]
 fn changing_ship_sells_equipment_and_resizes_the_hold() {
     let mut game = new_game(10_000);
+    go_to_high_tech(&mut game);
     assert!(elite_cli::cli::equipment::command(
         &mut game,
         &args("buy elite-racks")
@@ -100,4 +102,24 @@ fn upgrade_with_no_ship_or_an_unknown_one_changes_nothing() {
         );
         assert_eq!(game.commander.credits(), 10_000);
     }
+}
+
+#[test]
+fn equipment_and_ships_are_only_sold_at_high_enough_tech() {
+    let mut game = new_game(10_000);
+
+    assert!(!elite_cli::cli::equipment::command(
+        &mut game,
+        &args("buy elite-racks")
+    ));
+    assert_eq!(game.commander.credits(), 10_000);
+    assert!(!elite_cli::cli::upgrades::buy(&mut game, &args("python")));
+    assert_eq!(game.commander.credits(), 10_000);
+
+    go_to_high_tech(&mut game);
+    assert!(elite_cli::cli::equipment::command(
+        &mut game,
+        &args("buy elite-racks")
+    ));
+    assert!(elite_cli::cli::upgrades::buy(&mut game, &args("python")));
 }

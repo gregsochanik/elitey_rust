@@ -214,6 +214,9 @@ pub struct EquipmentItemData {
     pub output: u32,
     pub effect: String,
     pub installed: bool,
+    pub min_tech: u32,
+    /// The system's tech level is below the item's
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -221,6 +224,7 @@ pub struct EquipmentShopData {
     pub credits: u32,
     pub power_used: u32,
     pub power_capacity: u32,
+    pub tech_level: u32,
     pub items: Vec<EquipmentItemData>,
 }
 
@@ -257,10 +261,13 @@ pub struct ShipData {
     pub is_current: bool,
     pub affordable: bool,
     pub is_upgrade: bool,
+    pub min_tech: u32,
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct ShipyardData {
+    pub tech_level: u32,
     pub credits: u32,
     pub current: String,
     pub ships: Vec<ShipData>,
@@ -662,8 +669,10 @@ impl Game {
 
     pub fn equipment_shop(&self) -> EquipmentShopData {
         let state = self.state.lock().expect("game state lock");
-        let view = equipment::shop_view(&state.commander, &state.ship);
+        let tech_level = state.local_tech_level();
+        let view = equipment::shop_view(&state.commander, &state.ship, tech_level);
         EquipmentShopData {
+            tech_level: u32::from(tech_level),
             credits: view.credits,
             power_used: view.power_used,
             power_capacity: view.power_capacity,
@@ -681,6 +690,8 @@ impl Game {
                         output: entry.item.output,
                         effect: entry.item.effect.clone(),
                         installed: entry.installed,
+                        min_tech: u32::from(entry.item.min_tech),
+                        locked: entry.locked,
                     })
                 })
                 .collect(),
@@ -728,6 +739,9 @@ impl Game {
             Ok(item) => item,
             Err(error) => return failed(error),
         };
+        if let Err(error) = equipment::check_tech(item, state.local_tech_level()) {
+            return failed(error);
+        }
         match equipment::buy(&mut state.commander, &mut state.ship, item) {
             Ok(purchase) => ok(match purchase.replaced {
                 Some((old, refund)) => format!(
@@ -755,10 +769,13 @@ impl Game {
 
     pub fn shipyard(&self) -> ShipyardData {
         let state = self.state.lock().expect("game state lock");
-        let list = state
-            .upgrade_handler
-            .ship_list(&state.commander, &state.ship);
+        let list = state.upgrade_handler.ship_list(
+            &state.commander,
+            &state.ship,
+            state.local_tech_level(),
+        );
         ShipyardData {
+            tech_level: u32::from(state.local_tech_level()),
             credits: list.credits,
             current: list.current.display_name().to_string(),
             ships: list
@@ -775,6 +792,8 @@ impl Game {
                     is_current: listing.is_current,
                     affordable: listing.affordable,
                     is_upgrade: listing.ship.is_upgrade_from(&list.current),
+                    min_tech: u32::from(listing.ship.min_tech()),
+                    locked: listing.locked,
                 })
                 .collect(),
         }
@@ -1561,7 +1580,13 @@ mod tests {
             .refund;
         assert_eq!(refund, 30);
 
-        assert!(!game.buy_equipment("elite-reactor".to_string()).ok);
+        let locked = game.buy_equipment("elite-reactor".to_string());
+        assert!(!locked.ok && locked.message.contains("needs tech level 11"));
+        assert!(game
+            .equipment_shop()
+            .items
+            .iter()
+            .any(|item| item.id == "elite-reactor" && item.locked));
         assert!(!game.buy_equipment("nothing".to_string()).ok);
         assert!(!game
             .sell_equipment("basic-shield".to_string())
@@ -1582,7 +1607,12 @@ mod tests {
         assert_eq!(yard.current, "Cobra Mk III");
         assert!(yard.ships.iter().any(|s| s.is_current));
         assert!(yard.ships.iter().any(|s| s.is_upgrade && !s.affordable));
+        let locked = yard.ships.iter().find(|s| s.id == "python").unwrap();
+        assert!(locked.locked && locked.min_tech == 7);
         let result = game.buy_ship("python".to_string());
+        assert!(!result.ok);
+        assert!(result.message.contains("needs tech level 7"));
+        let result = game.buy_ship("cobra-mk-iv".to_string());
         assert!(!result.ok);
         assert!(result.message.contains("Insufficient credits"));
         assert!(!game.buy_ship("nonsense".to_string()).ok);

@@ -174,6 +174,8 @@ pub enum EquipmentError {
     NotInstalled(String),
     #[error("Insufficient credits. Need {needed}cr, have {have}cr")]
     NotEnoughCredits { needed: u32, have: u32 },
+    #[error("{name} needs tech level {needed} (this system is {have})")]
+    TechTooLow { name: String, needed: u8, have: u8 },
     /// No free slot, not enough power, or the ship could not take the change
     #[error("{0}")]
     CannotFit(String),
@@ -199,6 +201,8 @@ pub struct EquipmentSale {
 pub struct ShopItem {
     pub item: &'static Equipment,
     pub installed: bool,
+    /// The system's tech level is below the item's
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -293,7 +297,19 @@ pub fn sell(
     })
 }
 
-pub fn shop_view(commander: &Commander, ship: &Ship) -> ShopView {
+/// Whether a system of this tech level sells the item
+pub fn check_tech(item: &Equipment, tech_level: u8) -> Result<(), EquipmentError> {
+    if tech_level < item.min_tech {
+        return Err(EquipmentError::TechTooLow {
+            name: item.name.clone(),
+            needed: item.min_tech,
+            have: tech_level,
+        });
+    }
+    Ok(())
+}
+
+pub fn shop_view(commander: &Commander, ship: &Ship, tech_level: u8) -> ShopView {
     ShopView {
         credits: commander.credits(),
         power_used: ship.equipment.power_used(),
@@ -306,6 +322,7 @@ pub fn shop_view(commander: &Commander, ship: &Ship) -> ShopView {
                     .map(|item| ShopItem {
                         item,
                         installed: ship.equipment.installed().iter().any(|i| i.id == item.id),
+                        locked: tech_level < item.min_tech,
                     })
                     .collect(),
             })
@@ -528,7 +545,7 @@ mod tests {
     fn the_views_list_every_category() {
         let (commander, ship) = setup(100);
 
-        let shop = shop_view(&commander, &ship);
+        let shop = shop_view(&commander, &ship, 15);
         assert_eq!(shop.categories.len(), EquipmentCategory::ALL.len());
         assert!(shop
             .categories

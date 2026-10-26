@@ -490,6 +490,8 @@ fn shop_to_dictionary(shop: EquipmentShopData) -> VarDictionary {
                 "output": item.output,
                 "effect": item.effect,
                 "installed": item.installed,
+                "min_tech": item.min_tech,
+                "locked": item.locked,
             }
             .to_variant(),
         );
@@ -498,6 +500,7 @@ fn shop_to_dictionary(shop: EquipmentShopData) -> VarDictionary {
         "credits": shop.credits,
         "power_used": shop.power_used,
         "power_capacity": shop.power_capacity,
+        "tech_level": shop.tech_level,
         "items": items,
     }
 }
@@ -543,11 +546,13 @@ fn shipyard_to_dictionary(yard: ShipyardData) -> VarDictionary {
                 "is_current": ship.is_current,
                 "affordable": ship.affordable,
                 "is_upgrade": ship.is_upgrade,
+                "min_tech": ship.min_tech,
+                "locked": ship.locked,
             }
             .to_variant(),
         );
     }
-    vdict! { "credits": yard.credits, "current": yard.current, "ships": ships }
+    vdict! { "credits": yard.credits, "current": yard.current, "tech_level": yard.tech_level, "ships": ships }
 }
 
 fn board_to_dictionary(board: JobBoardData) -> VarDictionary {
