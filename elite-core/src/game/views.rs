@@ -45,6 +45,8 @@ pub struct SystemInfoView {
     pub description: String,
     pub star: Option<StarClass>,
     pub visited: bool,
+    /// One of the outer stars
+    pub frontier: bool,
     pub from_here: Option<JumpFromHere>,
 }
 

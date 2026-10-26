@@ -2,6 +2,7 @@ use crate::data::commodities::CommodityType;
 use crate::data::star_class::StarClass;
 use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
 use crate::game::exploration::Exploration;
+use crate::game::frontier;
 use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
 use crate::game::route::{plan_route, Route, RouteError};
@@ -199,6 +200,11 @@ impl GameState {
         self.system_manager
             .get_system(self.commander.location())
             .map_or(u8::MAX, |system| system.tech_level)
+    }
+
+    /// Whether a star is one of the outer systems
+    pub fn is_frontier(&self, system: &str) -> bool {
+        frontier::frontier_systems(&self.travel_handler.get_available_systems()).contains(system)
     }
 
     /// How many of the galaxy's stars the commander has been to
@@ -431,6 +437,7 @@ impl GameState {
             description: system.description.clone(),
             star: StarClass::from_code(&system.star_class),
             visited: self.commander.has_visited(&system.name),
+            frontier: self.is_frontier(&system.name),
             from_here,
         })
     }
