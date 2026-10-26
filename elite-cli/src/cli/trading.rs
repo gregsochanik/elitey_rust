@@ -162,17 +162,27 @@ fn print_market(view: &MarketView) {
             (held, Some(paid)) => format!("{}t @ {}cr", held, paid),
             (held, None) => format!("{}t", held),
         };
+        let available = if row.restriction.is_some() {
+            "not sold".red().to_string()
+        } else {
+            format!("{}t", row.available)
+        };
         table.row([
             row.commodity.name().to_string(),
             format!("{}cr", row.buy_price),
             format!("{}cr", row.sell_price),
-            format!("{}t", row.available),
+            available,
             versus_base.to_string(),
             holding.cyan().to_string(),
             markers(row.pushed).yellow().to_string(),
         ]);
     }
     table.print();
+    for row in &view.rows {
+        if let Some(reason) = &row.restriction {
+            println!("{}", reason.dimmed());
+        }
+    }
     println!();
 }
 

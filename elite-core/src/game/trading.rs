@@ -32,6 +32,8 @@ pub enum TradeError {
     NotEnoughCargo { held: u32, requested: u32 },
     #[error("You have nothing to sell")]
     NothingToSell,
+    #[error("{0}")]
+    Restricted(String),
 }
 
 /// What a completed buy or sell did
@@ -60,6 +62,8 @@ pub struct MarketRow {
     pub held: u32,
     /// What each held ton cost on average, when it was bought
     pub paid: Option<u32>,
+    /// Why this system does not sell the commodity, when it does not
+    pub restriction: Option<String>,
 }
 
 /// The market at a system as the player sees it
@@ -323,6 +327,7 @@ impl TradingHandler {
     ) -> Option<MarketView> {
         let market = self.market_view(system_manager, location, standing, clock)?;
         let pushed = self.pushed_commodities(location, clock);
+        let system = system_manager.get_system(location)?;
         let rows = self
             .trading_system
             .get_commodities()
@@ -339,6 +344,7 @@ impl TradingHandler {
                     pushed: pushed.get(commodity).copied().unwrap_or_default(),
                     held,
                     paid: trade_log.average_cost(commodity, held),
+                    restriction: commodity.restriction(system),
                 }
             })
             .collect();
@@ -361,6 +367,12 @@ impl TradingHandler {
         trade_log: &mut TradeLog,
         clock: u32,
     ) -> Result<TradeReceipt, TradeError> {
+        let system = system_manager
+            .get_system(commander.location())
+            .ok_or(TradeError::UnknownSystem)?;
+        if let Some(reason) = commodity.restriction(system) {
+            return Err(TradeError::Restricted(reason));
+        }
         let market = self.market_at(commander, system_manager, clock)?;
         self.execute_buy(commodity, quantity, commander, ship, &market, trade_log)
     }

@@ -1,4 +1,4 @@
-use crate::data::systems::EconomyType;
+use crate::data::systems::{EconomyType, GovernmentType, StarSystem};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -20,6 +20,49 @@ pub struct CommodityData {
     /// Price multiplier by economy, as named in the galaxy data ("Rich Ind", "Poor Agri", ...)
     #[serde(default)]
     pub economy_multipliers: HashMap<EconomyType, f64>,
+    /// When not empty, sold only under these governments
+    #[serde(default)]
+    pub only_governments: Vec<GovernmentType>,
+    /// Never sold under these governments
+    #[serde(default)]
+    pub not_governments: Vec<GovernmentType>,
+    /// Sold only where the tech level is at least this
+    #[serde(default)]
+    pub min_tech: u8,
+}
+
+impl CommodityData {
+    /// Why this system does not sell the good, or `None` when it does
+    pub fn restriction(&self, system: &StarSystem) -> Option<String> {
+        let names = |list: &[GovernmentType]| {
+            list.iter()
+                .map(|government| government.display_name())
+                .collect::<Vec<_>>()
+                .join(" and ")
+        };
+        if !self.only_governments.is_empty() && !self.only_governments.contains(&system.government)
+        {
+            return Some(format!(
+                "{} is only sold in {} systems",
+                self.name,
+                names(&self.only_governments)
+            ));
+        }
+        if self.not_governments.contains(&system.government) {
+            return Some(format!(
+                "{} is not sold in {} systems",
+                self.name,
+                names(&self.not_governments)
+            ));
+        }
+        if system.tech_level < self.min_tech {
+            return Some(format!(
+                "{} needs tech level {} (this system is {})",
+                self.name, self.min_tech, system.tech_level
+            ));
+        }
+        None
+    }
 }
 
 fn no_preference() -> f64 {
@@ -92,6 +135,11 @@ impl CommodityType {
             .iter()
             .map(|data| CommodityType(data.id.as_str()))
             .collect()
+    }
+
+    /// Why this system does not sell the commodity, or `None` when it does
+    pub fn restriction(&self, system: &StarSystem) -> Option<String> {
+        self.data().restriction(system)
     }
 
     fn data(&self) -> &'static CommodityData {

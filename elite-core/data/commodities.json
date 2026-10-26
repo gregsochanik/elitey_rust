@@ -2,9 +2,9 @@
   {"id": "food", "name": "Food", "base_price": 15, "economy_multipliers": {"Poor Agri": 1.3, "Average Agri": 1.4, "Rich Agri": 1.5, "Mainly Agri": 1.4}},
   {"id": "textiles", "name": "Textiles", "base_price": 25, "economy_multipliers": {"Poor Agri": 1.2, "Average Agri": 1.3, "Rich Agri": 1.4, "Mainly Agri": 1.3}},
   {"id": "machinery", "name": "Machinery", "base_price": 45, "economy_multipliers": {"Poor Ind": 1.3, "Average Ind": 1.4, "Rich Ind": 1.5, "Mainly Ind": 1.4}},
-  {"id": "computers", "name": "Computers", "base_price": 65, "economy_multipliers": {"Rich Ind": 1.4, "Mainly Ind": 1.3}},
+  {"id": "computers", "name": "Computers", "base_price": 65, "min_tech": 6, "economy_multipliers": {"Rich Ind": 1.4, "Mainly Ind": 1.3}},
   {"id": "minerals", "name": "Minerals", "base_price": 35, "economy_multipliers": {"Poor Ind": 1.2, "Average Ind": 1.3, "Rich Ind": 1.4, "Mainly Ind": 1.3}},
   {"id": "alloys", "name": "Alloys", "base_price": 55, "economy_multipliers": {"Average Ind": 1.3, "Rich Ind": 1.4, "Mainly Ind": 1.3}},
-  {"id": "luxury", "name": "Luxury", "base_price": 85, "economy_multipliers": {"Rich Agri": 1.4, "Rich Ind": 1.4}},
-  {"id": "narcotics", "name": "Narcotics", "base_price": 120, "illegal": true, "default_multiplier": 0.8}
+  {"id": "luxury", "name": "Luxury", "base_price": 85, "not_governments": ["Anarchy"], "economy_multipliers": {"Rich Agri": 1.4, "Rich Ind": 1.4}},
+  {"id": "narcotics", "name": "Narcotics", "base_price": 120, "illegal": true, "only_governments": ["Anarchy", "Feudal"], "default_multiplier": 0.8}
 ]

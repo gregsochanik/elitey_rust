@@ -76,6 +76,7 @@ fn stock_runs_out_after_repeated_buying() {
 #[test]
 fn trading_narcotics_costs_reputation_each_transaction() {
     let mut game = new_game(2000);
+    move_to_a_lawless_system(&mut game);
     let before = game.commander.reputation;
 
     assert!(elite_cli::cli::trading::buy(
@@ -175,4 +176,49 @@ fn sell_all_sells_one_commodity_or_the_whole_hold() {
     assert_eq!(game.ship.cargo_hold.current_weight(), 0);
     assert!(!elite_cli::cli::trading::sell(&mut game, &args("all")));
     assert!(!elite_cli::cli::trading::sell(&mut game, &args("gold all")));
+}
+
+fn move_to_a_lawless_system(game: &mut elite_core::game::GameState) {
+    let lawless = game
+        .system_manager
+        .get_all_systems()
+        .into_iter()
+        .find(|system| !system.government.is_lawful())
+        .expect("a lawless system")
+        .name
+        .clone();
+    game.commander.location = lawless;
+}
+
+#[test]
+fn some_goods_are_only_sold_in_some_systems() {
+    let mut game = new_game(5000);
+
+    let refused = |game: &mut elite_core::game::GameState, item: &str| {
+        !elite_cli::cli::trading::buy(game, &args(item))
+    };
+    assert!(
+        refused(&mut game, "narcotics 1"),
+        "narcotics outside lawless space"
+    );
+    assert!(
+        game.commander.reputation == 0 && game.ship.cargo_used() == 0,
+        "a refused purchase changes nothing"
+    );
+
+    move_to_a_lawless_system(&mut game);
+    assert!(elite_cli::cli::trading::buy(
+        &mut game,
+        &args("narcotics 1")
+    ));
+    let anarchy = game
+        .system_manager
+        .get_all_systems()
+        .into_iter()
+        .find(|system| system.government == elite_core::data::systems::GovernmentType::Anarchy)
+        .expect("an anarchy")
+        .name
+        .clone();
+    game.commander.location = anarchy;
+    assert!(refused(&mut game, "luxury 1"), "luxury in anarchy");
 }
