@@ -174,6 +174,7 @@ func _draw() -> void:
 		if positions.has(route[i]) and positions.has(route[i + 1]):
 			draw_line(positions[route[i]], positions[route[i + 1]], Theme_.WARNING, 2.5)
 
+	var labels := []
 	for system in galaxy["systems"]:
 		if not positions.has(system["name"]):
 			continue
@@ -206,9 +207,36 @@ func _draw() -> void:
 		if system["is_current"]:
 			draw_arc(current_at, radius + 4.0, 0.0, TAU, 32, Theme_.ACCENT, 2.0)
 		if labelled:
-			draw_string(font, at + Vector2(radius + 6.0, 6.0), system["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_BODY, Theme_.TEXT)
-		if system["reachable"] and system["name"] != selected and zoom >= FUEL_LABEL_ZOOM:
-			draw_string(font, at + Vector2(radius + 6.0, 24.0), "%d ⛽" % system["fuel_cost"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_SMALL, Theme_.MUTED)
+			var priority := 0
+			if system["is_current"] or system["name"] == selected or system["name"] == hovered:
+				priority = 2
+			elif system["reachable"]:
+				priority = 1
+			var fuel := ""
+			if system["reachable"] and system["name"] != selected and zoom >= FUEL_LABEL_ZOOM:
+				fuel = "%d ⛽" % system["fuel_cost"]
+			labels.append({"name": system["name"], "at": at + Vector2(radius + 6.0, 6.0), "fuel": fuel, "priority": priority})
+	_draw_labels(font, labels)
+
+
+## Draw star names most important first, skipping any that would sit on top of one already drawn
+func _draw_labels(font: Font, labels: Array) -> void:
+	labels.sort_custom(func(a, b): return a["priority"] > b["priority"])
+	var taken: Array[Rect2] = []
+	for label in labels:
+		var width := font.get_string_size(label["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_BODY).x
+		var rect := Rect2(label["at"] + Vector2(0, -16), Vector2(width, 36))
+		var overlaps := false
+		for other in taken:
+			if other.intersects(rect):
+				overlaps = true
+				break
+		if overlaps and label["priority"] < 2:
+			continue
+		taken.append(rect)
+		draw_string(font, label["at"], label["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_BODY, Theme_.TEXT)
+		if label["fuel"] != "":
+			draw_string(font, label["at"] + Vector2(0, 18), label["fuel"], HORIZONTAL_ALIGNMENT_LEFT, -1, Theme_.FONT_SMALL, Theme_.MUTED)
 
 
 ## Pixels per light year of fuel, from the nearest reachable system
