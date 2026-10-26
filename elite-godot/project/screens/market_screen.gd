@@ -79,6 +79,12 @@ func refresh() -> void:
 		item.set_text(1, "%d cr" % row["buy_price"])
 		item.set_text(2, "%d cr" % row["sell_price"])
 		item.set_text(3, "%d t" % row["available"])
+		if row["restriction"] != "":
+			item.set_text(1, "—")
+			item.set_text(3, "not sold")
+			item.set_custom_color(3, Theme_.BAD)
+			item.set_tooltip_text(0, row["restriction"])
+			item.set_tooltip_text(3, row["restriction"])
 		item.set_text(4, "%+d%%" % row["percent_vs_base"])
 		if row["held"] > 0:
 			var paid: int = row["paid"]

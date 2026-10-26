@@ -46,6 +46,8 @@ pub struct MarketRowData {
     pub paid: Option<u32>,
     pub bought_here: bool,
     pub sold_here: bool,
+    /// Why this system does not sell the commodity, or empty when it does
+    pub restriction: String,
 }
 
 #[derive(Debug, Clone)]
@@ -1156,6 +1158,7 @@ impl Game {
                     paid: row.paid,
                     bought_here: row.pushed.bought,
                     sold_here: row.pushed.sold,
+                    restriction: row.restriction.unwrap_or_default(),
                 })
                 .collect(),
         })

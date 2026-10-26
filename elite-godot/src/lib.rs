@@ -316,6 +316,7 @@ fn market_to_dictionary(market: MarketData) -> VarDictionary {
                 "percent_vs_base": row.percent_vs_base,
                 "held": row.held,
                 "paid": row.paid.map_or(-1, i64::from),
+                "restriction": row.restriction,
             }
             .to_variant(),
         );

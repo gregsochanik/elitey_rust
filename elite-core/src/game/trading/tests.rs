@@ -584,3 +584,32 @@ fn the_views_show_what_held_cargo_cost_on_average() {
         .unwrap();
     assert_eq!((textiles.held, textiles.paid), (0, None));
 }
+
+#[test]
+fn the_market_says_why_a_good_is_not_sold() {
+    let mut game = crate::game::GameState::new("Test".to_string());
+    let view = game.market_overview().unwrap();
+
+    let reason = |name: &str| {
+        view.rows
+            .iter()
+            .find(|row| row.commodity.name() == name)
+            .unwrap()
+            .restriction
+            .clone()
+    };
+
+    assert_eq!(
+        reason("Narcotics"),
+        Some("Narcotics is only sold in Anarchy and Feudal systems".to_string())
+    );
+    assert_eq!(
+        reason("Computers"),
+        Some("Computers needs tech level 6 (this system is 5)".to_string())
+    );
+    assert_eq!(reason("Food"), None);
+    assert!(matches!(
+        game.buy(CommodityType::Computers, 1),
+        Err(TradeError::Restricted(_))
+    ));
+}
