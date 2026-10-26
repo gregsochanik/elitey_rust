@@ -133,6 +133,7 @@ fn print_status(view: &StatusView) {
         view.exploration.visited,
         view.exploration.total
     );
+    println!("{}Discoveries: {}", icon(Icon::Explore), view.discoveries);
     header(Icon::Hull, "Ship Status");
     println!("{}Ship: {}", icon(Icon::Ship), view.ship_name.yellow());
     println!(
@@ -201,7 +202,10 @@ fn print_system_info(view: &SystemInfoView) {
     println!("Population: {}", view.population);
     println!("Visited: {}", if view.visited { "yes" } else { "not yet" });
     if view.frontier {
-        println!("Frontier: yes, one of the outer stars");
+        match &view.discovery {
+            Some(found) => println!("Frontier: yes, you found: {}", found),
+            None => println!("Frontier: yes, one of the outer stars"),
+        }
     }
     if let Some(star) = &view.star {
         println!("Star: {} ({})", star.type_name, star.code);
@@ -274,6 +278,29 @@ fn print_trade_log(view: &TradeLogView) {
     if let Some(rate) = view.stats.success_rate {
         println!("- Success Rate: {:.0}%", rate * 100.0);
     }
+    println!();
+}
+
+/// `discoveries`: what the commander has found at the frontier
+pub fn discoveries(game: &GameState) {
+    header(Icon::Explore, "Discoveries");
+    let found = &game.commander.discoveries;
+    if found.is_empty() {
+        println!(
+            "Nothing yet. The first visit to a frontier star finds something; try `route` to one."
+        );
+        println!();
+        return;
+    }
+    let mut table = Table::new(&[("#", RIGHT), ("Star", LEFT), ("Found", LEFT)]);
+    for (index, discovery) in found.iter().enumerate() {
+        table.row([
+            (index + 1).to_string(),
+            discovery.system.clone(),
+            discovery.title.clone().yellow().to_string(),
+        ]);
+    }
+    table.print();
     println!();
 }
 

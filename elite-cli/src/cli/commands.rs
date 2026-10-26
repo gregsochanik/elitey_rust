@@ -65,6 +65,7 @@ pub fn execute(game: &mut GameState, command: &str, args: &[String]) -> Control 
         "route" => {
             travel::route(game, args);
         }
+        "discoveries" => info::discoveries(game),
         "systems" => info::systems(game),
         "info" => {
             info::system_info(game, args);
