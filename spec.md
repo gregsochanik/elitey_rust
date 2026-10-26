@@ -37,7 +37,7 @@ Out of scope: multiplayer, real-time combat. A graphical front end (Godot, Featu
 | 22 | Real star systems (v1: 256 real stars from HYG, star classes) | Done (v1) | 02, 05 |
 | 23 | GUI ship visuals (ship models as data; wireframe, hidden-line, flat, textured styles) | Spec only | 15, 22 |
 | 25 | Exploration (v1: visited-stars log, completion percent and rating) | Done (v1) | 02, 05, 22 |
-| 24 | Encounters and NPC behaviour (decision function, behaviour data, encounter tables) | Done (v1; route planning open) | 06, 07, 08, 10, 15, 18, 20 |
+| 24 | Encounters and NPC behaviour (decision function, behaviour data, encounter tables) | Done (v1) | 06, 07, 08, 10, 15, 18, 20 |
 
 ## Roadmap
 

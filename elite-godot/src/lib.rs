@@ -1,7 +1,7 @@
 use elite_ffi::{
     ActionResult, CargoData, EquipmentShopData, FightData, FighterData, GalaxyData, Game,
-    InstalledData, JobBoardData, JumpPlanData, MarketData, ShipyardData, StatusData, StepData,
-    SystemDetailData, TradeLogData, TradeRecordData, TradeResult,
+    InstalledData, JobBoardData, JumpPlanData, MarketData, RouteData, ShipyardData, StatusData,
+    StepData, SystemDetailData, TradeLogData, TradeRecordData, TradeResult,
 };
 use godot::prelude::*;
 use std::sync::Arc;
@@ -219,6 +219,11 @@ impl EliteGame {
     }
 
     /// Details of one system; empty when unknown
+    #[func]
+    fn plan_route(&self, destination: GString) -> VarDictionary {
+        route_to_dictionary(self.game.plan_route(destination.to_string()))
+    }
+
     #[func]
     fn system_detail(&self, name: GString) -> VarDictionary {
         self.game
@@ -623,5 +628,32 @@ fn fight_to_dictionary(fight: FightData) -> VarDictionary {
         "log": log,
         "enemy_action": fight.enemy_action,
         "message": fight.message,
+    }
+}
+
+fn route_to_dictionary(route: RouteData) -> VarDictionary {
+    let mut hops = VarArray::new();
+    for hop in route.hops {
+        hops.push(
+            &vdict! {
+                "from": hop.from,
+                "to": hop.to,
+                "distance": hop.distance,
+                "fuel": hop.fuel,
+            }
+            .to_variant(),
+        );
+    }
+    let mut refuel_at = VarArray::new();
+    for name in route.refuel_at {
+        refuel_at.push(&name.to_variant());
+    }
+    vdict! {
+        "ok": route.ok,
+        "message": route.message,
+        "hops": hops,
+        "total_fuel": route.total_fuel,
+        "total_distance": route.total_distance,
+        "refuel_at": refuel_at,
     }
 }

@@ -233,11 +233,11 @@ fn status_bars_use_blocks_with_colour_and_hashes_without() {
 
 #[test]
 fn help_is_numbered_and_numbers_and_shortcuts_run_commands() {
-    let output = play("menu", "help\n2\ns\n6\nm\n99");
+    let output = play("menu", "help\n2\ns\n7\nm\n99");
 
     assert!(output.contains(" 1. help - Show this help menu"));
     assert!(output.contains(" 2. status - Display ship and commander status"));
-    assert!(output.contains("24. quit - Exit the game"));
+    assert!(output.contains("25. quit - Exit the game"));
     assert_eq!(output.matches("Commander Status").count(), 2);
     assert_eq!(output.matches("Sol Market").count(), 2);
     assert!(output.contains("Unknown command."));
@@ -253,4 +253,16 @@ fn lists_are_tables_with_a_header_rule() {
     assert!(output
         .lines()
         .any(|line| line.trim().chars().all(|c| c == '-') && line.len() > 20));
+}
+
+#[test]
+fn route_plans_the_cheapest_fuel_path_and_marks_refuel_stops() {
+    let output = play("route", "route gj 3512\nroute sol\nroute nowhere\nroute");
+
+    assert!(output.contains("Route to GJ 3512"));
+    assert!(output.contains("refuel at"));
+    assert!(output.contains("jumps,"));
+    assert!(output.contains("Error: You are already at Sol"));
+    assert!(output.contains("Error: System 'nowhere' not found"));
+    assert!(output.contains("Error: Usage: route <system_name>"));
 }

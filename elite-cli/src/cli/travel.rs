@@ -1,10 +1,12 @@
 use crate::cli::fight::run_fight;
 use crate::utils::display::{header, show_error, show_info, show_success, Icon};
 use crate::utils::input;
+use crate::utils::table::{Table, LEFT, RIGHT};
 use colored::*;
 use elite_core::game::combat::Combat;
 use elite_core::game::events::Event;
 use elite_core::game::journey::{Input, Journey, Notice, Step};
+use elite_core::game::route::Route;
 use elite_core::game::smuggling::InspectionChoice;
 use elite_core::game::travel::JumpPlan;
 use elite_core::game::GameState;
@@ -154,4 +156,59 @@ fn ask_inspection_choice(bribe_cost: u32, can_bribe: bool) -> InspectionChoice {
             _ => println!("Please choose one of the options."),
         }
     }
+}
+
+/// `route <system>`: the cheapest-fuel way there, hop by hop
+pub fn route(game: &GameState, args: &[String]) -> bool {
+    if args.is_empty() {
+        show_error("Usage: route <system_name>");
+        return false;
+    }
+    let destination = args.join(" ");
+    match game.plan_route(&destination) {
+        Ok(route) => {
+            print_route(&route);
+            true
+        }
+        Err(error) => {
+            show_error(&error.to_string());
+            false
+        }
+    }
+}
+
+fn print_route(route: &Route) {
+    let goal = route.hops.last().map_or("", |hop| hop.to.as_str());
+    header(Icon::Ship, &format!("Route to {}", goal));
+    let mut table = Table::new(&[
+        ("#", RIGHT),
+        ("From", LEFT),
+        ("To", LEFT),
+        ("Distance", RIGHT),
+        ("Fuel", RIGHT),
+        ("", LEFT),
+    ]);
+    for (index, hop) in route.hops.iter().enumerate() {
+        let note = if route.refuel_at.contains(&hop.from) {
+            format!("refuel at {} first", hop.from)
+        } else {
+            String::new()
+        };
+        table.row([
+            (index + 1).to_string(),
+            hop.from.clone(),
+            hop.to.clone(),
+            format!("{:.1} ly", hop.distance),
+            hop.fuel.to_string(),
+            note.yellow().to_string(),
+        ]);
+    }
+    table.print();
+    println!(
+        "{} jumps, {:.1} light years, {} fuel",
+        route.hops.len(),
+        route.total_distance,
+        route.total_fuel
+    );
+    println!();
 }

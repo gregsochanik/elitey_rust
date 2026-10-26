@@ -4,6 +4,7 @@ use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
 use crate::game::exploration::Exploration;
 use crate::game::refuel::{RefuelError, RefuelOutcome};
 use crate::game::repair::{RepairError, RepairReceipt};
+use crate::game::route::{plan_route, Route, RouteError};
 use crate::game::trading::{CargoView, MarketView, TradeError, TradeReceipt};
 use crate::game::travel::fuel_for_distance;
 use crate::game::upgrades::{UpgradeError, UpgradeReceipt};
@@ -180,6 +181,17 @@ impl GameState {
         if let Some(home) = home {
             self.commander.location = home;
         }
+    }
+
+    /// The cheapest-fuel route from here to `destination`, jumping no further than a full tank allows
+    pub fn plan_route(&self, destination: &str) -> Result<Route, RouteError> {
+        plan_route(
+            &self.travel_handler.get_available_systems(),
+            &self.commander.location,
+            destination,
+            self.ship.fuel_capacity(),
+            self.ship.fuel_current(),
+        )
     }
 
     /// How many of the galaxy's stars the commander has been to

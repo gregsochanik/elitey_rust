@@ -13,6 +13,7 @@ var title := Label.new()
 var explored := Label.new()
 var details := RichTextLabel.new()
 var plan := Label.new()
+var route_label := Label.new()
 var jump := Button.new()
 var toggle := Button.new()
 var selected := ""
@@ -68,6 +69,9 @@ func _ready() -> void:
 	box.add_child(details)
 	plan.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(plan)
+	route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	route_label.add_theme_color_override("font_color", Theme_.WARNING)
+	box.add_child(route_label)
 	jump.text = "🚀  Jump"
 	jump.disabled = true
 	jump.pressed.connect(_ask)
@@ -88,7 +92,9 @@ func refresh() -> void:
 		title.text = "Select a system"
 		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel. A yellow ring marks a star you have not visited."
 		plan.text = ""
+		route_label.text = ""
 		jump.disabled = true
+		map.set_route([])
 		return
 	_select(selected)
 
@@ -127,3 +133,21 @@ func _select(name: String) -> void:
 	else:
 		plan.text = "❌  %s" % jump_plan["message"]
 		plan.add_theme_color_override("font_color", Theme_.BAD)
+	_show_route(name, jump_plan["ok"])
+
+
+## The cheapest-fuel path to the selected star: drawn on the chart and listed under the jump plan.
+func _show_route(name: String, direct_ok: bool) -> void:
+	var route: Dictionary = game.plan_route(name)
+	route_label.text = ""
+	if not route["ok"] or route["hops"].size() < 2 and direct_ok:
+		map.set_route([])
+		return
+	var names := [route["hops"][0]["from"]]
+	for hop in route["hops"]:
+		names.append(hop["to"])
+	map.set_route(names)
+	var line := "🧭  Route: %s\n%d jumps · %.1f light years · %d fuel" % [" → ".join(names), route["hops"].size(), route["total_distance"], route["total_fuel"]]
+	if not route["refuel_at"].is_empty():
+		line += "\nRefuel at %s" % ", ".join(route["refuel_at"])
+	route_label.text = line
