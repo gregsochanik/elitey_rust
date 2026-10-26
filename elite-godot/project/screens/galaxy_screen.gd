@@ -61,11 +61,13 @@ func _ready() -> void:
 	centre.focus_mode = Control.FOCUS_NONE
 	centre.pressed.connect(map.reset_view)
 	controls.add_child(centre)
+	left.add_child(controls)
 	var hint := Label.new()
 	hint.text = "Arrow keys pan · + and − or the mouse wheel zoom · Home centres · Shift+arrows choose a star, Enter jumps"
 	hint.add_theme_color_override("font_color", Theme_.MUTED)
-	controls.add_child(hint)
-	left.add_child(controls)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(0, 0)
+	left.add_child(hint)
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(430, 0)
