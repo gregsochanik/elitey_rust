@@ -5,6 +5,7 @@ use crate::game::combat::{Combat, Combatant, Outcome};
 use crate::game::commander::Standing;
 use crate::game::encounters;
 use crate::game::events::{Event, EventPhase, EventReport, EventType};
+use crate::game::frontier;
 use crate::game::jobs::{self, ActiveJob};
 use crate::game::smuggling::{self, Answer, Inspection, InspectionChoice};
 use crate::game::travel::{redirect_target, JumpPlan, TravelError};
@@ -311,6 +312,17 @@ impl GameState {
                         .unwrap_or_else(|| journey.plan.destination.clone());
                     self.commander.location = arrived_at.clone();
                     self.commander.visit(&arrived_at);
+                    for (index, message) in self
+                        .explore_frontier(&arrived_at, rng)
+                        .into_iter()
+                        .enumerate()
+                    {
+                        journey.notices.push(if index == 0 {
+                            Notice::Success(message)
+                        } else {
+                            Notice::Text(message)
+                        });
+                    }
                     if arrived_at != journey.plan.destination {
                         journey.info(format!(
                             "You emerge at {}, not {}.",
@@ -476,6 +488,21 @@ impl GameState {
             phase,
         };
         Some(Step::Event(event))
+    }
+
+    /// On first reaching a frontier star, find what it holds; no messages anywhere else
+    fn explore_frontier(&mut self, system: &str, rng: &mut impl Rng) -> Vec<String> {
+        if !self.is_frontier(system)
+            || self
+                .commander
+                .discoveries
+                .iter()
+                .any(|found| found.system == system)
+        {
+            return Vec::new();
+        }
+        let nearby = self.nearest_systems(system);
+        frontier::discover(system, &nearby, &mut self.commander, &mut self.ship, rng)
     }
 
     fn fight_against(&self, enemy_id: &str) -> Combat {

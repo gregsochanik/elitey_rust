@@ -512,3 +512,58 @@ fn arriving_at_a_system_marks_it_visited() {
     assert!(game.commander.has_visited("Proxima Centauri"));
     assert_eq!(game.exploration().visited, 2);
 }
+
+#[test]
+fn a_frontier_star_gives_up_its_discovery_once() {
+    let mut game = game();
+    let frontier = frontier::frontier_systems(&game.travel_handler.get_available_systems())
+        .into_iter()
+        .min()
+        .unwrap();
+    let mut rng = StdRng::seed_from_u64(3);
+
+    let first = game.explore_frontier(&frontier, &mut rng);
+    let second = game.explore_frontier(&frontier, &mut rng);
+
+    assert!(first[0].starts_with("🔭 Discovery:"));
+    assert!(second.is_empty());
+    assert_eq!(game.commander.discoveries.len(), 1);
+    assert_eq!(game.commander.discoveries[0].system, frontier);
+}
+
+#[test]
+fn ordinary_stars_hold_nothing() {
+    let mut game = game();
+
+    let messages = game.explore_frontier("Proxima Centauri", &mut StdRng::seed_from_u64(3));
+
+    assert!(messages.is_empty());
+    assert!(game.commander.discoveries.is_empty());
+}
+
+#[test]
+fn arriving_at_a_frontier_star_reports_the_find_in_the_notices() {
+    let mut game = game();
+    let frontier = frontier::frontier_systems(&game.travel_handler.get_available_systems())
+        .into_iter()
+        .min()
+        .unwrap();
+    game.commander.location = frontier.clone();
+    let plan = JumpPlan {
+        origin: "Sol".to_string(),
+        destination: frontier.clone(),
+        distance: 1.0,
+        fuel_cost: 1,
+    };
+    let mut journey = Journey::new(plan, Stage::Arrive);
+
+    let step = game
+        .advance_journey(&mut journey, Input::Continue, &mut StdRng::seed_from_u64(5))
+        .unwrap();
+
+    assert!(matches!(step, Step::Arrived { .. }));
+    assert_eq!(game.commander.discoveries.len(), 1);
+    assert!(journey.take_notices().iter().any(
+        |notice| matches!(notice, Notice::Success(text) if text.starts_with("🔭 Discovery:"))
+    ));
+}
