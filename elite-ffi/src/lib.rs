@@ -147,6 +147,7 @@ pub struct SystemPointData {
     pub is_current: bool,
     pub industrial: bool,
     pub visited: bool,
+    pub frontier: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -187,6 +188,7 @@ pub struct SystemDetailData {
     pub star_type: String,
     pub star_note: String,
     pub visited: bool,
+    pub frontier: bool,
     pub distance: f64,
     pub fuel_cost: u32,
     pub reachable: bool,
@@ -541,6 +543,9 @@ impl Game {
         let current = state.commander.location.clone();
         let fuel = state.ship.fuel_current;
         let origin = state.travel_handler.get_system_info(&current);
+        let frontier = elite_core::game::frontier::frontier_systems(
+            &state.travel_handler.get_available_systems(),
+        );
         let mut systems: Vec<SystemPointData> = state
             .travel_handler
             .get_available_systems()
@@ -558,6 +563,7 @@ impl Game {
                     reachable: !is_current && fuel_cost <= fuel,
                     is_current,
                     visited: state.commander.has_visited(&system.name),
+                    frontier: frontier.contains(&system.name),
                     industrial: matches!(
                         system.economy,
                         EconomyType::RichIndustrial
@@ -632,6 +638,7 @@ impl Game {
                 .as_ref()
                 .map_or_else(String::new, |s| s.note.to_string()),
             visited: view.visited,
+            frontier: view.frontier,
             distance: from_here.map_or(0.0, |jump| jump.distance),
             fuel_cost: from_here.map_or(0, |jump| jump.fuel),
             reachable: !is_current

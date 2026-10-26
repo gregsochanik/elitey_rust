@@ -439,6 +439,7 @@ fn galaxy_to_dictionary(galaxy: GalaxyData) -> VarDictionary {
                 "is_current": system.is_current,
                 "industrial": system.industrial,
                 "visited": system.visited,
+                "frontier": system.frontier,
             }
             .to_variant(),
         );
@@ -458,6 +459,7 @@ fn detail_to_dictionary(detail: SystemDetailData) -> VarDictionary {
         "star_type": detail.star_type,
         "star_note": detail.star_note,
         "visited": detail.visited,
+        "frontier": detail.frontier,
         "distance": detail.distance,
         "fuel_cost": detail.fuel_cost,
         "reachable": detail.reachable,

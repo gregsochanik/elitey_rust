@@ -267,3 +267,20 @@ fn route_plans_the_cheapest_fuel_path_and_marks_refuel_stops() {
     assert!(output.contains("Error: System 'nowhere' not found"));
     assert!(output.contains("Error: Usage: route <system_name>"));
 }
+
+#[test]
+fn info_marks_the_frontier() {
+    let manager = elite_core::data::systems::SystemManager::new().unwrap();
+    let systems = manager.get_all_systems();
+    let frontier = elite_core::game::frontier::frontier_systems(&systems);
+    let far = frontier.iter().min().unwrap().to_lowercase();
+
+    let output = play("frontier", &format!("info {}\ninfo sol", far));
+
+    assert_eq!(
+        output
+            .matches("Frontier: yes, one of the outer stars")
+            .count(),
+        1
+    );
+}

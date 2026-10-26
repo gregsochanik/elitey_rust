@@ -200,6 +200,9 @@ fn print_system_info(view: &SystemInfoView) {
     println!("Tech Level: {}", view.tech_level);
     println!("Population: {}", view.population);
     println!("Visited: {}", if view.visited { "yes" } else { "not yet" });
+    if view.frontier {
+        println!("Frontier: yes, one of the outer stars");
+    }
     if let Some(star) = &view.star {
         println!("Star: {} ({})", star.type_name, star.code);
         println!("      {}", star.note);
