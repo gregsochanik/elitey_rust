@@ -332,6 +332,9 @@ impl TradingHandler {
             .trading_system
             .get_commodities()
             .iter()
+            .filter(|commodity| {
+                !commodity.is_hidden() || ship.cargo_hold().get_quantity(commodity) > 0
+            })
             .map(|commodity| {
                 let buy_price = market.get_buy_price(commodity).unwrap_or(0);
                 let held = ship.cargo_hold().get_quantity(commodity);

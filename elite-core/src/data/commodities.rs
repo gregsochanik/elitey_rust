@@ -29,11 +29,23 @@ pub struct CommodityData {
     /// Sold only where the tech level is at least this
     #[serde(default)]
     pub min_tech: u8,
+    /// Never for sale; found, not bought
+    #[serde(default)]
+    pub not_sold: bool,
+    /// Left out of the market list unless some is in the hold, and never picked as loot or freight
+    #[serde(default)]
+    pub hidden: bool,
 }
 
 impl CommodityData {
     /// Why this system does not sell the good, or `None` when it does
     pub fn restriction(&self, system: &StarSystem) -> Option<String> {
+        if self.not_sold {
+            return Some(format!(
+                "{} cannot be bought; they are only found",
+                self.name
+            ));
+        }
         let names = |list: &[GovernmentType]| {
             list.iter()
                 .map(|government| government.display_name())
@@ -103,6 +115,7 @@ impl CommodityType {
     pub const Alloys: CommodityType = CommodityType("alloys");
     pub const Luxury: CommodityType = CommodityType("luxury");
     pub const Narcotics: CommodityType = CommodityType("narcotics");
+    pub const Artefacts: CommodityType = CommodityType("artefacts");
 }
 
 impl Serialize for CommodityType {
@@ -130,11 +143,26 @@ impl CommodityType {
     }
 
     /// Every commodity, in market order
+    /// The goods that markets stock, freight carries and wrecks spill
     pub fn all() -> Vec<CommodityType> {
+        commodity_data()
+            .iter()
+            .filter(|data| !data.hidden)
+            .map(|data| CommodityType(data.id.as_str()))
+            .collect()
+    }
+
+    /// Every good there is, including the ones that can only be found
+    pub fn every() -> Vec<CommodityType> {
         commodity_data()
             .iter()
             .map(|data| CommodityType(data.id.as_str()))
             .collect()
+    }
+
+    /// Found rather than bought: listed in a market only while some is in the hold
+    pub fn is_hidden(&self) -> bool {
+        self.data().hidden
     }
 
     /// Why this system does not sell the commodity, or `None` when it does
@@ -351,7 +379,7 @@ pub struct TradingSystem {
 impl TradingSystem {
     pub fn new() -> Self {
         Self {
-            commodities: CommodityType::all(),
+            commodities: CommodityType::every(),
         }
     }
 

@@ -1,3 +1,4 @@
+use crate::game::frontier::Discovery;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -151,6 +152,9 @@ pub struct Commander {
     /// Systems the commander has been to
     #[serde(default)]
     pub visited: BTreeSet<String>,
+    /// What the commander has found at the frontier
+    #[serde(default)]
+    pub discoveries: Vec<Discovery>,
 }
 
 impl Commander {
@@ -193,6 +197,7 @@ impl Commander {
             reputation: 0,
             kills: 0,
             visited: BTreeSet::from(["Sol".to_string()]),
+            discoveries: Vec::new(),
         }
     }
 

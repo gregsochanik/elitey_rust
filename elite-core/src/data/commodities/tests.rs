@@ -61,9 +61,10 @@ fn test_market_generation() {
     let market = trading_system.generate_market_prices(&EconomyType::RichAgricultural, 1);
 
     // Check that all commodities have prices
-    assert_eq!(market.buy_prices.len(), 8);
-    assert_eq!(market.sell_prices.len(), 8);
-    assert_eq!(market.availability.len(), 8);
+    let every = CommodityType::every().len();
+    assert_eq!(market.buy_prices.len(), every);
+    assert_eq!(market.sell_prices.len(), every);
+    assert_eq!(market.availability.len(), every);
 
     // Check that buy prices are higher than sell prices
     for commodity in trading_system.get_commodities() {
@@ -217,7 +218,10 @@ fn the_named_commodities_exist_in_the_data() {
         assert_eq!(named.id(), id);
         assert!(!named.name().is_empty(), "{}", id);
     }
-    assert_eq!(CommodityType::all().len(), commodity_data().len());
+    assert_eq!(CommodityType::every().len(), commodity_data().len());
+    assert_eq!(CommodityType::all().len(), commodity_data().len() - 1);
+    assert!(CommodityType::Artefacts.is_hidden());
+    assert!(!CommodityType::all().contains(&CommodityType::Artefacts));
 }
 
 #[test]

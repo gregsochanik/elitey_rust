@@ -1,0 +1,38 @@
+[
+  {
+    "id": "derelict",
+    "title": "Derelict freighter",
+    "text": "A dead freighter drifts in the dark. You strip its holds before the cold takes your hands.",
+    "weight": 4,
+    "credits": [80, 200],
+    "cargo": { "commodity": "machinery", "tons": [2, 4] }
+  },
+  {
+    "id": "survey",
+    "title": "Uncharted world",
+    "text": "Your scanners find a world no chart shows. The survey data sells well to the cartographers.",
+    "weight": 3,
+    "credits": [150, 350]
+  },
+  {
+    "id": "beacon",
+    "title": "Forgotten navigation beacon",
+    "text": "An old beacon still broadcasts its star charts. Three nearby stars are now on your map.",
+    "weight": 3,
+    "chart": 3
+  },
+  {
+    "id": "fuel-cache",
+    "title": "Hidden fuel cache",
+    "text": "A smuggler's cache holds sealed fuel cells. Your tank is full.",
+    "weight": 2,
+    "refuel": true
+  },
+  {
+    "id": "artefact",
+    "title": "Alien artefact",
+    "text": "Something older than any known species sits in the rock. You haul it aboard.",
+    "weight": 1,
+    "cargo": { "commodity": "artefacts", "tons": [1, 1] }
+  }
+]
