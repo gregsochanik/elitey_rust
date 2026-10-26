@@ -77,6 +77,7 @@ To run it from source, install Godot 4, run `sh elite-godot/build.sh`, then open
 
 ### Travel
 - `jump <system name>` - Hyperspace to another system (triggers travel events)
+- `route <system name>` - Plan the cheapest-fuel route to any star, with refuel stops marked
 - `systems` - List systems in range
 - `info <system name>` - Info on a system
 

@@ -9,6 +9,13 @@ var galaxy: Dictionary = {}
 var selected := ""
 var local_view := true
 var hovered := ""
+var route: Array = []
+
+
+## Highlight a path through the stars, as a list of system names
+func set_route(names: Array) -> void:
+	route = names
+	queue_redraw()
 
 
 func show_galaxy(data: Dictionary) -> void:
@@ -80,6 +87,10 @@ func _draw() -> void:
 	if local_view and current_at != Vector2.ZERO:
 		var reach_px := _reach_pixels(positions)
 		draw_arc(current_at, reach_px, 0.0, TAU, 96, Theme_.ACCENT.darkened(0.55), 2.0)
+
+	for i in range(route.size() - 1):
+		if positions.has(route[i]) and positions.has(route[i + 1]):
+			draw_line(positions[route[i]], positions[route[i + 1]], Theme_.WARNING, 2.5)
 
 	for system in galaxy["systems"]:
 		if not positions.has(system["name"]):

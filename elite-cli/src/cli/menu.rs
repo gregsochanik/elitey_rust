@@ -43,6 +43,11 @@ const SECTIONS: &[Section] = &[
                 aliases: &["j"],
                 lines: &[("jump <system>", "Travel to a star system (with events!)")],
             },
+            Entry {
+                name: "route",
+                aliases: &[],
+                lines: &[("route <system>", "Plan the cheapest-fuel route to a star")],
+            },
         ],
     },
     Section {
@@ -252,14 +257,14 @@ mod tests {
     fn numbers_resolve_to_commands_in_help_order() {
         assert_eq!(resolve("1"), "help");
         assert_eq!(resolve("2"), "status");
-        assert_eq!(resolve("6"), "market");
-        assert_eq!(resolve("24"), "quit");
+        assert_eq!(resolve("7"), "market");
+        assert_eq!(resolve("25"), "quit");
     }
 
     #[test]
     fn numbers_outside_the_menu_are_left_alone() {
         assert_eq!(resolve("0"), "0");
-        assert_eq!(resolve("25"), "25");
+        assert_eq!(resolve("26"), "26");
     }
 
     #[test]

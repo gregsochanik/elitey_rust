@@ -148,6 +148,25 @@ pub struct SystemPointData {
 }
 
 #[derive(Debug, Clone)]
+pub struct HopData {
+    pub from: String,
+    pub to: String,
+    pub distance: f64,
+    pub fuel: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct RouteData {
+    pub ok: bool,
+    /// Why there is no route, when there is none
+    pub message: String,
+    pub hops: Vec<HopData>,
+    pub total_fuel: u32,
+    pub total_distance: f64,
+    pub refuel_at: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
 pub struct GalaxyData {
     pub current: String,
     pub fuel: u32,
@@ -545,6 +564,38 @@ impl Game {
             current,
             fuel,
             systems,
+        }
+    }
+
+    /// The cheapest-fuel route from here to `destination`
+    pub fn plan_route(&self, destination: String) -> RouteData {
+        let state = self.state.lock().expect("game state lock");
+        match state.plan_route(&destination) {
+            Ok(route) => RouteData {
+                ok: true,
+                message: String::new(),
+                hops: route
+                    .hops
+                    .into_iter()
+                    .map(|hop| HopData {
+                        from: hop.from,
+                        to: hop.to,
+                        distance: hop.distance,
+                        fuel: hop.fuel,
+                    })
+                    .collect(),
+                total_fuel: route.total_fuel,
+                total_distance: route.total_distance,
+                refuel_at: route.refuel_at,
+            },
+            Err(error) => RouteData {
+                ok: false,
+                message: error.to_string(),
+                hops: Vec::new(),
+                total_fuel: 0,
+                total_distance: 0.0,
+                refuel_at: Vec::new(),
+            },
         }
     }
 

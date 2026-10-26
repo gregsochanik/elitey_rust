@@ -4,7 +4,7 @@
 Enemies and other ships decide what to do instead of always shooting. A pirate who is losing can run or beg for mercy; police act on who you are; encounter tables decide who shows up where. All of it is a pure, deterministic Rust function over game state with injected randomness, so it behaves the same from the CLI and the Godot GUI. The GUI only dramatises the outcome.
 
 ## Status
-Phases 1 to 3 are built (decision function, retreat and surrender, police and traders, encounter tables, bounty hunters, groups, combat-rating scaling). Route planning (#231) and flight AI are open. Umbrella #224.
+Phases 1 to 3 are built (decision function, retreat and surrender, police and traders, encounter tables, bounty hunters, groups, combat-rating scaling). Route planning is built too (`route <system>`, and the GUI chart draws the path); flight AI is open. Umbrella #224.
 
 The brief for this spec asked for `features/16-encounters-npc-ai.md`; 16 is Jobs, so this is Feature 24.
 

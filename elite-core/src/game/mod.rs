@@ -12,6 +12,7 @@ pub mod journey;
 pub mod npc;
 pub mod refuel;
 pub mod repair;
+pub mod route;
 pub mod save_load;
 pub mod ship;
 pub mod smuggling;
