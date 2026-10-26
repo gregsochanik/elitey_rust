@@ -1,5 +1,6 @@
 use crate::data::commodities::CommodityType;
 use crate::data::star_class::StarClass;
+use crate::data::systems::StarSystem;
 use crate::data::systems::{EconomyType, GovernmentType, SystemManager};
 use crate::game::exploration::Exploration;
 use crate::game::frontier;
@@ -205,6 +206,21 @@ impl GameState {
     /// Whether a star is one of the outer systems
     pub fn is_frontier(&self, system: &str) -> bool {
         frontier::frontier_systems(&self.travel_handler.get_available_systems()).contains(system)
+    }
+
+    /// The other stars, nearest to `system` first
+    pub fn nearest_systems(&self, system: &str) -> Vec<String> {
+        let systems = self.travel_handler.get_available_systems();
+        let Some(here) = systems.iter().find(|s| s.name == system) else {
+            return Vec::new();
+        };
+        let mut others: Vec<(&&StarSystem, f64)> = systems
+            .iter()
+            .filter(|s| s.name != system)
+            .map(|s| (s, here.distance_to(s)))
+            .collect();
+        others.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.name.cmp(&b.0.name)));
+        others.into_iter().map(|(s, _)| s.name.clone()).collect()
     }
 
     /// How many of the galaxy's stars the commander has been to

@@ -1,4 +1,4 @@
-use crate::data::commodities::{CommodityType, TradingSystem};
+use crate::data::commodities::CommodityType;
 use crate::game::combat::Outcome;
 use crate::game::commander::{CombatRating, ReputationChange};
 use crate::game::events::{apply_cargo_gain, apply_cargo_loss, CargoGain, CargoLoss, EventType};
@@ -87,7 +87,7 @@ pub fn settle_against(
             let credits = rng.gen_range(TRADER_LOOT_CREDITS);
             commander.add_credits(credits);
             let mut messages = vec![format!("You take {} credits from the convoy.", credits)];
-            let commodities = TradingSystem::new().get_commodities().to_vec();
+            let commodities = CommodityType::all();
             let loot = CargoGain {
                 commodity: commodities[rng.gen_range(0..commodities.len())].clone(),
                 tons: rng.gen_range(2..=4),
@@ -172,7 +172,7 @@ pub fn settle_with_reward(
                 format!("You claim {} credits from the wreck.", reward)
             });
 
-            let commodities = TradingSystem::new().get_commodities().to_vec();
+            let commodities = CommodityType::all();
             let loot = CargoGain {
                 commodity: commodities[rng.gen_range(0..commodities.len())].clone(),
                 tons: rng.gen_range(1..=3),

@@ -37,7 +37,10 @@ fn prices_are_stable_across_arrivals_within_a_period_and_reroll_after_it() {
 #[test]
 fn test_trading_handler_creation() {
     let handler = TradingHandler::new();
-    assert_eq!(handler.trading_system.get_commodities().len(), 8);
+    assert_eq!(
+        handler.trading_system.get_commodities().len(),
+        CommodityType::every().len()
+    );
 }
 
 fn market(buy: u32, sell: u32, available: u32) -> MarketPrices {
