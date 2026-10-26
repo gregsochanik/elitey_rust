@@ -4,7 +4,7 @@
 The outer stars are the frontier. The first time the commander reaches one, something is found there: salvage, survey data, charts, fuel or an alien artefact. Finds are logged and the stars they chart count toward exploration (Feature 25).
 
 ## Status
-In progress, in slices: #256 mark the frontier, #257 discovery data and log, #258 find on arrival (all done), #259 CLI (done), #260 GUI.
+Done (v1), in slices: #256 mark the frontier, #257 discovery data and log, #258 find on arrival (all done), #259 CLI, #260 GUI (all done).
 
 ## Version 1 Scope
 

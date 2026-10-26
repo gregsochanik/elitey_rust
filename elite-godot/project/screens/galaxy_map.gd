@@ -116,7 +116,7 @@ func _draw() -> void:
 			labelled = true
 		draw_circle(at, radius, colour)
 		if system["frontier"]:
-			draw_arc(at, radius + 6.0, 0.0, TAU, 24, Color("6fb1ff"), 1.5)
+			draw_arc(at, radius + 6.0, 0.0, TAU, 24, Theme_.GOOD if system["discovered"] else Color("6fb1ff"), 1.5)
 		if not system["visited"] and not system["is_current"]:
 			draw_arc(at, radius + 3.0, 0.0, TAU, 24, Theme_.WARNING.darkened(0.2), 1.5)
 		if system["is_current"] and local_view:

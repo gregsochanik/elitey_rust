@@ -297,8 +297,30 @@ func _show_inspection(step: Dictionary) -> void:
 	dialog.present()
 
 
+## The discovery's lines from an arrival's notices: its title, then the details that follow
+func _discovery_lines(step: Dictionary) -> Array:
+	var lines := []
+	for notice in step["notices"]:
+		if notice["text"].begins_with("🔭"):
+			lines.append(notice["text"])
+		elif not lines.is_empty() and notice["kind"] == "text":
+			lines.append(notice["text"])
+		elif not lines.is_empty():
+			break
+	return lines
+
+
 func _show_arrival(step: Dictionary) -> void:
 	banner.text = "🚀  Arrived at %s" % step["arrived_at"]
+	var found := _discovery_lines(step)
+	if not found.is_empty():
+		dialog.subtitle("Docked at %s" % step["arrived_at"])
+		dialog.title(found[0])
+		for line in found.slice(1):
+			dialog.text(line)
+		dialog.choice("Continue", func(): arrived.emit())
+		dialog.present()
+		return
 	var title := "Docked at %s" % step["arrived_at"]
 	var text := ""
 	if step["arrived_at"] != step["planned"]:
