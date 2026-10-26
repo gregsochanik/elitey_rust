@@ -2,6 +2,7 @@ extends Control
 ## A 2D chart of the systems. Click one to select it; arrow keys pan, plus and minus or the wheel zoom.
 
 signal system_selected(name: String)
+signal jump_asked
 
 const Theme_ := preload("res://theme/elite_theme.gd")
 
@@ -66,6 +67,38 @@ func zoom_by(factor: float, around := Vector2(-1, -1)) -> void:
 	queue_redraw()
 
 
+## Select the nearest star in a direction from the selected one (or from the commander's star)
+## and bring it to the middle of the view.
+func select_toward(direction: Vector2) -> void:
+	var from := Vector2.ZERO
+	var from_name := selected
+	for system in galaxy.get("systems", []):
+		if system["name"] == selected or (selected == "" and system["is_current"]):
+			from = Vector2(system["x"], system["y"])
+			from_name = system["name"]
+	var best := ""
+	var best_score := INF
+	for system in galaxy.get("systems", []):
+		if system["name"] == from_name:
+			continue
+		var offset := Vector2(system["x"], system["y"]) - from
+		var along := offset.normalized().dot(direction.normalized())
+		if along < 0.5:
+			continue
+		var score := offset.length() / along
+		if score < best_score:
+			best_score = score
+			best = system["name"]
+	if best == "":
+		return
+	selected = best
+	for system in galaxy["systems"]:
+		if system["name"] == best:
+			view_centre = Vector2(system["x"], system["y"])
+	system_selected.emit(best)
+	queue_redraw()
+
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
@@ -87,7 +120,7 @@ func _process(delta: float) -> void:
 	var direction := Vector2(
 		float(Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_LEFT)),
 		float(Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_UP)))
-	if direction != Vector2.ZERO:
+	if direction != Vector2.ZERO and not Input.is_key_pressed(KEY_SHIFT):
 		pan(direction, delta)
 
 
@@ -195,6 +228,13 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
+				if event.shift_pressed:
+					select_toward(Vector2(
+						float(event.keycode == KEY_RIGHT) - float(event.keycode == KEY_LEFT),
+						float(event.keycode == KEY_DOWN) - float(event.keycode == KEY_UP)))
+				accept_event()
+			KEY_ENTER, KEY_KP_ENTER:
+				jump_asked.emit()
 				accept_event()
 			KEY_EQUAL, KEY_PLUS, KEY_KP_ADD:
 				zoom_by(ZOOM_STEP)
