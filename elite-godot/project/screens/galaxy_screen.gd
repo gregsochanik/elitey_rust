@@ -86,11 +86,11 @@ func refresh() -> void:
 	var data: Dictionary = game.galaxy()
 	map.show_galaxy(data)
 	var status: Dictionary = game.status()
-	explored.text = "🧭  Explored %d%% · %s · %d of %d stars visited" % [status["explored_percent"], status["explorer_rating"], status["systems_visited"], status["systems_total"]]
+	explored.text = "🧭  Explored %d%% · %s · %d of %d stars visited · 🔭 %d found" % [status["explored_percent"], status["explorer_rating"], status["systems_visited"], status["systems_total"], status["discoveries"]]
 	if selected == "" or selected == data["current"]:
 		selected = ""
 		title.text = "Select a system"
-		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel. A yellow ring marks a star you have not visited; a blue ring marks the frontier."
+		details.text = "Click a system on the chart.\n\nBright systems are within reach of your fuel. A yellow ring marks a star you have not visited; a blue ring marks the frontier (green once you have found what it holds)."
 		plan.text = ""
 		route_label.text = ""
 		jump.disabled = true
@@ -121,7 +121,10 @@ func _select(name: String) -> void:
 	text += "[color=#7d8da3]Population[/color]  %s\n" % info["population"]
 	text += "[color=#7d8da3]Visited[/color]  %s\n" % ("yes" if info["visited"] else "not yet")
 	if info["frontier"]:
-		text += "[color=#6fb1ff]Frontier[/color]  one of the outer stars\n"
+		if info["discovery"] != "":
+			text += "[color=#5ee08a]Frontier[/color]  you found: %s\n" % info["discovery"]
+		else:
+			text += "[color=#6fb1ff]Frontier[/color]  one of the outer stars; something waits to be found\n"
 	if info["star_class"] != "":
 		text += "[color=#7d8da3]Star[/color]  %s (%s)\n" % [info["star_type"], info["star_class"]]
 		text += "[color=#7d8da3]%s[/color]\n" % info["star_note"]

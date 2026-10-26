@@ -81,6 +81,7 @@ pub struct StatusData {
     pub explorer_rating: String,
     pub systems_visited: u32,
     pub systems_total: u32,
+    pub discoveries: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -148,6 +149,8 @@ pub struct SystemPointData {
     pub industrial: bool,
     pub visited: bool,
     pub frontier: bool,
+    /// A frontier star whose find has been made
+    pub discovered: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -189,6 +192,8 @@ pub struct SystemDetailData {
     pub star_note: String,
     pub visited: bool,
     pub frontier: bool,
+    /// What was found here, or empty
+    pub discovery: String,
     pub distance: f64,
     pub fuel_cost: u32,
     pub reachable: bool,
@@ -446,6 +451,7 @@ impl Game {
             explorer_rating: view.exploration.rating.name().to_string(),
             systems_visited: view.exploration.visited,
             systems_total: view.exploration.total,
+            discoveries: view.discoveries,
         }
     }
 
@@ -564,6 +570,11 @@ impl Game {
                     is_current,
                     visited: state.commander.has_visited(&system.name),
                     frontier: frontier.contains(&system.name),
+                    discovered: state
+                        .commander
+                        .discoveries
+                        .iter()
+                        .any(|found| found.system == system.name),
                     industrial: matches!(
                         system.economy,
                         EconomyType::RichIndustrial
@@ -639,6 +650,7 @@ impl Game {
                 .map_or_else(String::new, |s| s.note.to_string()),
             visited: view.visited,
             frontier: view.frontier,
+            discovery: view.discovery.unwrap_or_default(),
             distance: from_here.map_or(0.0, |jump| jump.distance),
             fuel_cost: from_here.map_or(0, |jump| jump.fuel),
             reachable: !is_current
@@ -1949,6 +1961,43 @@ mod tests {
         assert_eq!(game.market().unwrap().cargo_used, 0);
         assert!(game.sell_all(None).is_err());
         assert!(game.sell_all(Some("food".to_string())).is_err());
+    }
+
+    #[test]
+    fn the_chart_marks_the_frontier_and_what_was_found_there() {
+        let game = Game::new("Test".to_string());
+
+        let galaxy = game.galaxy();
+        let frontier: Vec<_> = galaxy.systems.iter().filter(|s| s.frontier).collect();
+        assert_eq!(frontier.len(), 31);
+        assert!(frontier.iter().all(|s| !s.discovered));
+        assert_eq!(game.status().discoveries, 0);
+
+        let far = frontier[0].name.clone();
+        let detail = game.system_detail(far.clone()).unwrap();
+        assert!(detail.frontier && detail.discovery.is_empty());
+
+        {
+            let mut state = game.state.lock().unwrap();
+            let nearby = state.nearest_systems(&far);
+            let mut rng = rand::rngs::StdRng::seed_from_u64(1);
+            let state = &mut *state;
+            elite_core::game::frontier::discover(
+                &far,
+                &nearby,
+                &mut state.commander,
+                &mut state.ship,
+                &mut rng,
+            );
+        }
+
+        assert_eq!(game.status().discoveries, 1);
+        assert!(game
+            .galaxy()
+            .systems
+            .iter()
+            .any(|s| s.name == far && s.discovered));
+        assert!(!game.system_detail(far).unwrap().discovery.is_empty());
     }
 
     #[test]
